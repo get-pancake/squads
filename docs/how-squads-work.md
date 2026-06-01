@@ -32,6 +32,30 @@ a transient task. Once installed it has:
 A squad agent is a focused contributor: one role, clear edges. Work outside its lane it
 routes back to the co-founder rather than handling itself.
 
+## The board is the bus
+
+A squad agent and the co-founder communicate **only through the company task board** (the
+`tasks` plugin) — never by DMing each other or the user. A ticket *is* the unit of work and
+the conversation around it:
+
+- **Dispatch.** The co-founder creates a ticket assigned to a squad agent, with the full
+  brief in `context` (naming the **workflow** to run and its inputs), and sends a short
+  pointer to wake it.
+- **Reconcile, don't just react.** On every wake the agent runs `list_tasks` for its own
+  open tickets and works the board — so a missed wake or a mid-ticket restart self-heals on
+  the next pulse. Push (the pointer) and pull (the scan) converge on the same board.
+- **Self-certify.** When the work is done the agent `complete_task`s with a substantive
+  result — it certifies its own outcome. If the user later disagrees, the co-founder
+  *reopens* the ticket (back to `todo`) and the agent re-runs it. There is no approval gate.
+- **Ask, don't guess.** Blocked on intent only the co-founder has? The agent posts the
+  question with `add_task_comment` and flips the ticket to `needs_input`; the co-founder
+  answers on the thread and flips it back. The whole exchange is on the ticket, auditable.
+- **One voice out.** The squad is mute to the user. Only the co-founder speaks to the user,
+  narrating board state in its own voice.
+
+This is the same reconcile-loop discipline the pancake-controller uses against the cluster:
+declarative desired state on the board, an idempotent loop that converges on it.
+
 ## The two halves of the system
 
 A squad travels through two separate pieces of infrastructure:

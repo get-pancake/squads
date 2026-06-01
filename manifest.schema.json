@@ -47,6 +47,43 @@
       },
       "description": "List of agent ids declared by this squad. Per-agent config lives in agents/<id>/agent.json."
     },
+    "workflows": {
+      "type": "array",
+      "description": "Outcome-typed entrypoints the squad publishes — its public interface. The cofounder delegates by creating a board ticket that names a workflow id + inputs and assigns it to the workflow's agent; the agent runs it via its own skills. Inline metadata (not file paths) so the cofounder's catalog can be built without reading extra files.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "summary", "outcome", "agent"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+            "description": "Stable workflow id, lower-kebab/dotted, e.g. github.triage_issue. Unique within the squad."
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "One line the cofounder reads to match intent → workflow."
+          },
+          "inputs": {
+            "type": "object",
+            "description": "Map of input name → type/description string, e.g. { \"repo\": \"string\", \"issue_number\": \"int\" }. Optional.",
+            "additionalProperties": { "type": "string" }
+          },
+          "outcome": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The defined outcome / done-state, e.g. \"issue labeled with a P0–P3 criticality + assessment filed\"."
+          },
+          "agent": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "description": "The squad agent that runs this workflow — must be one of manifest.agents. The cofounder assigns the ticket to this agent."
+          }
+        }
+      }
+    },
     "required_identities": {
       "type": "array",
       "items": {

@@ -71,6 +71,10 @@ const HEARTBEAT_FIELDS = {
 
 const FORBIDDEN_BASENAMES = new Set(["agents.md", "user.md", "bootstrap.md", "boot.md"]);
 
+// workflows[] — outcome-typed entrypoints the squad publishes.
+const WORKFLOW_ID = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
+const WORKFLOW_ALLOWED_KEYS = new Set(["id", "summary", "inputs", "outcome", "agent"]);
+
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const isStringArray = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
 
@@ -138,6 +142,56 @@ function validateManifest(input) {
         seen.add(id);
       }
     });
+  }
+
+  // workflows (optional) — published outcome-typed entrypoints. Inline metadata
+  // so the cofounder's catalog can be generated without reading extra files.
+  if (input.workflows !== undefined) {
+    if (!Array.isArray(input.workflows)) {
+      err("workflows", "must be an array when present");
+    } else {
+      const declaredAgents = new Set(
+        Array.isArray(input.agents) ? input.agents.filter((a) => typeof a === "string") : [],
+      );
+      const seenW = new Set();
+      input.workflows.forEach((w, i) => {
+        const at = `workflows[${i}]`;
+        if (!isObject(w)) {
+          err(at, "must be an object");
+          return;
+        }
+        for (const key of Object.keys(w)) {
+          if (!WORKFLOW_ALLOWED_KEYS.has(key)) {
+            err(`${at}.${key}`, `unknown field — allowed: ${[...WORKFLOW_ALLOWED_KEYS].join(", ")}`);
+          }
+        }
+        if (typeof w.id !== "string" || w.id.length === 0) {
+          err(`${at}.id`, "required, must be a non-empty string");
+        } else if (!WORKFLOW_ID.test(w.id)) {
+          err(`${at}.id`, `"${w.id}" must be lower-kebab/dotted (e.g. github.triage_issue)`);
+        } else if (seenW.has(w.id)) {
+          err(`${at}.id`, `duplicate workflow id "${w.id}"`);
+        } else {
+          seenW.add(w.id);
+        }
+        if (typeof w.summary !== "string" || w.summary.length === 0) {
+          err(`${at}.summary`, "required, must be a non-empty string");
+        } else if (w.summary.length > MAX_DESCRIPTION) {
+          err(`${at}.summary`, `must be ${MAX_DESCRIPTION} characters or fewer`);
+        }
+        if (typeof w.outcome !== "string" || w.outcome.length === 0) {
+          err(`${at}.outcome`, "required, must be a non-empty string describing the defined outcome");
+        }
+        if (w.inputs !== undefined && !isObject(w.inputs)) {
+          err(`${at}.inputs`, "must be an object mapping input name → type/description when present");
+        }
+        if (typeof w.agent !== "string" || w.agent.length === 0) {
+          err(`${at}.agent`, "required, must name the squad agent that runs this workflow");
+        } else if (declaredAgents.size && !declaredAgents.has(w.agent)) {
+          err(`${at}.agent`, `"${w.agent}" is not a declared agent id (must be one of: ${[...declaredAgents].join(", ")})`);
+        }
+      });
+    }
   }
 
   // required_identities
