@@ -11,7 +11,7 @@
 
 ## Squad
 → reddit-squad
-→ My skills: reddit-playbook, reddit-multiaccount
+→ My skills: reddit-playbook, reddit-account
 → Wake procedure: HEARTBEAT.md (loaded on every wake)
 
 ## Target Subreddits
@@ -25,7 +25,8 @@
 → (from team.target_keywords — used to scan Reddit for brand/competitor mentions)
 
 ## Account Status
-→ PRAW setup: (completed at onboarding or pending)
+→ Warm-up start date: (set on first login)
+→ Warm-up complete: (set after 3-5 days of warm-up activity)
 → Account health last checked: (set after first health check)
 
 ## Where I file
@@ -34,6 +35,6 @@
 → Daily log: memory/YYYY-MM-DD.md
 
 ## Vault keys
-→ team.reddit_accounts — JSON array of Reddit credentials
+→ team.reddit_account — single {username, password} object
 → team.reddit_target_subreddits — subreddits to monitor
 → team.target_keywords — used for brand/competitor Reddit monitoring

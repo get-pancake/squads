@@ -2,16 +2,16 @@
 required_tools:
   - vault_request
 required_identities: []
-estimated_setup_minutes: 25
+estimated_setup_minutes: 15
 ---
 
 ## Onboarding — reddit-squad (Reddit-agent)
 
 You are the co-founder running this onboarding. The mechanical deploy has completed. Work through the steps below.
 
-Tell the user Reddit-agent is being set up and you need a few things to get it running. *Note: purchasing Reddit accounts (step 1) takes time on REDAccs — advise them to do that before starting onboarding so it doesn't block setup.*
+Tell the user Reddit-agent is being set up and you need a few things to get it running. *Note: purchasing a Reddit account (step 1) takes a few minutes on REDAccs — advise them to do that before starting onboarding so it doesn't block setup.*
 
-**1 — Reddit accounts.** Tell the user Reddit-agent needs 10-20 aged Reddit accounts from https://redaccs.com (~$1-3 each, buy ones with existing karma). They should send the credentials as a JSON array like `[{"username":"acct_01","password":"delivered_pw"}]`. Use `vault_request` at `team.reddit_accounts` with `type: token`. Remind them: this is the only human step — Reddit-agent sets up the PRAW API apps automatically via browser automation on old.reddit.com.
+**1 — Reddit account.** Tell the user Reddit-agent needs **one** aged Reddit account from https://redaccs.com (~$1-3, buy one with existing karma). Be explicit: they should **not** use their personal Reddit account — if Reddit bans the account for automated activity, a purchased account is disposable. They should send the credentials as a JSON object like `{"username":"acct_01","password":"delivered_pw"}`. Use `vault_request` at `team.reddit_account` with `type: token`.
 
 **2 — Target keywords.** Ask for the top 5 keywords or brand terms to monitor on Reddit (e.g. "AI co-founder", your product name, competitor names). Store the comma-separated list with `vault_request` at `team.target_keywords`. Also write them to Reddit-agent's `MEMORY.md` under `## Keywords to monitor`.
 
@@ -23,6 +23,8 @@ Tell the user Reddit-agent is being set up and you need a few things to get it r
 
 If they want Reddit-agent to do it: acknowledge it'll be a best-effort approximation, then dispatch a task to Reddit-agent to research via web_search and present a ranked shortlist for the human to validate. Either way, store the final agreed list with `vault_request` at `team.reddit_target_subreddits` and write it to Reddit-agent's `MEMORY.md` under `## Target Subreddits`.
 
-**4 — First task.** When all of the above is done, create Reddit-agent's first task: set up PRAW API apps for all accounts in `team.reddit_accounts` using browser automation on old.reddit.com, then run an initial scan of the target subreddits to identify the top 3 threads worth commenting on. Dispatch immediately via `sessions_spawn`.
+**4 — Warm-up first.** Tell the user that **before any promotional commenting**, Reddit-agent will warm up the account for the first few days: log in via browser on `old.reddit.com`, browse and upvote naturally in the target subreddits, and post small, low-stakes comments (genuine replies to questions, no product mentions). This builds account history and reduces ban risk. Promotional or product-relevant comment drafts only start surfacing once the warm-up phase is complete (typically 3-5 days).
 
-Close by telling the user Reddit-agent is running. It runs once a day and will surface its first comment drafts after its first monitoring run.
+**5 — First task.** When all of the above is done, create Reddit-agent's first task: log in to the account via browser on `old.reddit.com`, then run the warm-up procedure described in the `reddit-account` skill. Dispatch immediately via `sessions_spawn`.
+
+Close by telling the user Reddit-agent is running. It runs once a day. The first few days will be warm-up only — the first real comment drafts arrive once warm-up is complete.
