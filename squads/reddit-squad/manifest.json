@@ -1,14 +1,14 @@
 {
   "name": "reddit-squad",
-  "version": "1.0.6",
-  "description": "Single-agent Reddit squad: Reddit-agent monitors subreddits, drafts comments, manages multi-account karma strategy, and runs weekly account health checks.",
+  "version": "2.0.0",
+  "description": "Single-agent Reddit squad: Reddit-agent monitors subreddits, drafts comments via browser automation on old.reddit.com, warms up a single purchased account, and runs weekly account health checks.",
   "author": "pancake-official",
   "license": "MIT",
   "agents": ["reddit-agent"],
   "required_vault_secrets": [
     {
-      "key": "team.reddit_accounts",
-      "label": "Reddit accounts JSON — array of {username, password} objects from REDAccs",
+      "key": "team.reddit_account",
+      "label": "Reddit account JSON — single {username, password} object from REDAccs (do NOT use your personal account)",
       "type": "token"
     },
     {
