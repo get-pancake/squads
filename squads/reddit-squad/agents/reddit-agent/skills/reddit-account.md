@@ -5,9 +5,9 @@ description: How to operate the single Reddit account via browser automation on 
 
 # Reddit account — Reddit-agent
 
-This squad uses **one** Reddit account, purchased from REDAccs and stored in vault. The Reddit API (PRAW) is **not** used here — Reddit's API access for new "script" apps is unreliable for posting from server IPs, and creating apps requires phone verification on most aged accounts. Everything happens through the browser on `old.reddit.com`, which is the stable, parseable, automation-friendly version of Reddit.
+This squad uses **one** dedicated Reddit account — either bought aged from REDAccs (~$1-3, comes with karma) or created fresh by the user at reddit.com/register (blank slate, no karma). Either works. The credentials live in vault at `team.reddit_account`. The Reddit API (PRAW) is **not** used here — Reddit's API access for new "script" apps is unreliable for posting from server IPs, and creating apps requires phone verification on most accounts. Everything happens through the browser on `old.reddit.com`, which is the stable, parseable, automation-friendly version of Reddit.
 
-> **Why a single purchased account.** A purchased account is disposable: if Reddit bans it, you've lost a few dollars, not your reputation. The user's personal account is never touched. Multi-account coordination is explicitly out of scope — it violates Reddit's User Agreement and Reddit's 2023+ detection makes it a fast path to bans.
+> **Why a single dedicated account (not personal).** A dedicated account is disposable: if Reddit bans it, you've lost nothing — at worst a few dollars and 2 minutes of setup, not your reputation. The user's personal account is never touched. Multi-account coordination is explicitly out of scope — it violates Reddit's User Agreement and Reddit's 2023+ detection makes it a fast path to bans.
 
 ## Login (every session that needs an authenticated action)
 
@@ -33,9 +33,11 @@ During the warm-up window (≈ 3-5 days), every daily cron run does this **inste
 4. **Log the warm-up day** to `wiki/Knowledge/Reddit/AccountHealth.md` and `memory/YYYY-MM-DD.md`.
 
 End the warm-up window when **all** of the following are true:
-- At least 3 days have passed since the warm-up start date.
+- At least **3 days** have passed (aged account from REDAccs) **or at least 5 days** (fresh account created from scratch with no prior karma) since the warm-up start date.
 - At least 2 small comments have been posted and accumulated ≥ 1 net karma each without removal.
 - No CAPTCHA, rate limit, or shadowban signal has appeared during warm-up.
+
+If the account is fresh and Reddit shows the new-account posting restriction (some subreddits block accounts with < N karma or < N days old), extend warm-up until the restriction lifts — comment in less restrictive subreddits in the meantime.
 
 When warm-up ends, set `MEMORY.md → Account Status → Warm-up complete` to **yes (YYYY-MM-DD)** and tell the co-founder the account is ready for promotional drafting.
 

@@ -9,9 +9,13 @@ estimated_setup_minutes: 15
 
 You are the co-founder running this onboarding. The mechanical deploy has completed. Work through the steps below.
 
-Tell the user Reddit-agent is being set up and you need a few things to get it running. *Note: purchasing a Reddit account (step 1) takes a few minutes on REDAccs — advise them to do that before starting onboarding so it doesn't block setup.*
+Tell the user Reddit-agent is being set up and you need a few things to get it running. *Note: getting the Reddit account ready (step 1) is a prerequisite — advise them to do that before starting onboarding so it doesn't block setup.*
 
-**1 — Reddit account.** Tell the user Reddit-agent needs **one** aged Reddit account from https://redaccs.com (~$1-3, buy one with existing karma). Be explicit: they should **not** use their personal Reddit account — if Reddit bans the account for automated activity, a purchased account is disposable. They should send the credentials as a JSON object like `{"username":"acct_01","password":"delivered_pw"}`. Use `vault_request` at `team.reddit_account` with `type: token`.
+**1 — Reddit account.** Tell the user Reddit-agent needs **one** dedicated Reddit account and they have two options:
+- **Buy aged** from https://redaccs.com (~$1-3, comes with existing karma). Faster to start drafting because the warm-up window can be shorter — Reddit treats aged accounts with karma as less suspicious.
+- **Create fresh** themselves at https://www.reddit.com/register/ — takes 2 minutes, blank slate, zero karma. This works fine, the warm-up window just runs the full 3-5 days (and possibly a bit longer) since the account has no history.
+
+Be explicit either way: they should **not** use their personal Reddit account — if Reddit bans the account for automated activity, a dedicated account is disposable. They should send the credentials as a JSON object like `{"username":"acct_01","password":"the_password"}`. Use `vault_request` at `team.reddit_account` with `type: token`. Record in Reddit-agent's `MEMORY.md` under `## Account Status` whether the account is `aged` or `fresh` — Reddit-agent uses that to calibrate the warm-up window.
 
 **2 — Target keywords.** Ask for the top 5 keywords or brand terms to monitor on Reddit (e.g. "AI co-founder", your product name, competitor names). Store the comma-separated list with `vault_request` at `team.target_keywords`. Also write them to Reddit-agent's `MEMORY.md` under `## Keywords to monitor`.
 

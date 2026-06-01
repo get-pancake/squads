@@ -25,8 +25,9 @@
 → (from team.target_keywords — used to scan Reddit for brand/competitor mentions)
 
 ## Account Status
+→ Account type: (aged from REDAccs / fresh created from scratch — set at onboarding)
 → Warm-up start date: (set on first login)
-→ Warm-up complete: (set after 3-5 days of warm-up activity)
+→ Warm-up complete: (set after 3 days for aged, 5 days for fresh — and only once posting is unrestricted)
 → Account health last checked: (set after first health check)
 
 ## Where I file

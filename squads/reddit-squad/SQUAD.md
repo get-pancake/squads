@@ -11,7 +11,10 @@ Deploys Reddit-agent — a focused agent that builds your product's organic pres
 
 ## What you'll need
 
-- **One** aged Reddit account from REDAccs (~$1-3, buy one with existing karma). Use a purchased account, never your personal one — if Reddit bans it, you lose nothing.
+- **One** dedicated Reddit account. Two options:
+  - **Buy aged** from REDAccs (~$1-3) — comes with existing karma, faster to start drafting.
+  - **Create fresh** yourself in 2 minutes — blank slate, no karma, longer warm-up.
+  Either way: do **not** use your personal account — if Reddit bans it, you lose nothing this way.
 - Your target subreddits (e.g. r/Entrepreneurs, r/startups, r/SaaS)
 - Your top 5 target keywords (for brand and competitor mention monitoring)
 
