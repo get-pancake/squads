@@ -1,0 +1,41 @@
+{
+  "name": "posthog-squad",
+  "version": "0.1.0",
+  "description": "Single-agent PostHog squad: installs the PostHog MCP, agrees on north-star events, then runs a daily digest — DAU/WAU/MAU, progression, top engaged users, and users at risk of churning.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "agents": ["posthog-agent"],
+  "required_vault_secrets": [
+    {
+      "key": "team.posthog_api_key",
+      "label": "PostHog personal API key (scoped to the target project — Settings → Personal API keys → read access on Query, Insight, Event definition, Action, Person, Cohort)",
+      "type": "api_key"
+    },
+    {
+      "key": "team.posthog_project_id",
+      "label": "PostHog project ID (numeric — Settings → Project → 'Project ID')",
+      "type": "string"
+    },
+    {
+      "key": "team.posthog_host",
+      "label": "PostHog host — 'https://us.posthog.com', 'https://eu.posthog.com', or a self-hosted base URL",
+      "type": "string"
+    },
+    {
+      "key": "team.posthog_north_star_events",
+      "label": "Comma-separated PostHog event names that count as 'real product use' (e.g. message_sent,workspace_created) — agreed during onboarding",
+      "type": "string"
+    },
+    {
+      "key": "team.posthog_activation_event",
+      "label": "The single PostHog event that means a new signup is now 'activated' (e.g. first_message_sent). One event name, no commas.",
+      "type": "string"
+    }
+  ],
+  "required_tool_permissions": [
+    "mcp-installer",
+    "vault",
+    "web_fetch"
+  ],
+  "min_pancake_version": "1.0.0"
+}
