@@ -16,14 +16,19 @@ raising a budget.
 
 ## What you'll need
 
-- A connected `google.com` identity (used to obtain and refresh the Google Ads
-  OAuth token).
 - A Google Ads **developer token** (apply for or retrieve from your MCC's
   Tools → API Center).
 - An **OAuth refresh token** for the account you want managed, plus that
   account's **customer ID** (and `login_customer_id` if the account is under
-  an MCC).
+  an MCC). This refresh token is the long-lived credential — the agent mints
+  fresh access tokens from it on every run, no human in the loop.
 - A primary KPI for the account (CPA, ROAS, or CPL) plus its target.
+
+That's the full setup — these API credentials drive every read and write. A
+connected `google.com` browser identity is **optional**: it's only a backup for
+re-running the OAuth consent dance or pulling CSV exports from the UI. If you
+enforce passkeys on your Google accounts, skip it — the squad is fully
+functional on the API credentials alone.
 
 ## What you get
 
@@ -43,9 +48,9 @@ raising a budget.
 
 You never talk to the agent directly — your co-founder relays everything.
 After install, the co-founder runs the onboarding script: collects API
-credentials via the vault, connects the Google identity, walks the
-account-foundations interview, assesses maturity stage, and dispatches a
-baseline audit. From there the agent runs on two crons (one sweep, one
+credentials via the vault (optionally connecting a Google identity as a
+backup), walks the account-foundations interview, assesses maturity stage,
+and dispatches a baseline audit. From there the agent runs on two crons (one sweep, one
 digest hand-off), supplemented by ad-hoc tasks the co-founder dispatches.
 Every cron stays silent unless something material happened — `NO_REPLY` is
 the default. The agent operates fully autonomously within the budget envelope;

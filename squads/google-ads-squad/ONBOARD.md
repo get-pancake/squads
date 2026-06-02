@@ -4,8 +4,6 @@ required_tools:
   - browser_identity_add
   - create_task
   - sessions_spawn
-required_identities:
-  - google.com
 estimated_setup_minutes: 12
 ---
 
@@ -39,10 +37,21 @@ secret in chat — collect every value with `vault_request` at the keys listed.
   `google_ads.login_customer_id` (type `string`). If the account is direct
   (no MCC), store an empty string at that key — don't skip it.
 
-**2 — Connect the Google identity.** Check whether the pod already has a
-matching `google.com` identity. If yes, reuse it. Otherwise call
-`browser_identity_add` for `google.com` so the agent can refresh the OAuth
-token without a human in the loop.
+Once these four values are in the vault the agent has everything it needs to
+operate. The refresh token *is* the long-lived credential — the agent mints
+fresh access tokens from it on every run with no human in the loop. This API
+path is the primary and complete path; reads and writes all flow through it.
+
+**2 — (Optional) Connect a Google identity as a backup.** This is *not*
+required for normal operation — the API credentials from step 1 already drive
+every read and write. A connected `google.com` identity is only a fallback for
+the rare case where the agent needs to re-run the OAuth consent dance or pull
+CSV exports from the Google Ads UI. If you enforce passkeys on your Google
+accounts (which blocks the browser sign-in), **skip this step** — it won't
+affect day-to-day operation. To set it up anyway: check whether the pod already
+has a matching `google.com` identity and reuse it, otherwise call
+`browser_identity_add` for `google.com`. Make clear to the user that skipping is
+fine and the squad is fully functional without it.
 
 **3 — Run the account-foundations interview.** Load the
 `pancake_account_foundations` skill (it is one of this squad's squad-wide
