@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "daily-posthog-analysis",
+      "name": "Daily PostHog analytics digest — PostHog-agent",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 9 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "posthog-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "Run the daily PostHog analysis cycle. **Load the `posthog-daily-analysis` skill** and execute it end to end via the PostHog MCP: compute DAU / WAU / MAU and the day-over-day + week-over-week deltas, north-star event volumes for the last 7 days vs the prior 7, activation rate of last week's signup cohort, the top 5 most engaged users this week (by north-star event count), and the top 5 dying users (previously-active accounts whose last-7-day north-star count is ≤ 25% of their prior 14-day baseline and who have not been seen in the last 48h). File the full report to `wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md` and the watchlist deltas to `wiki/Knowledge/PostHog/Watchlist.md`. Surface a 6–8 line summary to the co-founder via `complete_task` — numbers + one sentence on what changed + one suggested next move. Write the daily digest to `memory/YYYY-MM-DD.md` before closing. If the MCP is down, every HogQL query failed, or no events exist for the relevant window, log the reason to `memory/YYYY-MM-DD.md` and reply with the single literal token `NO_REPLY`."
+      },
+      "failureAlert": true,
+      "state": {}
+    },
+    {
+      "id": "weekly-posthog-recap",
+      "name": "Weekly PostHog recap — PostHog-agent",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 10 * * 1", "tz": "America/Los_Angeles" },
+      "sessionTarget": "posthog-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "Run the weekly PostHog recap. **Load the `posthog-daily-analysis` skill** and run the *Weekly recap* section there: 4-week trend on DAU / WAU / MAU and on each north-star event, 4-week activation cohort table, churn count (dying-list users who did not recover), and one written hypothesis on the single most leverage-positive thing to ship this week given what the data shows. File to `wiki/Knowledge/PostHog/Reports/weekly/YYYY-WW.md`. Surface a 10–12 line summary to the co-founder via `complete_task` ending with the hypothesis. If there is genuinely no movement worth reporting (still pre-traction, < 20 events in the trailing 7 days), say so explicitly in the surfaced summary — do not pad."
+      },
+      "failureAlert": true,
+      "state": {}
+    }
+  ]
+}
