@@ -14,9 +14,11 @@ All PostHog interactions happen through the **official PostHog MCP** in read-onl
 1. Confirm the MCP is connected and authenticated. A single read-only call (list 5 event definitions) is the sanity check. If it fails, escalate with the exact error; do not proceed.
 2. Read `MEMORY.md` for any prior north-star event list. If one exists, treat this as a *re-confirmation* pass, not a from-scratch discovery.
 
-## 0.5 — Probe the tenant's PostHog shape
+## 0.5 — Probe the tenant's PostHog shape (mandatory before any analysis)
 
 Every tenant's PostHog looks different above the platform layer. Before any analysis runs, probe and write the answers to `MEMORY.md → PostHog shape` — every later query reads from there instead of hardcoding column paths.
+
+**First action**: stamp the header of `MEMORY → PostHog shape` with `PROBE_COMPLETE: YYYY-MM-DD` once every value below has been resolved and written. `posthog-daily-analysis §0` will check for this marker before running; if it's missing, it stops and routes back here.
 
 Resolve and record:
 

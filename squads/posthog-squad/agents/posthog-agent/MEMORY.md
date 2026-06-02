@@ -39,7 +39,9 @@
 → MCP: official PostHog MCP, installed via mcp_install, read-only flag set
 
 ## PostHog shape
-<!-- Resolved by posthog-discovery §0.5. Every later query reads these instead of guessing. -->
+<!-- Resolved by posthog-discovery §0.5. Every later query reads these instead of guessing.
+     The PROBE_COMPLETE marker below is checked by posthog-daily-analysis §0 as a hard gate. -->
+→ PROBE_COMPLETE: (YYYY-MM-DD — set by posthog-discovery §0.5 once all values below are real)
 → person_identification: (identified | anonymous_only)
 → display_handle_path: (e.g. person.properties.email, or toString(distinct_id) if anonymous-only)
 → person_on_events: (true | false)

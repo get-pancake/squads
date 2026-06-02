@@ -58,6 +58,14 @@ Open `wiki/Company/COMPANY.md` and `wiki/Company/ICP.md` if they exist. Read wha
 
 If both are already documented in the company wiki and the user confirms they're still current, just point PostHog-agent's `MEMORY.md` at those wiki paths and move on. Don't duplicate prose.
 
+### Step 5.5 — Run the schema probe (hard gate)
+
+**Do not skip this step.** Every analysis the agent runs after onboarding substitutes tenant-specific values out of `MEMORY → PostHog shape`. If the probe doesn't run, the agent falls back to hardcoded guesses — engaged/dying user lists come back as opaque UUIDs instead of human handles, queries that depend on `$identify` behavior silently misbehave, and small-volume tenants get treated as if they had stable data.
+
+Load `posthog-discovery` skill, **execute its §0.5 procedure end to end** (probe person identification model, resolve `display_handle_path`, person-on-events mode, session signal availability, volume floor, autocapture status), then write each resolved value into PostHog-agent's `MEMORY.md → PostHog shape` and stamp the section header with `PROBE_COMPLETE: YYYY-MM-DD` so later runs can verify the probe actually ran.
+
+**Verify before moving on:** open `MEMORY → PostHog shape` and confirm every line has a real value (not the placeholder text from the seeded template). If any line still reads `(identified | anonymous_only)` or similar, the probe didn't run — re-execute §0.5 before Step 6.
+
 ### Step 6 — Agree on the north-star events
 
 This is the most important step in the entire onboarding. The daily digest is only useful if the events it counts mean "this user got real value".
@@ -83,10 +91,14 @@ The two crons ship pinned to `America/Los_Angeles`. Ask the user, plainly: **"Wh
 
 If they want the default, skip — leave both crons as LA. Otherwise edit `crons/jobs.json` in PostHog-agent's installed bundle: replace the `tz` field on both `daily-posthog-analysis` and `weekly-posthog-recap` with the user's tz. Confirm the new schedule back to them in one line so they know exactly when to expect the digest.
 
-### Step 8 — Dispatch the baseline scan
+### Step 8 — Dispatch the baseline scan to PostHog-agent (do NOT run it yourself)
 
-Create PostHog-agent's first task: a **baseline analytics scan** — current DAU/WAU/MAU, north-star event volume for the last 30 days with WoW deltas, activation rate of the last 4 weeks of signups, top 10 most engaged users this week, and a first-pass list of users likely to churn (previously-active accounts with a sharp recent drop in north-star event count). Output: a single `wiki/Knowledge/PostHog/Reports/baseline/YYYY-MM-DD.md` plus a 6–8 line summary surfaced to the co-founder.
+**Important — read this before you act.** This step is the most common place this onboarding gets the agent architecture wrong. The baseline scan is **PostHog-agent's** work, not yours. You are the cofounder; you do not impersonate squad agents. Spawn a session targeted at `posthog-agent` and let it execute against its own IDENTITY/SOUL/MEMORY/HEARTBEAT. If you run the queries as a `main` subagent, the agent's loaded skills (`posthog-discovery`, `posthog-daily-analysis`, `posthog-mcp-toolkit`) are never in context, the per-agent MEMORY isn't read, and the report ends up missing the schema-probe-aware substitutions and the HogQL-in-report rule. (This has happened in the wild — fixed in v0.1.1.)
 
-Dispatch it now via `sessions_spawn posthog-agent`, mark the task `in_progress`. Don't leave it for tomorrow's 09:00 cron — the user is here and the first impression matters.
+The task brief: a **baseline analytics scan** — current DAU/WAU/MAU, north-star event volume for the last 30 days with WoW deltas, activation rate of the last 4 weeks of signups, top 10 most engaged users this week, and a first-pass list of users likely to churn (previously-active accounts with a sharp recent drop in north-star event count). Output: a single `wiki/Knowledge/PostHog/Reports/baseline/YYYY-MM-DD.md` (including the verbatim HogQL used) plus a 6–8 line summary surfaced to the co-founder. Pre-condition: §5.5 schema probe must be complete (see `MEMORY → PostHog shape`).
+
+Dispatch it via the tasks plugin with `agent: "posthog-agent"` (the exact agent id from `manifest.agents`). Mark the task `in_progress`. Don't leave it for tomorrow's 09:00 cron — the user is here and the first impression matters.
+
+**Verify before reporting setup-complete:** look up the spawned session and confirm its `agent_id` is `posthog-agent`, not `main`. If it isn't, you spawned the wrong target — kill it and re-dispatch with the correct agent id.
 
 Close by telling the user PostHog-agent is now scanning the project, and confirm the exact daily + weekly schedule using the timezone they pinned in Step 7 (e.g. "daily digest at 09:00 Europe/Paris, weekly recap Mon 10:00 Europe/Paris"). Remind them that if the north-star events ever change (new product surface, deprecated feature), they just have to tell the co-founder and PostHog-agent will refresh its definitions — no re-onboarding needed.

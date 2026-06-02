@@ -1,6 +1,6 @@
 {
   "name": "posthog-squad",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Single-agent PostHog squad: installs the PostHog MCP, agrees on north-star events, then runs a daily digest — DAU/WAU/MAU, progression, top engaged users, and users at risk of churning.",
   "author": "pancake-official",
   "license": "MIT",
