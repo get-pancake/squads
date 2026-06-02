@@ -1,6 +1,6 @@
 {
   "name": "google-ads-squad",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Single-account Google Ads autopilot: twice-daily optimization sweeps, daily digest, 19-skill toolkit. Ships work autonomously, escalates only for budget increases.",
   "author": "pancake-official",
   "license": "MIT",
@@ -26,12 +26,6 @@
     "skills/pancake_youtube_playbook.md"
   ],
   "agents": ["google-ads-agent"],
-  "required_identities": [
-    {
-      "site": "google.com",
-      "reason": "OAuth flow for the Google Ads API — the agent uses the connected Google identity to obtain and refresh the OAuth token that drives every account read and write."
-    }
-  ],
   "required_vault_secrets": [
     {
       "key": "google_ads.developer_token",
