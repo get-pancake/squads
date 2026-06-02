@@ -85,6 +85,30 @@ Also write both to PostHog-agent's `MEMORY.md` under `## North-star events` and 
 
 If the user genuinely doesn't know which events matter — common for early-stage products — do not invent an answer. Pick the single highest-volume non-autocapture event as a placeholder, store it with a note in `MEMORY.md` that it's provisional, and create a follow-up task on the agent to revisit after the first weekly digest lands. Be explicit with the user that the first week's digest will be noisier than usual because of this.
 
+### Step 6.3 — Capture the signup event (for funnel debugger)
+
+Ask: **"Which single event fires when a brand-new user signs up?"** (e.g. `user_signed_up`, `signup_complete`, `account_created`). Show them the top 5 non-autocapture events whose name contains "sign", "register", or "account" if any exist in the shortlist from Step 6 — that's usually the answer.
+
+Store at `team.posthog_signup_event`. If they don't have an explicit signup event (auth-less product, anonymous-first), tell them the funnel debugger will be disabled and skip — store an empty string. Write the value to `MEMORY.md → Signup event`.
+
+The funnel debugger (`posthog-funnel-debugger` skill) uses this to build a `signup_event → … → activation_event` funnel and surface the biggest drop-off step whenever the daily digest detects activation rate dropping > 2pp WoW or sitting below a 5% floor.
+
+### Step 6.5 — Hook up release tracking (optional, recommended)
+
+Ask: **"Which GitHub repo ships your product? Give me the `owner/name` slug (e.g. `acme/web-app`)."** This is the repo PostHog-agent will watch for releases. On each new release tag, the agent snapshots DAU/WAU + north-star event volumes at T+0, T+24h, and T+7d, then files a release-impact report to `wiki/Knowledge/PostHog/Releases/`. Lets the cofounder see "release v1.4.2 moved activation +1.8pp" at a glance.
+
+Store at `team.posthog_release_repo`. If they don't want release tracking (no GitHub repo, no clear single repo, prefer to skip), store an empty string. Write to `MEMORY.md → Release tracking`. If the value is set, PostHog-agent will poll the repo on every 2h heartbeat pulse.
+
+### Step 6.7 — Provision the cohort-write API key (optional, the one carve-out)
+
+PostHog-agent is read-only by default. The single exception is **maintaining two static cohorts in PostHog**: `PostHog-agent: Power Users` (current top 20 engaged by north-star event count) and `PostHog-agent: Dying Users` (current dying list). This lets the cofounder slice any PostHog chart by these cohorts without ever leaving the PostHog UI.
+
+To enable, ask the user to provision a **second** personal API key, scoped *only* to **Cohort write** (no read scopes from the first key, no other writes). Walk them through: PostHog → Settings → Personal API keys → "Create personal API key" → scope: **Cohort write only**. Store at `team.posthog_write_api_key` via `vault_request`, type `api_key`.
+
+Be explicit with the user about the tradeoff: they're giving the agent the ability to modify cohorts in their PostHog project. The agent will only touch the two cohorts named exactly above; every modification is logged to `wiki/Knowledge/PostHog/CohortSync/`. If they prefer to keep the agent strictly read-only, store an empty string and skip — the digest still works, they just won't get the auto-maintained cohorts.
+
+Never reuse the read-only key from Step 2 here. The whole point of the separation is blast-radius containment — a compromised write key can only mutate two cohorts; a compromised read key can leak every event the project has ever ingested.
+
 ### Step 7 — Pin the cron timezone
 
 The two crons ship pinned to `America/Los_Angeles`. Ask the user, plainly: **"What timezone should the 09:00 daily digest and the Monday 10:00 weekly recap land in?"** Expect an IANA tz (`Europe/Paris`, `America/New_York`, etc.).
