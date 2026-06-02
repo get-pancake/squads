@@ -8,7 +8,7 @@
   "required_vault_secrets": [
     {
       "key": "team.posthog_api_key",
-      "label": "PostHog personal API key (scoped to the target project — Settings → Personal API keys → 'Read query' + 'Read insight' + 'Read event_definition' + 'Read action')",
+      "label": "PostHog personal API key (scoped to the target project — Settings → Personal API keys → read access on Query, Insight, Event definition, Action, Person, Cohort)",
       "type": "api_key"
     },
     {

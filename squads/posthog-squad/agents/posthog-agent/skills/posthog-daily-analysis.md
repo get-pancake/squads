@@ -98,6 +98,7 @@ Substitute `{DISPLAY_HANDLE_PATH}` with the resolved path from MEMORY (e.g. `per
 
 ```sql
 SELECT person_id,
+       any(distinct_id) AS distinct_id,
        any({DISPLAY_HANDLE_PATH}) AS handle,
        count() AS ns_events,
        count(DISTINCT event) AS distinct_event_types,
@@ -110,15 +111,18 @@ ORDER BY ns_events DESC, distinct_event_types DESC, last_seen DESC
 LIMIT 5
 ```
 
-Include `distinct_id` and email (if identified). If the same person tops the list every week, note it — that's signal about which design partners to call.
+The query returns both `distinct_id` (always present, the SDK-side id used for click-through links in PostHog's UI) and `handle` (the resolved display name; may be null on anonymous-only tenants). If the same person tops the list every week, note it — that's signal about which design partners to call.
 
 ### 1.5 — Top 5 dying users
 
-Definition: persons whose **last-7-day** north-star event count is ≤ 25% of their **prior 14-day** baseline, AND who have not been seen at all in the last 48 hours, AND whose prior baseline was ≥ 5 events (filter out one-time visitors).
+Definition: persons whose **last-7-day** north-star event count is ≤ 25% of their **prior weekly rate** (= prior-14-day count ÷ 2), AND who have not been seen at all in the last 48 hours, AND whose prior-14-day count was ≥ 5 events (filter out one-time visitors). The query below computes the weekly rate as `count() / 2.0` so the `* 0.25` filter compares apples-to-apples against the last-7-day count.
 
 ```sql
 WITH baseline AS (
-  SELECT person_id, count() / 2.0 AS weekly_baseline
+  SELECT person_id,
+         any(distinct_id) AS distinct_id,
+         any({DISPLAY_HANDLE_PATH}) AS handle,
+         count() / 2.0 AS weekly_baseline
   FROM events
   WHERE event IN {NORTH_STAR}
     AND timestamp >= now() - INTERVAL 21 DAY
@@ -135,7 +139,8 @@ WITH baseline AS (
   GROUP BY person_id
 )
 SELECT b.person_id,
-       any({DISPLAY_HANDLE_PATH}) AS handle,
+       b.distinct_id,
+       b.handle,
        b.weekly_baseline,
        coalesce(r.recent_count, 0) AS recent_count,
        coalesce(r.last_seen, now() - INTERVAL 999 DAY) AS last_seen
@@ -159,17 +164,17 @@ Cross-reference each result against the prior week's dying list in `wiki/Knowled
 3. **Surface** a 6–8 line summary to the co-founder via `complete_task`. Template:
 
 ```
-PostHog daily — {date}
+PostHog daily, {date}.
 
 · DAU {n} (WoW {±%}), WAU {n} (WoW {±%}), MAU {n}.
 · North-star: {event_a} {n} (WoW {±%}), {event_b} {n} (WoW {±%}).
 · Activation last week's signups: {x/y} = {pct}% (prior week {pct}%).
 · Engaged: {handle_1}, {handle_2}, {handle_3}, {handle_4}, {handle_5}.
-· Dying: {handle_1} ({baseline}→{recent}), {handle_2} (…), … {n} new on watchlist.
-· Suggested move: {one sentence — call a dying user, ship X, dig into Y}.
+· Dying: {handle_1} ({baseline} to {recent}), {handle_2} (…), … {n} new on watchlist.
+· Suggested move: {one sentence, e.g. call a dying user, ship X, dig into Y}.
 ```
 
-If nothing meaningful changed, replace the suggested move with `Nothing material — hold course.` Do not pad.
+If nothing meaningful changed, replace the suggested move with `Nothing material, hold course.` Do not pad.
 
 ## 2 — Weekly recap section (Monday cron)
 
@@ -189,7 +194,7 @@ How many users on the dying list 2+ weeks ago have not returned (0 north-star ev
 
 ### 2.4 — One written hypothesis
 
-Read the numbers + the ICP + the goal. Write **one paragraph** (no more) answering: *given what the data shows and the 90-day goal, what is the single most leverage-positive thing to ship or do this week?* Examples: "activation dropped because the signup flow lost the demo CTA — restore it"; "the top 5 engaged users are all in the EU and we have zero EU-targeted positioning — fix the landing page"; "dying users all stopped after the v2 release — investigate the regression in `report_generated`."
+Read the numbers + the ICP + the goal. Write **one paragraph** (no more) answering: *given what the data shows and the 90-day goal, what is the single highest-impact thing to ship or do this week?* Examples: "activation dropped because the signup flow lost the demo CTA, restore it"; "the top 5 engaged users are all in the EU and we have zero EU-targeted positioning, fix the landing page"; "dying users all stopped after the v2 release, investigate the regression in `report_generated`."
 
 ### 2.5 — File and surface
 

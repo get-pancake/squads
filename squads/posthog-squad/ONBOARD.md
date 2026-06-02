@@ -77,10 +77,16 @@ Also write both to PostHog-agent's `MEMORY.md` under `## North-star events` and 
 
 If the user genuinely doesn't know which events matter — common for early-stage products — do not invent an answer. Pick the single highest-volume non-autocapture event as a placeholder, store it with a note in `MEMORY.md` that it's provisional, and create a follow-up task on the agent to revisit after the first weekly digest lands. Be explicit with the user that the first week's digest will be noisier than usual because of this.
 
-### Step 7 — Dispatch the baseline scan
+### Step 7 — Pin the cron timezone
+
+The two crons ship pinned to `America/Los_Angeles`. Ask the user, plainly: **"What timezone should the 09:00 daily digest and the Monday 10:00 weekly recap land in?"** Expect an IANA tz (`Europe/Paris`, `America/New_York`, etc.).
+
+If they want the default, skip — leave both crons as LA. Otherwise edit `crons/jobs.json` in PostHog-agent's installed bundle: replace the `tz` field on both `daily-posthog-analysis` and `weekly-posthog-recap` with the user's tz. Confirm the new schedule back to them in one line so they know exactly when to expect the digest.
+
+### Step 8 — Dispatch the baseline scan
 
 Create PostHog-agent's first task: a **baseline analytics scan** — current DAU/WAU/MAU, north-star event volume for the last 30 days with WoW deltas, activation rate of the last 4 weeks of signups, top 10 most engaged users this week, and a first-pass list of users likely to churn (previously-active accounts with a sharp recent drop in north-star event count). Output: a single `wiki/Knowledge/PostHog/Reports/baseline/YYYY-MM-DD.md` plus a 6–8 line summary surfaced to the co-founder.
 
 Dispatch it now via `sessions_spawn posthog-agent`, mark the task `in_progress`. Don't leave it for tomorrow's 09:00 cron — the user is here and the first impression matters.
 
-Close by telling the user PostHog-agent is now scanning the project, the daily digest lands at 09:00 in their timezone, and the weekly recap arrives Monday 10:00 LA. Remind them that if the north-star events ever change (new product surface, deprecated feature), they just have to tell the co-founder and PostHog-agent will refresh its definitions — no re-onboarding needed.
+Close by telling the user PostHog-agent is now scanning the project, and confirm the exact daily + weekly schedule using the timezone they pinned in Step 7 (e.g. "daily digest at 09:00 Europe/Paris, weekly recap Mon 10:00 Europe/Paris"). Remind them that if the north-star events ever change (new product surface, deprecated feature), they just have to tell the co-founder and PostHog-agent will refresh its definitions — no re-onboarding needed.
