@@ -38,6 +38,16 @@
 → API key vault ref: team.posthog_api_key
 → MCP: official PostHog MCP, installed via mcp_install, read-only flag set
 
+## PostHog shape
+<!-- Resolved by posthog-discovery §0.5. Every later query reads these instead of guessing. -->
+→ person_identification: (identified | anonymous_only)
+→ display_handle_path: (e.g. person.properties.email, or toString(distinct_id) if anonymous-only)
+→ person_on_events: (true | false)
+→ session_signal_available: (true | false — based on $session_id coverage)
+→ low_volume_project: (true | false — < 200 events / 7d)
+→ autocapture_active: (true | false — $pageview firing)
+→ Last probed: (YYYY-MM-DD)
+
 ## Where I file
 → Daily digests: wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md
 → Weekly recaps: wiki/Knowledge/PostHog/Reports/weekly/YYYY-WW.md

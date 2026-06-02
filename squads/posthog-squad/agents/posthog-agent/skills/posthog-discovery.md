@@ -14,6 +14,21 @@ All PostHog interactions happen through the **official PostHog MCP** in read-onl
 1. Confirm the MCP is connected and authenticated. A single read-only call (list 5 event definitions) is the sanity check. If it fails, escalate with the exact error; do not proceed.
 2. Read `MEMORY.md` for any prior north-star event list. If one exists, treat this as a *re-confirmation* pass, not a from-scratch discovery.
 
+## 0.5 — Probe the tenant's PostHog shape
+
+Every tenant's PostHog looks different above the platform layer. Before any analysis runs, probe and write the answers to `MEMORY.md → PostHog shape` — every later query reads from there instead of hardcoding column paths.
+
+Resolve and record:
+
+1. **Person identification model.** Run a small HogQL: `SELECT countIf(event = '$identify') AS identified, count() AS total FROM events WHERE timestamp >= now() - INTERVAL 7 DAY`. If `identified` is ~0, this tenant is **anonymous-only** — every later report keys on `distinct_id`, not on a human-readable handle, and the dying-users / engaged-users lists will show opaque ids. Note this explicitly in the surfaced digest each day so the founder isn't surprised.
+2. **Best display handle.** If persons are identified, sample 20 identified persons and inspect `properties` keys present in *all 20*. In priority order, pick the first that exists: `email`, `username`, `name`, `$email`, `user_email`, `handle`. If none exists on every sampled person, fall back to `distinct_id`. Record the resolved JSON path as `display_handle_path` in MEMORY (e.g. `person.properties.email` or `distinct_id`). Every later "named user" output uses this.
+3. **Person-on-events mode.** Quick probe: query the same person on two different days for one person property and see if the value can differ across rows. On Cloud this is on by default; on self-hosted it varies. Record `person_on_events: true|false`. This decides whether `person.properties.*` is point-in-time (PoE on) or current (PoE off).
+4. **Session signal availability.** Check whether `$session_id` is populated on ≥ 50% of events in the last 7 days. If yes, session-level analysis is available later; if no, all "engagement" rolls up by `person_id` only.
+5. **Volume floor.** Total events last 7 days. If < 200, every subsequent number is small-sample by default — record `low_volume_project: true` so the daily report tags everything `directional` automatically.
+6. **Autocapture status.** Is `$pageview` firing? If not, the tenant is using server-side or product-only events (no web SDK). Note it — it changes what "DAU" means.
+
+These are the only assumptions the squad is allowed to bake in: PostHog's primitives (`events`, `persons`, `event`, `timestamp`, `distinct_id`, `person_id`, `properties` JSON, autocapture event names, HogQL itself). Anything else — including which property holds the user's email — must come from this probe.
+
 ## 1 — Scan the event taxonomy
 
 1. List event definitions for the project, sorted by 30-day volume descending. Cap at the top ~50.
@@ -64,6 +79,7 @@ Write to `MEMORY.md`:
 - `## North-star events` — the list + one-line *why* per event (in the user's words).
 - `## Activation event` — the event + one-line *why* (in the user's words).
 - `## ICP` and `## Goal (next 90 days)` — if not just a wiki pointer.
+- `## PostHog shape` — the resolved probe answers from §0.5: `display_handle_path`, `person_identification`, `person_on_events`, `session_signal_available`, `low_volume_project`, `autocapture_active`. Every later query reads these instead of guessing.
 
 ## 6 — File the discovery report
 

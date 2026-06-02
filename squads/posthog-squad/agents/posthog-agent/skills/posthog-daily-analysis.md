@@ -9,10 +9,18 @@ This is your operating procedure for the daily digest and the Monday weekly reca
 
 ## 0 — Before you start
 
-1. Read `MEMORY.md` — north-star events, activation event, ICP, goal, file paths.
+Everything in this skill is a **sketch**. PostHog projects vary heavily above the platform layer — column names you might want (`email`, `name`) are not guaranteed to exist on any given tenant. Resolve tenant-specifics from `MEMORY.md` first, then adapt.
+
+1. Read `MEMORY.md` and pull, into local variables:
+   - `NORTH_STAR` = the events from `team.posthog_north_star_events`.
+   - `ACTIVATION` = the single event from `team.posthog_activation_event`.
+   - `DISPLAY_HANDLE_PATH` from `## PostHog shape` (e.g. `person.properties.email`, or `distinct_id` if persons are anonymous-only on this tenant).
+   - `PERSON_ON_EVENTS`, `SESSION_SIGNAL_AVAILABLE`, `LOW_VOLUME_PROJECT`, `AUTOCAPTURE_ACTIVE`.
+   - If `## PostHog shape` is missing or stale, **stop and run `posthog-discovery` §0.5 first** — do not proceed with hardcoded assumptions.
 2. Confirm the MCP is up with one trivial read call. If it errors, surface the exact error to the co-founder and `fail_task` — do not silently skip a daily.
-3. Resolve `team.posthog_north_star_events` into the variable `NORTH_STAR` (a list of event names). Resolve `team.posthog_activation_event` into `ACTIVATION` (a single event name).
-4. Quick taxonomy health check: for every event in `NORTH_STAR`, is the 7-day volume > 0? If any is 0, that is your **item #1** in today's digest — flag it as a likely SDK / ingestion break (not user collapse) and surface it before the rest of the numbers.
+3. Quick taxonomy health check: for every event in `NORTH_STAR`, is the 7-day volume > 0? If any is 0, that is your **item #1** in today's digest — flag it as a likely SDK / ingestion break (not user collapse) and surface it before the rest of the numbers.
+4. If `LOW_VOLUME_PROJECT` is true, tag every number in today's digest `directional` by default. Don't claim trend on a tenant that doesn't have the volume to support one.
+5. The HogQL below uses these variables literally — substitute them in. Anything else in the queries (`events`, `persons`, `event`, `timestamp`, `person_id`, `distinct_id`, `properties` JSON, autocapture event names) is a PostHog platform primitive and is the same on every tenant.
 
 ## 1 — Daily section
 
@@ -86,9 +94,11 @@ Report: `activated / cohort_size` and the prior week's equivalent for comparison
 
 Persons ranked by total `NORTH_STAR` event count over the last 7 days. Tie-break on distinct event types triggered, then on most recent activity.
 
+Substitute `{DISPLAY_HANDLE_PATH}` with the resolved path from MEMORY (e.g. `person.properties.email` if email is the chosen handle, `toString(distinct_id)` if the tenant is anonymous-only):
+
 ```sql
 SELECT person_id,
-       any(person.properties.email) AS email,
+       any({DISPLAY_HANDLE_PATH}) AS handle,
        count() AS ns_events,
        count(DISTINCT event) AS distinct_event_types,
        max(timestamp) AS last_seen
@@ -125,7 +135,7 @@ WITH baseline AS (
   GROUP BY person_id
 )
 SELECT b.person_id,
-       any(person.properties.email) AS email,
+       any({DISPLAY_HANDLE_PATH}) AS handle,
        b.weekly_baseline,
        coalesce(r.recent_count, 0) AS recent_count,
        coalesce(r.last_seen, now() - INTERVAL 999 DAY) AS last_seen

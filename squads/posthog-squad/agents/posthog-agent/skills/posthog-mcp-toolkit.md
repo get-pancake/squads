@@ -23,6 +23,28 @@ When the MCP starts, it should list its tools. Confirm the surface includes at m
 
 If a tool prefixed with `create_`, `update_`, `delete_`, `mutate_`, or any verb that writes state appears in the surface — **do not call it**. PostHog-agent is read-only, period. The MCP may expose those if started without `--read-only`; that's an install bug. Surface it to the co-founder, don't quietly use them.
 
+## What's stable across tenants vs what isn't
+
+Tenants plug their own PostHog projects. The squad must rely **only** on what PostHog itself ships — never on a particular tenant's event taxonomy or property layout.
+
+**Stable across every tenant (safe to hardcode):**
+- Tables: `events`, `persons`, `sessions`, `groups`.
+- Event columns: `event`, `timestamp`, `distinct_id`, `person_id`, `properties` (JSON), `$session_id`.
+- Person columns: `id`, `properties` (JSON, free-form).
+- Autocapture / lifecycle events: `$pageview`, `$autocapture`, `$pageleave`, `$identify`, `$set`, `$exception`, `$rageclick`, `$web_vitals`, `$opt_in`, and `$feature_*` flag-evaluation events.
+- HogQL itself; the MCP's query / event-definition / person / cohort tools.
+- The fact that `$identify` is the only reliable signal that a `distinct_id` was promoted to an identified person.
+
+**Tenant-specific (must be discovered, never hardcoded):**
+- Every non-`$`-prefixed event name. The "north-star" events.
+- Every `properties.*` key. Including `email`, `name`, `user_id`, etc. — none of these are guaranteed.
+- Whether persons are identified at all (some tenants run anonymous-only).
+- Person-on-events mode (affects whether `person.properties.*` is point-in-time or current).
+- Naming conventions (`message_sent` vs `MessageSent` vs `message.sent`).
+- Whether autocapture is on, server-side ingestion only, or both.
+
+All tenant-specific values are resolved once by `posthog-discovery` §0.5 and written to `MEMORY.md → PostHog shape`. Every query downstream substitutes from there. If you find yourself about to type a tenant-specific column name into a query directly, stop and read MEMORY instead.
+
 ## HogQL basics
 
 PostHog's `events` table is the workhorse. Useful columns:
