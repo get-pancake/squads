@@ -1,7 +1,7 @@
 {
   "name": "posthog-squad",
-  "version": "0.2.2",
-  "description": "Single-agent PostHog squad: daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, release-impact tracker, mid-day anomaly alerts, auto-maintained PostHog cohorts.",
+  "version": "0.2.3",
+  "description": "Single-agent PostHog squad: daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, mid-day anomaly alerts, weekly recap. Opt-in add-ons: release tracker + auto cohorts.",
   "author": "pancake-official",
   "license": "MIT",
   "agents": ["posthog-agent"],
@@ -12,38 +12,8 @@
       "type": "api_key"
     },
     {
-      "key": "team.posthog_project_id",
-      "label": "PostHog project ID (numeric — Settings → Project → 'Project ID')",
-      "type": "string"
-    },
-    {
-      "key": "team.posthog_host",
-      "label": "PostHog host — 'https://us.posthog.com', 'https://eu.posthog.com', or a self-hosted base URL",
-      "type": "string"
-    },
-    {
-      "key": "team.posthog_north_star_events",
-      "label": "Comma-separated PostHog event names that count as 'real product use' (e.g. message_sent,workspace_created) — agreed during onboarding",
-      "type": "string"
-    },
-    {
-      "key": "team.posthog_activation_event",
-      "label": "The single PostHog event that means a new signup is now 'activated' (e.g. first_message_sent). One event name, no commas.",
-      "type": "string"
-    },
-    {
-      "key": "team.posthog_signup_event",
-      "label": "The single PostHog event that fires when a new user signs up (e.g. user_signed_up). Used by the activation funnel debugger. Defaults to user_signed_up if blank.",
-      "type": "string"
-    },
-    {
-      "key": "team.posthog_release_repo",
-      "label": "GitHub repo slug owner/name to watch for releases (e.g. acme/web-app). Each new release triggers a metric snapshot at T+0, T+24h, T+7d. Leave blank to disable release tracking.",
-      "type": "string"
-    },
-    {
       "key": "team.posthog_write_api_key",
-      "label": "SECOND PostHog API key — narrowly scoped to Cohort write ONLY. Used ONLY to maintain the two cohorts 'PostHog-agent: Power Users' and 'PostHog-agent: Dying Users'. Leave blank to disable auto-cohort sync. NEVER reuse the read-only key here.",
+      "label": "SECOND PostHog API key, Cohort write ONLY. Powers the optional auto-cohort sync. Leave blank to skip — the squad still works fully without it. NEVER reuse the read-only key here.",
       "type": "api_key"
     }
   ],

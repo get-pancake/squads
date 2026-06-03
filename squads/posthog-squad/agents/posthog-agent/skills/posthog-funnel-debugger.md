@@ -12,8 +12,8 @@ It's the first thing to reach for when the daily digest flags a low or falling a
 ## 0 — Pre-flight
 
 1. Read `MEMORY.md`:
-   - `SIGNUP` = `team.posthog_signup_event` (or `MEMORY → Signup event`). If blank, **stop**: the funnel debugger is disabled on this tenant. Log the reason in `memory/YYYY-MM-DD.md` and exit.
-   - `ACTIVATION` = `team.posthog_activation_event`.
+   - `SIGNUP` = `MEMORY → Signup event`. If blank, **stop**: the funnel debugger is disabled on this tenant. Log the reason in `memory/YYYY-MM-DD.md` and exit.
+   - `ACTIVATION` = `MEMORY → Activation event`.
    - `DISPLAY_HANDLE_PATH` from `## PostHog shape`.
    - Confirm `PROBE_COMPLETE` is set; if not, run `posthog-discovery §0.5` first.
 2. Trigger conditions (decide whether to run):

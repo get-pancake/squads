@@ -25,19 +25,19 @@
 → (set at onboarding — one sentence on the company's current goal)
 
 ## North-star events
-→ (from team.posthog_north_star_events — 1–3 event names that mean "real product use")
+→ (set at onboarding — 1–3 event names that mean "real product use")
 → Why each was picked: (one line per event, in the user's words)
 
 ## Activation event
-→ (from team.posthog_activation_event — single event meaning "new signup activated")
+→ (set at onboarding — single event meaning "new signup activated")
 → Why this event: (one line, in the user's words)
 
 ## Signup event
-→ (from team.posthog_signup_event — single event fired when a new user signs up; powers posthog-funnel-debugger)
-→ Defaults to `user_signed_up` if blank; funnel debugger is disabled if neither set nor defaulted
+→ (set at onboarding — single event fired when a new user signs up; powers posthog-funnel-debugger)
+→ Blank disables the funnel debugger; the rest of the squad still works
 
 ## Release tracking
-→ Repo: (from team.posthog_release_repo, owner/name slug; blank disables release tracking)
+→ Repo: (set when the user enables release tracking — owner/name slug; absent disables)
 → Last seen tag: (set by posthog-release-tracker after each poll)
 → Last seen published_at: (set by posthog-release-tracker)
 
@@ -46,9 +46,9 @@
 → (none yet)
 
 ## PostHog connection
-→ Host: (from team.posthog_host)
-→ Project ID: (from team.posthog_project_id)
-→ API key vault ref: team.posthog_api_key
+→ Host: (set at onboarding — https://us.posthog.com / https://eu.posthog.com / self-hosted URL)
+→ Project ID: (set at onboarding — numeric project ID)
+→ API key vault ref: team.posthog_api_key (the only secret in this squad's required vault)
 → MCP: official PostHog MCP, installed via mcp_install, read-only flag set
 
 ## PostHog shape
@@ -73,15 +73,11 @@
 → User watchlist (dying / power): wiki/Knowledge/PostHog/Watchlist.md
 → Daily log: memory/YYYY-MM-DD.md
 
-## Vault keys
+## Vault keys (secrets only)
 → team.posthog_api_key — personal API key, read scopes only
-→ team.posthog_project_id — numeric project id
-→ team.posthog_host — Cloud US / Cloud EU / self-hosted base URL
-→ team.posthog_north_star_events — comma-separated event names
-→ team.posthog_activation_event — single activation event name
-→ team.posthog_signup_event — single signup event name (powers funnel debugger; blank disables)
-→ team.posthog_release_repo — GitHub owner/name slug (powers release tracker; blank disables)
 → team.posthog_write_api_key — SECOND key, Cohort write ONLY (powers cohort sync; blank disables)
+
+Everything else (host, project ID, event names, release repo) is configuration and lives in this MEMORY file, not the vault. Asking the user to fill a vault form for non-secret config is bad UX.
 
 ## Weekly Learnings
 → (one short entry per Sunday — see HEARTBEAT.md §7)

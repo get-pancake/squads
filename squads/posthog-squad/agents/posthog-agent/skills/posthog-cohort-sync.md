@@ -20,7 +20,7 @@ If at any point a query or response shape suggests the skill is about to touch a
 
 1. Read `MEMORY.md`:
    - `WRITE_KEY` = `team.posthog_write_api_key`. If blank, skill disabled — exit silently, don't log to digest.
-   - `PROJECT_ID` = `team.posthog_project_id`.
+   - `PROJECT_ID` = `MEMORY → PostHog connection → Project ID`.
    - `DISPLAY_HANDLE_PATH` from `## PostHog shape`. Confirm `PROBE_COMPLETE` is set; else stop.
 2. **Verify the write key is scoped to Cohort write only.** On first use of the run, call a cohort *read* operation with `WRITE_KEY` (e.g. list cohorts). If it succeeds, that's a problem — the key has read scopes it shouldn't have. Surface to the cofounder: "Your write key has read scopes; please re-issue it with Cohort write only for blast-radius containment." Continue the sync anyway (the cofounder can re-scope later), but flag it.
 
