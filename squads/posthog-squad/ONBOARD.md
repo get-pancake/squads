@@ -24,20 +24,21 @@ Ask, plainly:
 1. **"Is PostHog already deployed and receiving events from your product?"** If no, pause onboarding and direct them to posthog.com → install the SDK for their stack → confirm events appear in the **Live events** view. Do not proceed until events are flowing — there is nothing to analyze otherwise.
 2. **"Which PostHog do you use — Cloud US, Cloud EU, or self-hosted?"** Record the answer; you'll need the host URL in Step 2.
 
-### Step 2 — Collect PostHog credentials via vault_request
+### Step 2 — Collect PostHog credentials
 
-Group these into one ask — don't ping-pong. For each, use `vault_request`; never have the user paste a key into chat. After you submit the API key, I'll auto-resolve your project ID from it — no need to look it up manually.
+**Only the API key is a secret. The host and project ID are not — don't put either through `vault_request`.** Asking the user to fill vault forms for plain configuration is bad UX and trains them to treat configuration like a credential. Discipline:
 
-- `team.posthog_host` — `https://us.posthog.com`, `https://eu.posthog.com`, or their self-hosted base URL. Type `string`. If the user just says "EU" or "US", pre-fill `https://eu.posthog.com` or `https://us.posthog.com` respectively.
-- `team.posthog_api_key` — a **personal API key** with read access. Walk them to: PostHog → Settings → **Personal API keys** → "Create personal API key" → scope it to their project → grant *read* on **Query**, **Insight**, **Event definition**, **Action**, **Person**, **Cohort**. Type `api_key`. Tell them: never the project's *write* key, never an org-wide key with delete scopes — PostHog-agent reads, it does not mutate.
+- **API key** → `vault_request` at `team.posthog_api_key` (type `api_key`). Walk them to: PostHog → Settings → **Personal API keys** → "Create personal API key" → scope it to their project → grant *read* on **Query**, **Insight**, **Event definition**, **Action**, **Person**, **Cohort**. Tell them: never the project's *write* key, never an org-wide key with delete scopes — PostHog-agent reads, it does not mutate.
+- **Host** → ask in plain chat: "What's your PostHog host? `https://us.posthog.com`, `https://eu.posthog.com`, or a self-hosted URL?" If they just say "EU" or "US", fill in `https://eu.posthog.com` or `https://us.posthog.com` for them. Write to `MEMORY.md → PostHog connection → Host`. No vault.
+- **Project ID** → don't ask for it at all. Auto-resolve it from the API key (next).
 
 **After the user submits the API key, auto-resolve the project ID** — don't make them hunt for it in Settings:
 
-1. Call `GET {team.posthog_host}/api/projects/` with the personal API key as a Bearer token (header `Authorization: Bearer <team.posthog_api_key>`) via `web_fetch`.
+1. Call `GET {host}/api/projects/` with the personal API key as a Bearer token (header `Authorization: Bearer <team.posthog_api_key>`) via `web_fetch`, using the host they just gave you.
 2. Parse the JSON response. The projects live in the `results` array, each with an `id` and a human-readable `name`.
    - **If there's exactly one project**, take its `id` directly — no need to ask.
    - **If there's more than one**, don't guess. Show the user the project **names** (not the numeric IDs — those mean nothing to them) and ask which one PostHog-agent should watch. Map their choice back to that project's `id`.
-3. Store the resolved `id` in the vault as `team.posthog_project_id` (type `string`).
+3. Write the resolved `id` to `MEMORY.md → PostHog connection → Project ID`. No vault.
 
 If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `results` array → key not scoped to any project), surface the exact error and send the user back to re-issue the API key before continuing. Don't fall back to asking for the project ID by hand — fix the key.
 
@@ -45,9 +46,9 @@ If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `
 
 Use `mcp_install` to install PostHog's official MCP (`@posthog/agent-toolkit` MCP, published by PostHog). Configure it with:
 
-- `POSTHOG_API_KEY` ← `team.posthog_api_key`
-- `POSTHOG_HOST` ← `team.posthog_host`
-- `POSTHOG_PROJECT_ID` ← `team.posthog_project_id`
+- `POSTHOG_API_KEY` ← vault `team.posthog_api_key`
+- `POSTHOG_HOST` ← `MEMORY → PostHog connection → Host`
+- `POSTHOG_PROJECT_ID` ← `MEMORY → PostHog connection → Project ID`
 
 If the MCP exposes a `--read-only` flag (current versions do), pass it. PostHog-agent must not be able to mutate the project.
 
@@ -67,8 +68,8 @@ Do not proceed past this step until the verification call succeeds. Surface the 
 
 Open `wiki/Company/COMPANY.md` and `wiki/Company/ICP.md` if they exist. Read what's already on file, then ask the user to confirm two things in plain language:
 
-- **"In one sentence, who is the ICP?"** — write the answer to PostHog-agent's `MEMORY.md` under `## ICP`.
-- **"In one sentence, what's the single goal of the company over the next 90 days?"** (e.g. "hit 200 weekly active users", "ship paid conversion above 5%"). Write it to PostHog-agent's `MEMORY.md` under `## Goal (next 90 days)`.
+- **"In one sentence, who is the ICP?"** — write the answer to PostHog-agent's `MEMORY.md` under `## Company context → ICP`.
+- **"In one sentence, what's the single goal of the company over the next 90 days?"** (e.g. "hit 200 weekly active users", "ship paid conversion above 5%"). Write it to PostHog-agent's `MEMORY.md` under `## Company context → Goal (next 90 days)`.
 
 If both are already documented in the company wiki and the user confirms they're still current, just point PostHog-agent's `MEMORY.md` at those wiki paths and move on. Don't duplicate prose.
 
@@ -101,12 +102,12 @@ Then ask the user in **one** turn — not three separate questions back-to-back.
 > 2. Which **single** event means **'this new signup is now activated'**? (often the first occurrence of one of #1)
 > 3. Which event fires when a **brand-new user signs up**? (looks like `<your best guess>` from the shortlist — confirm or correct)"
 
-Store the answers in vault:
-- `team.posthog_north_star_events` — comma-separated event names (string).
-- `team.posthog_activation_event` — single event name (string).
-- `team.posthog_signup_event` — single event name (string). If the user genuinely has no signup event (auth-less product), store empty — the funnel debugger will be disabled, the rest of the squad still works.
+Write the answers directly to PostHog-agent's `MEMORY.md` (no vault — these are configuration, not secrets):
 
-Also write all three to PostHog-agent's `MEMORY.md` under `## North-star events`, `## Activation event`, `## Signup event` — each with a one-line *why* in the user's words.
+All three under the single `## Events` section in MEMORY:
+- `→ North-star` — the comma-separated list + a one-line *why* per event in the user's words.
+- `→ Activation` — the single event name + a one-line *why* in the user's words.
+- `→ Signup` — the single event name. If the user genuinely has no signup event (auth-less product), leave blank — the funnel debugger will be disabled, the rest of the squad still works.
 
 **If the user is stuck on the north-star pick**, don't push. Pick the single highest-distinct-persons non-autocapture event as a provisional placeholder, note `provisional: true` in MEMORY, and tell them you'll revisit after the first weekly digest. The first week will be noisier than usual.
 

@@ -11,8 +11,8 @@ PostHog ships fast. If a tool name in this file no longer matches the live MCP, 
 
 ## Connection
 
-- Host: `team.posthog_host` — Cloud US (`https://us.posthog.com`), Cloud EU (`https://eu.posthog.com`), or a self-hosted base URL.
-- Project: `team.posthog_project_id` — numeric.
+- Host: `MEMORY → PostHog connection → Host` — Cloud US (`https://us.posthog.com`), Cloud EU (`https://eu.posthog.com`), or a self-hosted base URL.
+- Project: `MEMORY → PostHog connection → Project ID` — numeric.
 - Auth: `team.posthog_api_key` — personal API key with read-only scopes: Query, Insight, Event definition, Action, Person, Cohort.
 
 When the MCP starts, it should list its tools. Confirm the surface includes at minimum:
