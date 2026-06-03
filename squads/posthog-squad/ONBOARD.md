@@ -60,8 +60,8 @@ Do not proceed past this step until the verification call succeeds. Surface the 
 
 Open `wiki/Company/COMPANY.md` and `wiki/Company/ICP.md` if they exist. Read what's already on file, then ask the user to confirm two things in plain language:
 
-- **"In one sentence, who is the ICP?"** — write the answer to PostHog-agent's `MEMORY.md` under `## ICP`.
-- **"In one sentence, what's the single goal of the company over the next 90 days?"** (e.g. "hit 200 weekly active users", "ship paid conversion above 5%"). Write it to PostHog-agent's `MEMORY.md` under `## Goal (next 90 days)`.
+- **"In one sentence, who is the ICP?"** — write the answer to PostHog-agent's `MEMORY.md` under `## Company context → ICP`.
+- **"In one sentence, what's the single goal of the company over the next 90 days?"** (e.g. "hit 200 weekly active users", "ship paid conversion above 5%"). Write it to PostHog-agent's `MEMORY.md` under `## Company context → Goal (next 90 days)`.
 
 If both are already documented in the company wiki and the user confirms they're still current, just point PostHog-agent's `MEMORY.md` at those wiki paths and move on. Don't duplicate prose.
 
@@ -96,9 +96,10 @@ Then ask the user in **one** turn — not three separate questions back-to-back.
 
 Write the answers directly to PostHog-agent's `MEMORY.md` (no vault — these are configuration, not secrets):
 
-- `## North-star events` — the comma-separated list + a one-line *why* per event in the user's words.
-- `## Activation event` — the single event name + a one-line *why* in the user's words.
-- `## Signup event` — the single event name. If the user genuinely has no signup event (auth-less product), leave blank — the funnel debugger will be disabled, the rest of the squad still works.
+All three under the single `## Events` section in MEMORY:
+- `→ North-star` — the comma-separated list + a one-line *why* per event in the user's words.
+- `→ Activation` — the single event name + a one-line *why* in the user's words.
+- `→ Signup` — the single event name. If the user genuinely has no signup event (auth-less product), leave blank — the funnel debugger will be disabled, the rest of the squad still works.
 
 **If the user is stuck on the north-star pick**, don't push. Pick the single highest-distinct-persons non-autocapture event as a provisional placeholder, note `provisional: true` in MEMORY, and tell them you'll revisit after the first weekly digest. The first week will be noisier than usual.
 
