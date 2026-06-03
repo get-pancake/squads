@@ -16,9 +16,13 @@ Everything in this skill is a **sketch**. PostHog projects vary heavily above th
    - `ACTIVATION` = the single event from `team.posthog_activation_event`.
    - `DISPLAY_HANDLE_PATH` from `## PostHog shape` (e.g. `person.properties.email`, or `distinct_id` if persons are anonymous-only on this tenant).
    - `PERSON_ON_EVENTS`, `SESSION_SIGNAL_AVAILABLE`, `LOW_VOLUME_PROJECT`, `AUTOCAPTURE_ACTIVE`.
-   - If `## PostHog shape` is missing or stale, **stop and run `posthog-discovery` §0.5 first** — do not proceed with hardcoded assumptions.
+   - **Hard gate.** Confirm `## PostHog shape` carries a `PROBE_COMPLETE: YYYY-MM-DD` marker AND every line below it has a real value (no placeholder text like `(identified | anonymous_only)`). If the marker is missing or any line is still placeholder, **stop**: load `posthog-discovery`, execute §0.5 in full, write the values, stamp the marker, then resume. Do not proceed with hardcoded assumptions — the engaged/dying lists will come back as UUIDs and any handle-dependent query will silently degrade.
 2. Confirm the MCP is up with one trivial read call. If it errors, surface the exact error to the co-founder and `fail_task` — do not silently skip a daily.
-3. Quick taxonomy health check: for every event in `NORTH_STAR`, is the 7-day volume > 0? If any is 0, that is your **item #1** in today's digest — flag it as a likely SDK / ingestion break (not user collapse) and surface it before the rest of the numbers.
+3. Quick taxonomy health check. For every event in `NORTH_STAR`, classify the 7-day volume against the prior 7 days and surface anything weird as **item #1** in today's digest before the rest of the numbers. Two distinct failure modes:
+   - **Silent break.** 7-day volume = 0 (or < 5% of prior 7d). Almost always SDK / ingestion break, not user collapse. Flag: "event `X` dropped from N to ~0 — verify SDK before reading this as churn".
+   - **Suspicious jump.** Prior 7-day volume < 100 AND current 7-day volume is > 300% of prior. Almost always one of: a newly-instrumented event firing for the first full week, an event renamed (and the prior name is in the historical baseline), or a marketing burst. Flag: "event `X` jumped from N to M on a small prior baseline — confirm this is real user behaviour, not instrumentation change or rename, before reading this as growth". Do **not** celebrate the number in the surfaced summary until the cause is named in the wiki report.
+
+   **For every item-#1 anomaly fired in this step**, also call `create_task` with: title `Investigate {event} {anomaly_type} on {YYYY-MM-DD}`, owner = cofounder, body containing the HogQL used to detect the anomaly + a one-paragraph reading of what the data shows + a suggested first diagnostic step (e.g. "check the SDK's last successful event timestamp for `{event}` in PostHog → Live events"). The task moves the anomaly out of the digest and into the cofounder's task queue, where it has a chance of actually being investigated instead of scrolled past.
 4. If `LOW_VOLUME_PROJECT` is true, tag every number in today's digest `directional` by default. Don't claim trend on a tenant that doesn't have the volume to support one.
 5. The HogQL below uses these variables literally — substitute them in. Anything else in the queries (`events`, `persons`, `event`, `timestamp`, `person_id`, `distinct_id`, `properties` JSON, autocapture event names) is a PostHog platform primitive and is the same on every tenant.
 
@@ -90,6 +94,12 @@ FROM cohort
 
 Report: `activated / cohort_size` and the prior week's equivalent for comparison.
 
+**Auto-trigger the funnel debugger** when either holds:
+- Activation rate dropped by more than 2pp WoW (e.g. 8% → 5.5%), OR
+- Activation rate is below an absolute 5% floor.
+
+When the trigger fires, load `posthog-funnel-debugger` and run it inline before §1.4. Its output (biggest drop-off step + one-sentence hypothesis) gets folded into the daily digest under the Activation section as a 3-line block — see `posthog-funnel-debugger §6`. If `team.posthog_signup_event` is blank on this tenant, the funnel debugger is a no-op and you just note "funnel debugger disabled — no signup event configured" in the digest.
+
 ### 1.4 — Top 5 most engaged users (this week)
 
 Persons ranked by total `NORTH_STAR` event count over the last 7 days. Tie-break on distinct event types triggered, then on most recent activity.
@@ -159,9 +169,26 @@ Cross-reference each result against the prior week's dying list in `wiki/Knowled
 
 ### 1.6 — File and surface
 
-1. **File** the full report (numbers + HogQL + raw rows) to `wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md`.
+1. **File** the full report to `wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md`. The filed report **MUST** follow the skeleton below; the `## HogQL` section is non-negotiable and must contain every query you ran, verbatim, in the order you ran them. A filed report without `## HogQL` is an unfinished report — re-open it before closing the session.
+
+   Report skeleton:
+   ```
+   # PostHog daily — YYYY-MM-DD
+
+   ## Flagged (item #1 if anything weird)
+   ## DAU / WAU / MAU
+   ## North-star event volumes
+   ## Activation rate
+   ## Top 5 engaged users
+   ## Top 5 dying users
+   ## Suggested move
+   ## HogQL
+   (every query used, verbatim, in code blocks, with a one-line label above each)
+   ```
+
 2. **Update** `wiki/Knowledge/PostHog/Watchlist.md` with the dying-users deltas.
-3. **Surface** a 6–8 line summary to the co-founder via `complete_task`. Template:
+3. **Sync the PostHog cohorts** — load `posthog-cohort-sync` and run it. The skill is a no-op if `team.posthog_write_api_key` is blank; otherwise it replaces membership on the two static cohorts `PostHog-agent: Power Users` (top 20 engaged) and `PostHog-agent: Dying Users` (full current dying list) so the cofounder can slice any PostHog chart by them. Every cohort write is logged to `wiki/Knowledge/PostHog/CohortSync/`.
+4. **Surface** a 6–8 line summary to the co-founder via `complete_task`. Template:
 
 ```
 PostHog daily, {date}.
@@ -205,6 +232,7 @@ File to `wiki/Knowledge/PostHog/Reports/weekly/YYYY-WW.md`. Surface a 10–12 li
 - **MCP auth fails** → `fail_task` with the error. The co-founder needs to refresh `team.posthog_api_key`. Do not retry silently.
 - **One HogQL query errors but the rest succeed** → file what you have, name the broken query in the surfaced summary, keep going.
 - **A north-star event's 7-day count is 0 and was non-zero last week** → likely SDK / ingestion break. Make this item #1 in the surfaced summary. Do not blame the product.
+- **A north-star event's WoW delta is > 300% AND prior-week baseline was < 100 events** → almost never real growth on a first read. Either the event was just instrumented, renamed, or there was a one-off marketing push. Make this item #1, ask the question explicitly, and do not celebrate the % in the surfaced summary. Reading "🚀 explosive growth" off a 26→515 spike is exactly the failure mode this rule exists to prevent.
 - **No movement at all worth a digest** → say so in one sentence in the surfaced summary; do not pad to look busy.
 
 ## 4 — Sample sizes

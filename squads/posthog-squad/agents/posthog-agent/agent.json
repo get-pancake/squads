@@ -6,6 +6,9 @@
   "skills": [
     "agents/posthog-agent/skills/posthog-discovery.md",
     "agents/posthog-agent/skills/posthog-daily-analysis.md",
-    "agents/posthog-agent/skills/posthog-mcp-toolkit.md"
+    "agents/posthog-agent/skills/posthog-mcp-toolkit.md",
+    "agents/posthog-agent/skills/posthog-funnel-debugger.md",
+    "agents/posthog-agent/skills/posthog-release-tracker.md",
+    "agents/posthog-agent/skills/posthog-cohort-sync.md"
   ]
 }

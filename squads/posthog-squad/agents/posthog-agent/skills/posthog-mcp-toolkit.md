@@ -110,6 +110,8 @@ Prefer ad-hoc cohorts (`WITH cohort AS (...)`) inside HogQL over PostHog-side Co
 - **403 on a specific tool** → tool needs a scope the key doesn't have. Either re-scope the key or stop using that tool.
 - **Tool surface changed since last run** → PostHog updated the MCP. Re-read the live tool list, update this skill (or escalate the drift). Do not paper over with guesswork.
 
-## Read-only discipline
+## Read-only discipline (with one named carve-out)
 
-The single rule that overrides everything else in this skill: **PostHog-agent never mutates the PostHog project.** No created events, no created flags, no edited dashboards, no edited cohorts, no opened experiments, no surveys, no annotations. If a future MCP version makes mutation easier, that does not change the rule — the founder runs PostHog, PostHog-agent reads from it.
+The default rule: **PostHog-agent never mutates the PostHog project via the read key (`team.posthog_api_key`).** No created events, no created flags, no edited dashboards, no opened experiments, no surveys, no annotations. If a future MCP version makes mutation easier, that does not change the rule — the founder runs PostHog, PostHog-agent reads from it via this key.
+
+**The single carve-out** lives in `posthog-cohort-sync`: the agent may create + replace membership on exactly two named static cohorts (`PostHog-agent: Power Users`, `PostHog-agent: Dying Users`), authenticated by a **separate** narrowly-scoped key (`team.posthog_write_api_key`, scoped to Cohort write only). Read `posthog-cohort-sync` and `SOUL.md → Boundaries` before invoking it. The two-key separation is what makes the carve-out safe: a compromised read key can leak every event ever ingested but cannot mutate anything; a compromised write key can mutate exactly two cohort memberships and nothing else. Never collapse them into one key.

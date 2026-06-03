@@ -91,6 +91,29 @@ the pulse is for advancing work in flight and deepening the model.
 
 Run through this in order:
 
+0. **Lightweight anomaly check** (always, every pulse). For each event in
+   `NORTH_STAR`, count events in the last 2h vs the average of the same
+   2h window over the previous 7 days. If the deviation is > 50% AND the
+   prior-week baseline for that 2h window is ≥ 20 events (filter out
+   noise), DM the cofounder immediately — don't wait for tomorrow's
+   09:00 digest. One DM per anomaly per event per day; track in
+   `memory/YYYY-MM-DD.md` so a flapping event doesn't spam.
+
+   DM template (two lines, no emoji):
+   ```
+   Mid-day anomaly: {event} ran {n} in the last 2h vs {baseline} typical (Δ {pct}%).
+   Likely: {SDK break | release just shipped | marketing spike | unclear — investigate}.
+   ```
+
+   If the lightweight check itself errors (MCP down, query times out),
+   log it and continue — the pulse still does the rest of its work.
+
+0.5. **Release poll** — load `posthog-release-tracker` and run it. The
+   skill is a no-op if `team.posthog_release_repo` is blank. Otherwise
+   it polls GitHub for new releases, queues T+24h / T+7d snapshots, and
+   processes any pending snapshots whose `due_at` has elapsed. Most
+   pulses produce no output here — that's correct.
+
 1. **Scan the tasks tool** — `list_tasks`. Any task dispatched, queued, or
    stuck in flight gets attention now.
 2. **Advance work in flight** — any half-finished analysis from earlier
