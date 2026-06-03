@@ -73,9 +73,9 @@ These two answers are the lens through which every future digest is read — a 1
 
 Write directly to `MEMORY.md` — only the API key(s) go through `vault_request`; the event names are configuration, not secrets:
 
-- `## North-star events` — the list + one-line *why* per event (in the user's words).
-- `## Activation event` — the event + one-line *why* (in the user's words).
-- `## ICP` and `## Goal (next 90 days)` — if not just a wiki pointer.
+- `## Events → North-star` — the list + one-line *why* per event (in the user's words).
+- `## Events → Activation` — the event + one-line *why* (in the user's words).
+- `## Company context → ICP` and `## Company context → Goal (next 90 days)` — if not just a wiki pointer.
 - `## PostHog shape` — the resolved probe answers from §0.5: `display_handle_path`, `person_identification`, `person_on_events`, `session_signal_available`, `low_volume_project`, `autocapture_active`. Every later query reads these instead of guessing.
 
 ## 6 — File the discovery report
