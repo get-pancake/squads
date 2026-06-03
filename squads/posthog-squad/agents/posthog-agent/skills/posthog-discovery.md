@@ -64,8 +64,8 @@ If the co-founder is unsure, do **not** pick for them. Pick the highest-7d-disti
 
 Open `wiki/Company/COMPANY.md` and `wiki/Company/ICP.md` if they exist. If both are current and the co-founder confirms, point `MEMORY.md` at them and stop. Otherwise ask:
 
-- **"In one sentence, who is the ICP?"** → write to `MEMORY.md → ICP`.
-- **"In one sentence, what's the single goal of the company over the next 90 days?"** → write to `MEMORY.md → Goal (next 90 days)`.
+- **"In one sentence, who is the ICP?"** → write to `MEMORY.md → Company context → ICP`.
+- **"In one sentence, what's the single goal of the company over the next 90 days?"** → write to `MEMORY.md → Company context → Goal (next 90 days)`.
 
 These two answers are the lens through which every future digest is read — a 12% DAU bump means something very different for a "200 WAU by Q3" goal than for a "5% paid conversion by Q3" goal.
 

@@ -23,9 +23,12 @@ before ending the turn.
 ## 2. Decide what this wake is for
 
 - **Dispatched task waiting?** Handle it first. That's why you were woken.
-- **Cron fired?** The cron payload names the skill to load (e.g.
-  `daily-posthog-analysis` for the daily, `posthog-daily-analysis` weekly
-  section for the Monday recap). Load that skill and run it end to end.
+- **Cron fired?** The cron payload tells you which skill to load. Job
+  `daily-posthog-analysis` → load the `posthog-daily-analysis` skill and
+  run its Daily section. Job `weekly-posthog-recap` → load the same
+  `posthog-daily-analysis` skill and run its Weekly recap section. (Job
+  IDs and skill names are distinct — don't try to load a skill named
+  after the job.)
 - **Heartbeat pulse with no task?** Pick the highest-leverage action in
   your lane: advance a draft, refresh the dying-users watchlist with
   intra-day data, scout a candidate north-star event, run the lightweight
