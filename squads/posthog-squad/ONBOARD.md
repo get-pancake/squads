@@ -26,11 +26,18 @@ Ask, plainly:
 
 ### Step 2 — Collect PostHog credentials via vault_request
 
-Group these into one ask — don't ping-pong. For each, use `vault_request`; never have the user paste a key into chat.
+Group these into one ask — don't ping-pong. For each, use `vault_request`; never have the user paste a key into chat. After you submit the API key, I'll auto-resolve your project ID from it — no need to look it up manually.
 
-- `team.posthog_host` — `https://us.posthog.com`, `https://eu.posthog.com`, or their self-hosted base URL. Type `string`.
-- `team.posthog_project_id` — numeric project ID (PostHog → Settings → **Project** → "Project ID"). Type `string`.
+- `team.posthog_host` — `https://us.posthog.com`, `https://eu.posthog.com`, or their self-hosted base URL. Type `string`. If the user just says "EU" or "US", pre-fill `https://eu.posthog.com` or `https://us.posthog.com` respectively.
 - `team.posthog_api_key` — a **personal API key** with read access. Walk them to: PostHog → Settings → **Personal API keys** → "Create personal API key" → scope it to their project → grant *read* on **Query**, **Insight**, **Event definition**, **Action**, **Person**, **Cohort**. Type `api_key`. Tell them: never the project's *write* key, never an org-wide key with delete scopes — PostHog-agent reads, it does not mutate.
+
+**After the user submits the API key, auto-resolve the project ID** — don't make them hunt for it in Settings:
+
+1. Call `GET {team.posthog_host}/api/projects/` with the personal API key as a Bearer token (header `Authorization: Bearer <team.posthog_api_key>`) via `web_fetch`.
+2. Parse the JSON response. The projects live in the `results` array; take the first project and read its `id` field.
+3. Store that value in the vault as `team.posthog_project_id` (type `string`).
+
+If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `results` array → key not scoped to any project), surface the exact error and send the user back to re-issue the API key before continuing. Don't fall back to asking for the project ID by hand — fix the key.
 
 ### Step 3 — Install the PostHog MCP
 
