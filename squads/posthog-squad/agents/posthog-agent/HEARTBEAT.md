@@ -62,14 +62,14 @@ PostHog MCP is down, no dispatched task, no relevant new data in the last
 
 On the daily analysis cron run (09:00 PT), per `posthog-daily-analysis`:
 
-1. **Confirm the taxonomy still maps.** Quick MCP call: do all
-   `team.posthog_north_star_events` still exist as event definitions in the
+1. **Confirm the taxonomy still maps.** Quick MCP call: do all events in
+   `MEMORY → North-star events` still exist as event definitions in the
    project, with non-zero 7-day volume? If any has gone to zero, flag in the
    digest as item #1 (likely SDK breakage, not user collapse).
 2. **DAU / WAU / MAU** for today vs 7 days ago and 30 days ago.
 3. **North-star event volumes** for last 7 days vs prior 7 days, per event.
 4. **Activation rate** of last week's signup cohort against
-   `team.posthog_activation_event`.
+   `MEMORY → Activation event`.
 5. **Top 5 most engaged users** this week by total north-star event count.
 6. **Top 5 dying users** — previously-active accounts whose last-7-day
    north-star count is ≤ 25% of their prior 14-day baseline and who have
@@ -109,7 +109,7 @@ Run through this in order:
    log it and continue — the pulse still does the rest of its work.
 
 0.5. **Release poll** — load `posthog-release-tracker` and run it. The
-   skill is a no-op if `team.posthog_release_repo` is blank. Otherwise
+   skill is a no-op if `MEMORY → Release tracking → Repo` is blank. Otherwise
    it polls GitHub for new releases, queues T+24h / T+7d snapshots, and
    processes any pending snapshots whose `due_at` has elapsed. Most
    pulses produce no output here — that's correct.

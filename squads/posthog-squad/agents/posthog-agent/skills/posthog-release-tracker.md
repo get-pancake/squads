@@ -10,7 +10,7 @@ This skill connects what shipped to what moved. The agent watches one configured
 ## 0 — Pre-flight
 
 1. Read `MEMORY.md`:
-   - `RELEASE_REPO` = `team.posthog_release_repo` (e.g. `acme/web-app`). If blank, **stop**: release tracking is disabled on this tenant. Exit silently — do not log noise, do not surface anything.
+   - `RELEASE_REPO` = `MEMORY → Release tracking → Repo` (e.g. `acme/web-app`). If blank or absent, **stop**: release tracking is disabled on this tenant. Exit silently — do not log noise, do not surface anything.
    - `LAST_SEEN_RELEASE` = the latest release tag the agent has already processed, from `MEMORY → Release tracking → Last seen tag`. May be empty on first run.
    - `PENDING_SNAPSHOTS` = the queued snapshot list from `MEMORY → Pending release snapshots`. Each entry: `{ tag, kind: T+24h | T+7d, due_at: ISO8601 }`.
 2. Confirm `PROBE_COMPLETE` is set in `MEMORY → PostHog shape`. If not, run `posthog-discovery §0.5` first — the release tracker's metric snapshots use the same shape (DISPLAY_HANDLE_PATH etc).

@@ -10,15 +10,11 @@
 ## Reporting line
 → PostHog-agent reports to the co-founder only.
 
-## Shared vault keys
+## Shared vault keys (secrets only — everything else lives in MEMORY)
 → team.posthog_api_key — personal API key, read scopes only
-→ team.posthog_project_id — numeric project id
-→ team.posthog_host — Cloud US / Cloud EU / self-hosted base URL
-→ team.posthog_north_star_events — comma-separated event names that count as "real product use"
-→ team.posthog_activation_event — single event meaning "new signup is activated"
-→ team.posthog_signup_event — single signup event (funnel debugger; blank disables)
-→ team.posthog_release_repo — GitHub owner/name slug (release tracker; blank disables)
 → team.posthog_write_api_key — second key, Cohort write ONLY (cohort sync; blank disables)
+
+Non-secret configuration (host, project ID, north-star events, activation event, signup event, release repo) is stored in PostHog-agent's `MEMORY.md`, not the vault.
 
 ## Where we file
 → Daily digests: wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md

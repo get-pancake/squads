@@ -12,8 +12,8 @@ This is your operating procedure for the daily digest and the Monday weekly reca
 Everything in this skill is a **sketch**. PostHog projects vary heavily above the platform layer — column names you might want (`email`, `name`) are not guaranteed to exist on any given tenant. Resolve tenant-specifics from `MEMORY.md` first, then adapt.
 
 1. Read `MEMORY.md` and pull, into local variables:
-   - `NORTH_STAR` = the events from `team.posthog_north_star_events`.
-   - `ACTIVATION` = the single event from `team.posthog_activation_event`.
+   - `NORTH_STAR` = the events from `MEMORY → North-star events`.
+   - `ACTIVATION` = the single event from `MEMORY → Activation event`.
    - `DISPLAY_HANDLE_PATH` from `## PostHog shape` (e.g. `person.properties.email`, or `distinct_id` if persons are anonymous-only on this tenant).
    - `PERSON_ON_EVENTS`, `SESSION_SIGNAL_AVAILABLE`, `LOW_VOLUME_PROJECT`, `AUTOCAPTURE_ACTIVE`.
    - **Hard gate.** Confirm `## PostHog shape` carries a `PROBE_COMPLETE: YYYY-MM-DD` marker AND every line below it has a real value (no placeholder text like `(identified | anonymous_only)`). If the marker is missing or any line is still placeholder, **stop**: load `posthog-discovery`, execute §0.5 in full, write the values, stamp the marker, then resume. Do not proceed with hardcoded assumptions — the engaged/dying lists will come back as UUIDs and any handle-dependent query will silently degrade.
@@ -98,7 +98,7 @@ Report: `activated / cohort_size` and the prior week's equivalent for comparison
 - Activation rate dropped by more than 2pp WoW (e.g. 8% → 5.5%), OR
 - Activation rate is below an absolute 5% floor.
 
-When the trigger fires, load `posthog-funnel-debugger` and run it inline before §1.4. Its output (biggest drop-off step + one-sentence hypothesis) gets folded into the daily digest under the Activation section as a 3-line block — see `posthog-funnel-debugger §6`. If `team.posthog_signup_event` is blank on this tenant, the funnel debugger is a no-op and you just note "funnel debugger disabled — no signup event configured" in the digest.
+When the trigger fires, load `posthog-funnel-debugger` and run it inline before §1.4. Its output (biggest drop-off step + one-sentence hypothesis) gets folded into the daily digest under the Activation section as a 3-line block — see `posthog-funnel-debugger §6`. If `MEMORY → Signup event` is blank on this tenant, the funnel debugger is a no-op and you just note "funnel debugger disabled — no signup event configured" in the digest.
 
 ### 1.4 — Top 5 most engaged users (this week)
 

@@ -71,12 +71,7 @@ These two answers are the lens through which every future digest is read — a 1
 
 ## 5 — Persist
 
-Write to vault (via the co-founder's `vault_request`):
-
-- `team.posthog_north_star_events` — comma-separated event names, no spaces around commas.
-- `team.posthog_activation_event` — single event name.
-
-Write to `MEMORY.md`:
+Write directly to `MEMORY.md` — only the API key(s) go through `vault_request`; the event names are configuration, not secrets:
 
 - `## North-star events` — the list + one-line *why* per event (in the user's words).
 - `## Activation event` — the event + one-line *why* (in the user's words).
