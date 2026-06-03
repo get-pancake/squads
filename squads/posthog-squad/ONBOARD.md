@@ -3,14 +3,19 @@ required_tools:
   - vault_request
   - mcp_install
 required_identities: []
-estimated_setup_minutes: 20
+estimated_setup_minutes: 10
 ---
 
 ## Onboarding — posthog-squad (PostHog-agent)
 
-You are the co-founder running this onboarding. The mechanical deploy has completed — the agent files, both crons, and the three skills are in place. Work the steps below in order. The user was promised ~20 minutes; most of that is them clicking around PostHog Settings, not waiting on you.
+You are the co-founder running this onboarding. The mechanical deploy has completed — agent files, both crons, and the six skills are in place. The user was promised ~10 minutes; most of that is them clicking around PostHog Settings, not waiting on you.
 
-Tell the user PostHog-agent is being set up, that you'll install the official PostHog MCP and then spend a few minutes agreeing with them on which events actually matter for their product. Be explicit that you can do *nothing useful* until they've shared the events they care about — generic dashboards on a strange event taxonomy are noise, not signal.
+**Read this discipline before you start a single step.** This onboarding has historically over-shared. The user is busy and reading from their phone half the time. They don't want a feature list — they want their analyst running. Walk through one step at a time, ask one question per turn, and **do not preview future steps**. The two failure modes to avoid:
+
+- *Dumping the whole script up front* — "here's everything we'll do" lists overwhelm and cause the user to bail before step 1.
+- *Listing every optional capability* — the squad ships with three add-ons (release tracking, auto-cohorts, auto-tasks) that are deliberately disabled by default. Do not surface them during onboarding. Step 9 mentions them in one line at the end, that's it.
+
+Open with one sentence: "Setting up PostHog-agent — I'll need a few things from your PostHog account, then we'll agree on which events matter. Sound good?" Wait for confirmation, then begin Step 1. Move at the user's pace.
 
 ### Step 1 — Gate on PostHog prerequisites
 
@@ -70,44 +75,31 @@ Load `posthog-discovery` skill, **execute its §0.5 procedure end to end** (prob
 
 This is the most important step in the entire onboarding. The daily digest is only useful if the events it counts mean "this user got real value".
 
-Run a discovery pass through the MCP:
+Run a discovery pass through the MCP first, *silently* (don't dump the raw list at the user):
 
 1. List the top ~50 event definitions in the project, sorted by 30-day volume.
-2. Drop the autocaptured noise (`$pageview`, `$autocapture`, `$rageclick`, `$identify`, `$set`, `$opt_in`, `$exception`) from what you show the user.
-3. Present the user with the remaining shortlist and ask: **"Which 1–3 of these events means this user actually got value from the product?"** Examples: `message_sent`, `workspace_created`, `report_generated`, `invite_accepted`. Then: **"Which single event means a new signup is now activated?"** (Usually the *first occurrence* of one of the value events above for a given person.)
+2. Drop the autocaptured noise (`$pageview`, `$autocapture`, `$rageclick`, `$identify`, `$set`, `$opt_in`, `$exception`).
+3. From what remains, prepare a short shortlist of 5–8 events worth considering as north-star, plus your best guess at which is the signup event (usually contains "sign", "register", or "account").
 
-Store the answers:
+Then ask the user in **one** turn — not three separate questions back-to-back. Present the shortlist as a clean Slack list and ask all three event questions together:
 
-- `team.posthog_north_star_events` — comma-separated event names. Type `string`.
-- `team.posthog_activation_event` — the single activation event name. Type `string`.
+> "I scanned your project and these are the events that look most product-meaningful:
+>
+> {shortlist of 5–8 events with one-line inferred meaning each}
+>
+> Three quick questions:
+> 1. Which 1–3 of these mean **'this user actually got value'**? (north-star events)
+> 2. Which **single** event means **'this new signup is now activated'**? (often the first occurrence of one of #1)
+> 3. Which event fires when a **brand-new user signs up**? (looks like `<your best guess>` from the shortlist — confirm or correct)"
 
-Also write both to PostHog-agent's `MEMORY.md` under `## North-star events` and `## Activation event`, plus a one-line *why* the user picked each (their words, not yours).
+Store the answers in vault:
+- `team.posthog_north_star_events` — comma-separated event names (string).
+- `team.posthog_activation_event` — single event name (string).
+- `team.posthog_signup_event` — single event name (string). If the user genuinely has no signup event (auth-less product), store empty — the funnel debugger will be disabled, the rest of the squad still works.
 
-If the user genuinely doesn't know which events matter — common for early-stage products — do not invent an answer. Pick the single highest-volume non-autocapture event as a placeholder, store it with a note in `MEMORY.md` that it's provisional, and create a follow-up task on the agent to revisit after the first weekly digest lands. Be explicit with the user that the first week's digest will be noisier than usual because of this.
+Also write all three to PostHog-agent's `MEMORY.md` under `## North-star events`, `## Activation event`, `## Signup event` — each with a one-line *why* in the user's words.
 
-### Step 6.3 — Capture the signup event (for funnel debugger)
-
-Ask: **"Which single event fires when a brand-new user signs up?"** (e.g. `user_signed_up`, `signup_complete`, `account_created`). Show them the top 5 non-autocapture events whose name contains "sign", "register", or "account" if any exist in the shortlist from Step 6 — that's usually the answer.
-
-Store at `team.posthog_signup_event`. If they don't have an explicit signup event (auth-less product, anonymous-first), tell them the funnel debugger will be disabled and skip — store an empty string. Write the value to `MEMORY.md → Signup event`.
-
-The funnel debugger (`posthog-funnel-debugger` skill) uses this to build a `signup_event → … → activation_event` funnel and surface the biggest drop-off step whenever the daily digest detects activation rate dropping > 2pp WoW or sitting below a 5% floor.
-
-### Step 6.5 — Hook up release tracking (optional, recommended)
-
-Ask: **"Which GitHub repo ships your product? Give me the `owner/name` slug (e.g. `acme/web-app`)."** This is the repo PostHog-agent will watch for releases. On each new release tag, the agent snapshots DAU/WAU + north-star event volumes at T+0, T+24h, and T+7d, then files a release-impact report to `wiki/Knowledge/PostHog/Releases/`. Lets the cofounder see "release v1.4.2 moved activation +1.8pp" at a glance.
-
-Store at `team.posthog_release_repo`. If they don't want release tracking (no GitHub repo, no clear single repo, prefer to skip), store an empty string. Write to `MEMORY.md → Release tracking`. If the value is set, PostHog-agent will poll the repo on every 2h heartbeat pulse.
-
-### Step 6.7 — Provision the cohort-write API key (optional, the one carve-out)
-
-PostHog-agent is read-only by default. The single exception is **maintaining two static cohorts in PostHog**: `PostHog-agent: Power Users` (current top 20 engaged by north-star event count) and `PostHog-agent: Dying Users` (current dying list). This lets the cofounder slice any PostHog chart by these cohorts without ever leaving the PostHog UI.
-
-To enable, ask the user to provision a **second** personal API key, scoped *only* to **Cohort write** (no read scopes from the first key, no other writes). Walk them through: PostHog → Settings → Personal API keys → "Create personal API key" → scope: **Cohort write only**. Store at `team.posthog_write_api_key` via `vault_request`, type `api_key`.
-
-Be explicit with the user about the tradeoff: they're giving the agent the ability to modify cohorts in their PostHog project. The agent will only touch the two cohorts named exactly above; every modification is logged to `wiki/Knowledge/PostHog/CohortSync/`. If they prefer to keep the agent strictly read-only, store an empty string and skip — the digest still works, they just won't get the auto-maintained cohorts.
-
-Never reuse the read-only key from Step 2 here. The whole point of the separation is blast-radius containment — a compromised write key can only mutate two cohorts; a compromised read key can leak every event the project has ever ingested.
+**If the user is stuck on the north-star pick**, don't push. Pick the single highest-distinct-persons non-autocapture event as a provisional placeholder, note `provisional: true` in MEMORY, and tell them you'll revisit after the first weekly digest. The first week will be noisier than usual.
 
 ### Step 7 — Pin the cron timezone
 
@@ -126,3 +118,13 @@ Dispatch it via the tasks plugin with `agent: "posthog-agent"` (the exact agent 
 **Verify before reporting setup-complete:** look up the spawned session and confirm its `agent_id` is `posthog-agent`, not `main`. If it isn't, you spawned the wrong target — kill it and re-dispatch with the correct agent id.
 
 Close by telling the user PostHog-agent is now scanning the project, and confirm the exact daily + weekly schedule using the timezone they pinned in Step 7 (e.g. "daily digest at 09:00 Europe/Paris, weekly recap Mon 10:00 Europe/Paris"). Remind them that if the north-star events ever change (new product surface, deprecated feature), they just have to tell the co-founder and PostHog-agent will refresh its definitions — no re-onboarding needed.
+
+### Step 9 — Mention the opt-in add-ons (one line, then stop)
+
+After the close, add **one** short message naming the three add-ons the user can enable later. Do not pitch them, do not explain how they work, do not ask if they want them now. Onboarding is over; this is just so they know the surface exists:
+
+> "When you want, you can also ask me to enable: release-impact tracking (snapshot metrics around each GitHub release), auto-maintained PostHog cohorts (Power Users + Dying Users kept in sync), or auto-filed investigation tasks (anomalies become tasks in your queue). They each need one extra piece of config — happy to walk through any of them later."
+
+That's the whole step. Do not list features for each, do not offer to enable any of them in the same turn. The user just finished a 10-minute setup; respect that they're done. They'll come back when they want one.
+
+If the user *does* immediately ask to enable one in the same turn, walk through just the one they asked for (the relevant skill — `posthog-release-tracker`, `posthog-cohort-sync` — has the full procedure). Don't bundle them.
