@@ -34,8 +34,10 @@ Group these into one ask — don't ping-pong. For each, use `vault_request`; nev
 **After the user submits the API key, auto-resolve the project ID** — don't make them hunt for it in Settings:
 
 1. Call `GET {team.posthog_host}/api/projects/` with the personal API key as a Bearer token (header `Authorization: Bearer <team.posthog_api_key>`) via `web_fetch`.
-2. Parse the JSON response. The projects live in the `results` array; take the first project and read its `id` field.
-3. Store that value in the vault as `team.posthog_project_id` (type `string`).
+2. Parse the JSON response. The projects live in the `results` array, each with an `id` and a human-readable `name`.
+   - **If there's exactly one project**, take its `id` directly — no need to ask.
+   - **If there's more than one**, don't guess. Show the user the project **names** (not the numeric IDs — those mean nothing to them) and ask which one PostHog-agent should watch. Map their choice back to that project's `id`.
+3. Store the resolved `id` in the vault as `team.posthog_project_id` (type `string`).
 
 If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `results` array → key not scoped to any project), surface the exact error and send the user back to re-issue the API key before continuing. Don't fall back to asking for the project ID by hand — fix the key.
 
