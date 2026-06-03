@@ -26,13 +26,21 @@ Ask, plainly:
 
 ### Step 2 — Collect PostHog credentials
 
-**Only the API key is a secret. The host and project ID are not — don't put either through `vault_request`.** Asking the user to fill three vault forms in a row is bad UX and trains them to treat configuration like a credential. Discipline:
+**Only the API key is a secret. The host and project ID are not — don't put either through `vault_request`.** Asking the user to fill vault forms for plain configuration is bad UX and trains them to treat configuration like a credential. Discipline:
 
 - **API key** → `vault_request` at `team.posthog_api_key` (type `api_key`). Walk them to: PostHog → Settings → **Personal API keys** → "Create personal API key" → scope it to their project → grant *read* on **Query**, **Insight**, **Event definition**, **Action**, **Person**, **Cohort**. Tell them: never the project's *write* key, never an org-wide key with delete scopes — PostHog-agent reads, it does not mutate.
-- **Host** → ask in plain chat: "What's your PostHog host? `https://us.posthog.com`, `https://eu.posthog.com`, or a self-hosted URL?" Write to `MEMORY.md → PostHog connection → Host`. No vault.
-- **Project ID** → ask in plain chat: "What's your numeric project ID? (PostHog → Settings → Project → 'Project ID')" Write to `MEMORY.md → PostHog connection → Project ID`. No vault.
+- **Host** → ask in plain chat: "What's your PostHog host? `https://us.posthog.com`, `https://eu.posthog.com`, or a self-hosted URL?" If they just say "EU" or "US", fill in `https://eu.posthog.com` or `https://us.posthog.com` for them. Write to `MEMORY.md → PostHog connection → Host`. No vault.
+- **Project ID** → don't ask for it at all. Auto-resolve it from the API key (next).
 
-Bundle host + project ID into a single chat message so it's one turn for the user, not two. The vault prompt for the API key is its own thing.
+**After the user submits the API key, auto-resolve the project ID** — don't make them hunt for it in Settings:
+
+1. Call `GET {host}/api/projects/` with the personal API key as a Bearer token (header `Authorization: Bearer <team.posthog_api_key>`) via `web_fetch`, using the host they just gave you.
+2. Parse the JSON response. The projects live in the `results` array, each with an `id` and a human-readable `name`.
+   - **If there's exactly one project**, take its `id` directly — no need to ask.
+   - **If there's more than one**, don't guess. Show the user the project **names** (not the numeric IDs — those mean nothing to them) and ask which one PostHog-agent should watch. Map their choice back to that project's `id`.
+3. Write the resolved `id` to `MEMORY.md → PostHog connection → Project ID`. No vault.
+
+If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `results` array → key not scoped to any project), surface the exact error and send the user back to re-issue the API key before continuing. Don't fall back to asking for the project ID by hand — fix the key.
 
 ### Step 3 — Install the PostHog MCP
 
