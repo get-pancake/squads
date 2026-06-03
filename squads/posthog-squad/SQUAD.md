@@ -1,6 +1,6 @@
 ---
 tags: [posthog, analytics, product, metrics, retention, activation]
-preview_image: https://squads.getpancake.ai/avatars/telescope.png
+preview_image: https://squads.getpancake.ai/avatars/vr-user.png
 ---
 
 ## What this squad does
