@@ -1,0 +1,18 @@
+{
+  "id": "buffer-agent",
+  "description": "Social media scheduling agent — owns the official Buffer CLI, maintains per-channel tone profiles, drafts and schedules on-voice posts, audits queue health, files weekly output reports, and captures ideas.",
+  "model": "sonnet",
+  "skills": [
+    "agents/buffer-agent/skills/buffer-cli-toolkit.md",
+    "agents/buffer-agent/skills/buffer-channel-discovery.md",
+    "agents/buffer-agent/skills/buffer-channel-tone-extraction.md",
+    "agents/buffer-agent/skills/buffer-strategy-and-goals.md",
+    "agents/buffer-agent/skills/buffer-platform-playbooks.md",
+    "agents/buffer-agent/skills/buffer-cadence-and-timing.md",
+    "agents/buffer-agent/skills/buffer-post-drafter.md",
+    "agents/buffer-agent/skills/buffer-queue-health.md",
+    "agents/buffer-agent/skills/buffer-weekly-audit.md",
+    "agents/buffer-agent/skills/buffer-engagement-advisory.md",
+    "agents/buffer-agent/skills/buffer-ideas-capture.md"
+  ]
+}

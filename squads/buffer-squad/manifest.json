@@ -1,0 +1,23 @@
+{
+  "name": "buffer-squad",
+  "version": "0.3.0",
+  "description": "Single-agent Buffer squad via the official CLI: per-channel tone profiles, on-voice drafting and scheduling, queue audits, weekly output reports, pillars-as-tags, ideas backlog.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "agents": ["buffer-agent"],
+  "required_vault_secrets": [
+    {
+      "key": "team.buffer_api_key",
+      "label": "Buffer API key (publish.buffer.com → Settings → API). Used as BUFFER_API_KEY for the official @bufferapp/cli.",
+      "type": "api_key"
+    }
+  ],
+  "required_tool_permissions": [
+    "vault",
+    "cron",
+    "image-generation",
+    "web_search",
+    "web_fetch"
+  ],
+  "min_pancake_version": "1.0.0"
+}
