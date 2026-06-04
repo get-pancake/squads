@@ -11,9 +11,15 @@ PostHog ships fast. If a tool name in this file no longer matches the live MCP, 
 
 ## Connection
 
-- Host: `MEMORY → PostHog connection → Host` — Cloud US (`https://us.posthog.com`), Cloud EU (`https://eu.posthog.com`), or a self-hosted base URL.
-- Project: `MEMORY → PostHog connection → Project ID` — numeric.
-- Auth: `team.posthog_api_key` — personal API key with read-only scopes: Query, Insight, Event definition, Action, Person, Cohort.
+The PostHog MCP and the PostHog API are **separate endpoints** — don't conflate them. The agent reads data through the MCP; the MCP authenticates against the user's PostHog project using the personal API key.
+
+- **MCP URL (Cloud, US + EU)**: `https://mcp.posthog.com/mcp` — streamable HTTP, same endpoint for both regions. Project routing happens via the API key's scope, not via URL.
+- **MCP URL (self-hosted)**: `MEMORY → PostHog connection → MCP URL` — the user runs their own; ask if missing.
+- **API host** (used by `posthog-discovery` for direct REST calls like project lookup): `MEMORY → PostHog connection → Host` — `https://us.posthog.com`, `https://eu.posthog.com`, or self-hosted base URL.
+- **Project**: `MEMORY → PostHog connection → Project ID` — numeric, auto-resolved during onboarding from the API key.
+- **Auth**: `team.posthog_api_key` — personal API key with read-only scopes (Query, Insight, Event definition, Action, Person, Cohort). MCP passes it as `Authorization: Bearer <key>` on every request.
+
+If you're debugging "MCP returns nothing", the first thing to check is the **URL** — the wrong endpoint (e.g. `posthog.com/api/mcp` or `app.posthog.com/mcp`) will silently return an empty tool list instead of an auth error, which looks like "the MCP works but my project has no data". Confirm `https://mcp.posthog.com/mcp` first, then auth, then project.
 
 When the MCP starts, it should list its tools. Confirm the surface includes at minimum:
 
