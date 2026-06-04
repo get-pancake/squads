@@ -24,6 +24,8 @@ squad.
 | [`ai-seo-squad`](./squads/ai-seo-squad/) | AI-SEO / GEO — daily citation audits, blog posts, and GEO engineering PRs (self-merging). | `geo-agent` |
 | [`reddit-squad`](./squads/reddit-squad/) | Reddit growth — monitors subreddits, drafts replies, and ships founder-voice posts. | `reddit-agent` |
 | [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, and posts a digest. | `outreach-agent` |
+| [`google-ads-squad`](./squads/google-ads-squad/) | Single-account Google Ads autopilot — daily optimization sweep + digest hand-off; escalates only to raise budget. | `google-ads-agent` |
+| [`meta-ads-squad`](./squads/meta-ads-squad/) | Meta Ads operator — daily diagnostic + action sweep, daily digest, weekly review. Holds spend flat autonomously; escalates only budget increases. | `meta-ads-agent` |
 
 ## How squads work
 

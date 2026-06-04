@@ -1,0 +1,27 @@
+{
+  "name": "posthog-squad",
+  "version": "0.3.0",
+  "description": "Single-agent PostHog squad: daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, mid-day anomaly alerts, weekly recap. Opt-in add-ons: release tracker + auto cohorts.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "agents": ["posthog-agent"],
+  "required_vault_secrets": [
+    {
+      "key": "team.posthog_api_key",
+      "label": "PostHog personal API key (read-only — Settings → Personal API keys → read access on Query, Insight, Event definition, Action, Person, Cohort)",
+      "type": "api_key"
+    },
+    {
+      "key": "team.posthog_write_api_key",
+      "label": "SECOND PostHog API key, Cohort write ONLY. Powers the optional auto-cohort sync. Leave blank to skip — the squad still works fully without it. NEVER reuse the read-only key here.",
+      "type": "api_key"
+    }
+  ],
+  "required_tool_permissions": [
+    "mcp-installer",
+    "vault",
+    "web_fetch",
+    "github"
+  ],
+  "min_pancake_version": "1.0.0"
+}

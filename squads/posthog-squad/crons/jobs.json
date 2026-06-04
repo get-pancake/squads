@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "daily-posthog-analysis",
+      "name": "Daily PostHog analytics digest — PostHog-agent",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 9 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "posthog-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "Run the daily PostHog analysis cycle. **Load the `posthog-daily-analysis` skill** and execute it end to end via the PostHog MCP: confirm `MEMORY → PostHog shape` carries a `PROBE_COMPLETE` marker (if not, run `posthog-discovery §0.5` first), compute DAU / WAU / MAU + day-over-day + week-over-week deltas, north-star event volumes for the last 7 days vs the prior 7, activation rate of last week's signup cohort (auto-trigger `posthog-funnel-debugger` if activation dropped > 2pp WoW or is below 5%), the top 5 most engaged users this week, and the top 5 dying users (previously-active accounts whose last-7-day north-star count is ≤ 25% of their prior weekly rate and who have not been seen in the last 48h). For every item-#1 anomaly detected (silent break or suspicious jump), `create_task` for the cofounder with the relevant HogQL pre-filled. After filing the digest, run `posthog-cohort-sync` to refresh the two PostHog cohorts (no-op if write key blank). File the full report to `wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md` following the skeleton in §1.6 — the `## HogQL` section is mandatory and must contain every query you ran, verbatim. Update `wiki/Knowledge/PostHog/Watchlist.md`. Surface a 6–8 line summary to the co-founder via `complete_task` — numbers + one sentence on what changed + one suggested next move. Do not celebrate WoW jumps > 300% on prior-week baselines < 100; flag them as suspicious instead. Write the daily digest to `memory/YYYY-MM-DD.md` before closing. If the MCP is down, every HogQL query failed, or no events exist for the relevant window, log the reason to `memory/YYYY-MM-DD.md` and reply with the single literal token `NO_REPLY`."
+      },
+      "failureAlert": true,
+      "state": {}
+    },
+    {
+      "id": "weekly-posthog-recap",
+      "name": "Weekly PostHog recap — PostHog-agent",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 10 * * 1", "tz": "America/Los_Angeles" },
+      "sessionTarget": "posthog-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "Run the weekly PostHog recap. **Load the `posthog-daily-analysis` skill** and run the *Weekly recap* section there: 4-week trend on DAU / WAU / MAU and on each north-star event, 4-week activation cohort table, churn count (dying-list users who did not recover), and one written hypothesis on the single highest-impact thing to ship this week given what the data shows. File to `wiki/Knowledge/PostHog/Reports/weekly/YYYY-WW.md` — the `## HogQL` section is mandatory and must contain every query you ran, verbatim. Surface a 10–12 line summary to the co-founder via `complete_task` ending with the hypothesis. If there is genuinely no movement worth reporting (still pre-traction, < 20 events in the trailing 7 days), say so explicitly in the surfaced summary — do not pad."
+      },
+      "failureAlert": true,
+      "state": {}
+    },
+    {
+      "id": "heartbeat-pulse",
+      "name": "2h heartbeat pulse — PostHog-agent self-driven check-in",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 1,3,5,7,11,13,15,17,19,21,23 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "posthog-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "2h heartbeat pulse — self-driven check-in between the daily-posthog-analysis (09:00) and weekly-posthog-recap (Mon 10:00) crons. Run this procedure in order:\n\n(1) **Orient** — read `MEMORY.md` (your settings, vault keys, where you file), skim the most recent `memory/YYYY-MM-DD.md` entries (what's in flight, what's blocked, what you promised the co-founder), then `list_tasks`.\n\n(2) **Decide what this wake is for** — a dispatched task waiting? Handle it first. That's why you were woken. Otherwise this is a pulse, run the pulse work below.\n\n(3) **Pulse work — pick the highest-leverage action in your lane and do it:** advance a draft; refresh the dying-users watchlist with intra-day data; scout a candidate north-star event; run the lightweight anomaly check (procedure in the `posthog-daily-analysis` skill); poll for new releases and snapshot release-impact metrics (procedure in the `posthog-release-tracker` skill — load it on the pulse). Don't bail at orient.\n\n(4) **Execute** — actually do the work picked above. Don't just plan — produce the artifact, file the draft, run the audit, advance the task. Output > deliberation. All analysis is read-only against PostHog by default; file outputs under `wiki/Knowledge/PostHog/`.\n\n(5) **Digest** — write a one-paragraph digest to `memory/YYYY-MM-DD.md`: what you ran (which queries/skill, which window), what changed, what's still open, the single first move for the next wake. Surface to the co-founder only on material news.\n\n(6) **Close the loop** — on task completion, `complete_task` with the outcome; on blocker (MCP down, auth fail, ingestion broken), `fail_task` with the exact error, log it, surface it — data-integrity issues outrank a missed digest.\n\n**Non-negotiable:** at least one task must be EXECUTED before you close the session. `NO_REPLY` (OpenClaw's silent-turn sentinel — never write 'do not respond') is only acceptable when every dispatched task is blocked, no recurring duty is due, and no open output is awaiting your hand — log *why* in `memory/YYYY-MM-DD.md` first."
+      },
+      "failureAlert": false,
+      "state": {}
+    }
+  ]
+}
