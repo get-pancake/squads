@@ -44,25 +44,38 @@ If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `
 
 ### Step 3 — Install the PostHog MCP
 
-Use `mcp_install` to install PostHog's official MCP (`@posthog/agent-toolkit` MCP, published by PostHog). Configure it with:
+The official PostHog MCP is a **remote streamable-HTTP server**, not a local npm package. Use `mcp_install` with the URL pinned below — do **not** infer a URL from the API host. (Earlier installs guessed `posthog.com/api/mcp` and silently returned no tools; this step exists so that never happens again.)
 
-- `POSTHOG_API_KEY` ← vault `team.posthog_api_key`
-- `POSTHOG_HOST` ← `MEMORY → PostHog connection → Host`
-- `POSTHOG_PROJECT_ID` ← `MEMORY → PostHog connection → Project ID`
+**For PostHog Cloud (US or EU)**, the URL is the same for both regions — auth + project routing happens via headers:
 
-If the MCP exposes a `--read-only` flag (current versions do), pass it. PostHog-agent must not be able to mutate the project.
+- URL: `https://mcp.posthog.com/mcp` (the trailing `/mcp` path matters)
+- Transport: **streamable HTTP** — NOT SSE.
+- Auth header: `Authorization: Bearer <team.posthog_api_key>` — uses the vault key from Step 2 directly, no rewriting.
+- Project routing: PostHog's MCP infers the project from the API key's scope; no `POSTHOG_PROJECT_ID` env var needed at install time.
 
-Confirm in the install output that the MCP starts cleanly and lists tools that include at minimum: an event-definition listing tool, an insight/query execution tool (HogQL), and a person/cohort listing tool. If the tools surface looks different, look it up via `web_fetch` against `posthog.com/docs/model-context-protocol` rather than guessing — PostHog ships fast and the tool names move.
+**Wrong URLs the cofounder has guessed in the past — do not use any of these:**
 
-### Step 4 — Verify with a read-only call
+| URL | Why it fails |
+|---|---|
+| `https://mcp.posthog.com/sse` | Right host, wrong path + wrong transport. Returns SSE error 400. |
+| `https://posthog.com/api/mcp` | Wrong host entirely. Returns 404 "page not found". |
+| `https://app.posthog.com/mcp` | Wrong host. Returns 404. |
+| `https://us.posthog.com/mcp` / `https://eu.posthog.com/mcp` | The PostHog API host is NOT the MCP host. Don't conflate them. |
 
-Through the freshly installed MCP, run one read-only call: list 10 event definitions for the configured project. If it succeeds, you're wired. If it fails:
+Use **`https://mcp.posthog.com/mcp`** with streamable HTTP transport, period. Don't invent variants.
 
-- **401 / invalid key** → key wrong, expired, or scoped to a different project. Send back to Step 2.
-- **403 / missing scope** → personal API key missing the read scopes named in Step 2. Re-issue.
-- **404 / project not found** → wrong `POSTHOG_PROJECT_ID` or host. Re-check both.
+**For self-hosted PostHog**, the user runs their own MCP — ask them for the MCP endpoint URL explicitly, store at `MEMORY → PostHog connection → MCP URL`, and pass that to `mcp_install` instead. If they don't have one running, skip the install and surface to the user: "self-hosted PostHog doesn't run an MCP by default, you'll need to deploy one before PostHog-agent can analyze the project."
 
-Do not proceed past this step until the verification call succeeds. Surface the exact error to the user.
+After the install call, **smoke-test immediately, before declaring this step done**:
+
+1. List the MCP's tools via `mcp_list` (or the equivalent). The surface must include at minimum: an event-definition listing tool, an insight/HogQL query tool, and a person/cohort listing tool. If zero PostHog tools appear, the install silently failed — the URL is wrong, the auth header is wrong, or the key is invalid. Re-check the three above before retrying.
+2. Call the event-definition tool with a small limit (10). If it returns event names from the user's project, you're wired. If it returns an empty list, the project has no events yet (send the user back to Step 1's prereq gate). If it returns an auth error, the key is wrong — back to Step 2.
+
+Do not proceed past Step 3 until both checks pass. The MCP install is the load-bearing step in this onboarding; if it silently fails, every subsequent skill returns empty results and the baseline scan appears to "finish" but produce nothing — the exact failure mode of earlier installs.
+
+### Step 4 — (folded into Step 3's smoke test)
+
+Verification used to be its own step. It's now the second half of Step 3 — if you smoke-tested the install, you've verified.
 
 ### Step 5 — Reconcile ICP and company goal
 
@@ -77,9 +90,9 @@ If both are already documented in the company wiki and the user confirms they're
 
 **Do not skip this step.** Every analysis the agent runs after onboarding substitutes tenant-specific values out of `MEMORY → PostHog shape`. If the probe doesn't run, the agent falls back to hardcoded guesses — engaged/dying user lists come back as opaque UUIDs instead of human handles, queries that depend on `$identify` behavior silently misbehave, and small-volume tenants get treated as if they had stable data.
 
-Load `posthog-discovery` skill, **execute its §0.5 procedure end to end** (probe person identification model, resolve `display_handle_path`, person-on-events mode, session signal availability, volume floor, autocapture status), then write each resolved value into PostHog-agent's `MEMORY.md → PostHog shape` and stamp the section header with `PROBE_COMPLETE: YYYY-MM-DD` so later runs can verify the probe actually ran.
+Load `posthog-discovery` skill, **execute its §0.5 procedure end to end** (probe person identification model, resolve `display_handle_path`, person-on-events mode, session signal availability, volume floor, autocapture status). The skill creates the `## PostHog shape` section in MEMORY (it's not seeded by the bundle — that's deliberate, an empty placeholder is the trap), writes each resolved value, and stamps the section header with `PROBE_COMPLETE: YYYY-MM-DD` so later runs can verify the probe actually ran.
 
-**Verify before moving on:** open `MEMORY → PostHog shape` and confirm every line has a real value (not the placeholder text from the seeded template). If any line still reads `(identified | anonymous_only)` or similar, the probe didn't run — re-execute §0.5 before Step 6.
+**Verify before moving on:** open MEMORY and confirm `## PostHog shape` now exists with `PROBE_COMPLETE: <today's date>` on the first line. If the section is absent or the marker is missing, the probe didn't run — re-execute §0.5 before Step 6.
 
 ### Step 6 — Agree on the north-star events
 
