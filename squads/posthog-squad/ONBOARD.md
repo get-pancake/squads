@@ -48,10 +48,21 @@ The official PostHog MCP is a **remote streamable-HTTP server**, not a local npm
 
 **For PostHog Cloud (US or EU)**, the URL is the same for both regions — auth + project routing happens via headers:
 
-- URL: `https://mcp.posthog.com/mcp`
-- Transport: streamable HTTP
+- URL: `https://mcp.posthog.com/mcp` (the trailing `/mcp` path matters)
+- Transport: **streamable HTTP** — NOT SSE.
 - Auth header: `Authorization: Bearer <team.posthog_api_key>` — uses the vault key from Step 2 directly, no rewriting.
 - Project routing: PostHog's MCP infers the project from the API key's scope; no `POSTHOG_PROJECT_ID` env var needed at install time.
+
+**Wrong URLs the cofounder has guessed in the past — do not use any of these:**
+
+| URL | Why it fails |
+|---|---|
+| `https://mcp.posthog.com/sse` | Right host, wrong path + wrong transport. Returns SSE error 400. |
+| `https://posthog.com/api/mcp` | Wrong host entirely. Returns 404 "page not found". |
+| `https://app.posthog.com/mcp` | Wrong host. Returns 404. |
+| `https://us.posthog.com/mcp` / `https://eu.posthog.com/mcp` | The PostHog API host is NOT the MCP host. Don't conflate them. |
+
+Use **`https://mcp.posthog.com/mcp`** with streamable HTTP transport, period. Don't invent variants.
 
 **For self-hosted PostHog**, the user runs their own MCP — ask them for the MCP endpoint URL explicitly, store at `MEMORY → PostHog connection → MCP URL`, and pass that to `mcp_install` instead. If they don't have one running, skip the install and surface to the user: "self-hosted PostHog doesn't run an MCP by default, you'll need to deploy one before PostHog-agent can analyze the project."
 

@@ -19,7 +19,14 @@ The PostHog MCP and the PostHog API are **separate endpoints** — don't conflat
 - **Project**: `MEMORY → PostHog connection → Project ID` — numeric, auto-resolved during onboarding from the API key.
 - **Auth**: `team.posthog_api_key` — personal API key with read-only scopes (Query, Insight, Event definition, Action, Person, Cohort). MCP passes it as `Authorization: Bearer <key>` on every request.
 
-If you're debugging "MCP returns nothing", the first thing to check is the **URL** — the wrong endpoint (e.g. `posthog.com/api/mcp` or `app.posthog.com/mcp`) will silently return an empty tool list instead of an auth error, which looks like "the MCP works but my project has no data". Confirm `https://mcp.posthog.com/mcp` first, then auth, then project.
+If you're debugging "MCP returns nothing", the first thing to check is the **URL + transport**. Verified against live install logs on a tenant pod, these are the wrong variants that all silently fail (404, SSE 400, or empty tool list):
+
+- `https://mcp.posthog.com/sse` — right host, wrong path + wrong transport (SSE instead of streamable HTTP).
+- `https://posthog.com/api/mcp` — wrong host, returns 404.
+- `https://app.posthog.com/mcp` — wrong host, returns 404.
+- `https://us.posthog.com/mcp` / `https://eu.posthog.com/mcp` — confusing the API host with the MCP host. PostHog has separate endpoints for each.
+
+The only working configuration is **`https://mcp.posthog.com/mcp` with streamable HTTP transport** (same for Cloud US and EU; project routing happens via the API key's scope, not via URL). Confirm URL + transport first, then auth, then project.
 
 When the MCP starts, it should list its tools. Confirm the surface includes at minimum:
 
