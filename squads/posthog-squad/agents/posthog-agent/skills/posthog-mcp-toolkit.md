@@ -9,6 +9,24 @@ This skill is reference, not procedure. Load it when you're stuck on a query, wh
 
 PostHog ships fast. If a tool name in this file no longer matches the live MCP, trust the live MCP and update this skill (or escalate the drift to the co-founder).
 
+## Result-size discipline (HARD RULE — non-negotiable)
+
+A query result is a tool output that lands directly in your context window. An oversized result is not a style problem — it is a **correctness and availability constraint**, because:
+
+- A tool result over roughly **25k tokens** overflows the model's context window.
+- A **single** oversized tool result **cannot be compacted away** — it exceeds the summarizer's per-message limit, so auto-compaction fails on it repeatedly.
+- The run then **wedges**: it retries, exhausts the whole model fallback ladder (Bedrock → Anthropic → OpenRouter, each rejecting "prompt is too long"), and **blocks every later turn** in that session until the session is manually reset.
+
+This has happened in production: a single query returned ~459k tokens of `properties` JSON and took the agent down. Treat the rules below as inviolable.
+
+1. **Aggregate, don't enumerate.** Prefer `count()`, `count(DISTINCT …)`, `sum()`, `groupBy` over returning raw rows. The founder reads numbers, not dumps.
+2. **Every row-returning query carries an explicit `LIMIT`.** Cap it small — `≤ 50` for any listing, `≤ 5` for shape/inspection probes. There is no exploratory `SELECT` without a `LIMIT`.
+3. **Never `SELECT *`. Never select a raw `properties` / `person.properties` JSON object.** Project only the specific scalar paths you need (`properties.$foo`, `person.properties.email`). The whole JSON blob is unbounded and per-row.
+4. **To inspect an event's shape**, read the named keys you care about on `≤ 5` rows — never dump the JSON for many rows or many events at once.
+5. **If you genuinely need a wide or row-level extract**, aggregate it further in SQL first, or write it to a file and process it there. Raw rows never page into the conversation.
+
+If a result comes back unexpectedly large, do not paste it, summarize it, or retry as-is — rewrite the query to aggregate or `LIMIT`, and note the near-miss.
+
 ## Connection
 
 The PostHog MCP and the PostHog API are **separate endpoints** — don't conflate them. The agent reads data through the MCP; the MCP authenticates against the user's PostHog project using the personal API key.

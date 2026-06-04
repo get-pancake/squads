@@ -1,6 +1,6 @@
 {
   "name": "posthog-squad",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Single-agent PostHog squad: daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, mid-day anomaly alerts, weekly recap. Opt-in add-ons: release tracker + auto cohorts.",
   "author": "pancake-official",
   "license": "MIT",
