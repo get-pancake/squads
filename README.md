@@ -54,7 +54,8 @@ node scripts/validate.mjs squads/<bundle-name> # one bundle
 Zero dependencies — just Node. It mirrors marketplace ingestion exactly, so a bundle that
 passes here passes ingestion. CI runs it on every push and pull request, alongside
 `node scripts/test-validator.mjs` which self-tests the validator against negative
-fixtures (forbidden files, wrong heartbeat shape, etc.) — both must pass for a merge.
+fixtures (forbidden files including `HEARTBEAT.md`, deprecated fields, unknown
+`agent.json` keys, cron-target mismatches, etc.) — both must pass for a merge.
 
 ## Publish
 

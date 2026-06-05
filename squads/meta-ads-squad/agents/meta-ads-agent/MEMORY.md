@@ -12,8 +12,8 @@
 
 ## Squad
 → meta-ads-squad
-→ Skills: pancake-meta-ads-01 through 10 (methodology) + 11 through 13 (operations) — all squad-wide
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Skills: pancake-meta-ads-01 through 10 (methodology) + 11 through 13 (operations) — all squad-wide; plus `meta-ads-wake-routine` (agent-specific)
+→ Wake procedure: the `meta-ads-wake-routine` skill, loaded by each cron in `crons/jobs.json` (meta-ads-daily-operations + meta-ads-daily-digest + meta-ads-weekly-review). No heartbeat pulse.
 
 ## Mode
 → autonomous

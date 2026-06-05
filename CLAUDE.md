@@ -26,11 +26,12 @@ A bundle is a directory with a `manifest.json` (the package descriptor: `name`, 
 `description`, `author`, `agents` as a string array of ids, plus optional squad-wide
 skills, required identities, and vault secrets), a `SQUAD.md` catalog card, an
 `ONBOARD.md` onboarding script, and per agent: an `agents/<id>/agent.json` (the per-agent
-runtime config — model, heartbeat, agent-specific skills, mirroring OpenClaw's
-`agents.list[]`), `agents/<id>/IDENTITY.md`, and `agents/<id>/SOUL.md`. Optionally it
-carries `MEMORY.md` seed memory, `skills/` files, `crons/jobs.json`, and a per-agent
-`HEARTBEAT.md` (required when `agent.json` declares a heartbeat). Full detail is in
-[`docs/bundle-reference.md`](./docs/bundle-reference.md).
+runtime config — model, agent-specific skills, mirroring OpenClaw's `agents.list[]`),
+`agents/<id>/IDENTITY.md`, and `agents/<id>/SOUL.md`. Optionally it carries `MEMORY.md`
+seed memory, `skills/` files, and `crons/jobs.json`. Recurring wakes live in
+`crons/jobs.json` payloads — OpenClaw's per-agent heartbeats do not fire for squad
+sub-agents today, so `HEARTBEAT.md` is a forbidden filename anywhere in a bundle. Full
+detail is in [`docs/bundle-reference.md`](./docs/bundle-reference.md).
 
 ## Working in this repo
 

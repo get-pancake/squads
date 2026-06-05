@@ -1,6 +1,6 @@
 ---
 name: posthog-release-tracker
-description: PostHog-agent's procedure for tying product releases to metric movement. Polls a configured GitHub repo on every 2h heartbeat pulse, snapshots DAU / WAU / north-star metrics at T+0, T+24h, T+7d after each new release, and files a release-impact report. Load on every heartbeat pulse.
+description: PostHog-agent's procedure for tying product releases to metric movement. Polls a configured GitHub repo on every 2h heartbeat-pulse cron run, snapshots DAU / WAU / north-star metrics at T+0, T+24h, T+7d after each new release, and files a release-impact report. Load on every heartbeat-pulse cron run.
 ---
 
 # PostHog release tracker — PostHog-agent
@@ -58,7 +58,7 @@ Process every pending snapshot whose `due_at <= now()`. For each:
 3. Append to the per-release report at `wiki/Knowledge/PostHog/Releases/YYYY-MM-DD-{tag}.md`.
 4. Remove the entry from `MEMORY → Pending release snapshots`.
 
-If a pending snapshot is overdue by more than 50% of its window (e.g. a T+24h snapshot that didn't run until T+36h because the heartbeat was busy), tag the report with `late: true` and note the actual elapsed time — late snapshots are still useful, just less precise.
+If a pending snapshot is overdue by more than 50% of its window (e.g. a T+24h snapshot that didn't run until T+36h because the pulse was busy), tag the report with `late: true` and note the actual elapsed time — late snapshots are still useful, just less precise.
 
 ## 4 — File the per-release report
 

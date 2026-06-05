@@ -50,26 +50,19 @@ const ACCEPTED_TOOL_PERMISSIONS = {
 };
 const ACCEPTED_TOOL_KEYS = new Set(Object.values(ACCEPTED_TOOL_PERMISSIONS).flat());
 
-// Heartbeat config is the curated subset of OpenClaw's
-// agents.list[].heartbeat (see https://docs.openclaw.ai/gateway/config-agents)
-// that squad authors are allowed to set. Pod-level fields (prompt, target,
-// directPolicy, session, to, ackMaxChars, includeReasoning,
-// includeSystemPromptSection, suppressToolErrorWarnings) are intentionally
-// excluded — OpenClaw still accepts them at the pod level, but a squad
-// bundle should not declare them. `every` is a duration string in OpenClaw's
-// ms/s/m/h format (e.g. "30m", "2h", "24h", "0m" to disable) — named values
-// like "daily" are invalid.
-const HEARTBEAT_EVERY_PATTERN = /^\d+(ms|s|m|h)$/;
-const HEARTBEAT_FIELDS = {
-  every:           { kind: "duration" },
-  model:           { kind: "enum", values: MODELS },
-  lightContext:    { kind: "boolean" },
-  isolatedSession: { kind: "boolean" },
-  skipWhenBusy:    { kind: "boolean" },
-  timeoutSeconds:  { kind: "positiveInteger" },
-};
-
-const FORBIDDEN_BASENAMES = new Set(["agents.md", "user.md", "bootstrap.md", "boot.md"]);
+// Per-agent `agent.json#/heartbeat` and the per-agent `HEARTBEAT.md` file
+// are intentionally not authorable from a squad bundle. OpenClaw's agent-level
+// heartbeat does not fire for squad sub-agents today, so every recurring wake
+// must be driven by a cron in `crons/jobs.json`. The `heartbeat` key in
+// `agent.json` is rejected as an unknown field; `HEARTBEAT.md` is rejected as
+// a forbidden filename anywhere inside a bundle.
+const FORBIDDEN_BASENAMES = new Set([
+  "agents.md",
+  "user.md",
+  "bootstrap.md",
+  "boot.md",
+  "heartbeat.md",
+]);
 
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const isStringArray = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
@@ -217,47 +210,16 @@ function validateManifest(input) {
   return errors;
 }
 
-// ── heartbeat sub-schema validation ─────────────────────────────────────────
-// Mirrors OpenClaw's heartbeat config exactly. Every sub-field is optional;
-// unknown sub-fields are rejected.
-
-function validateHeartbeat(input, prefix, err) {
-  for (const key of Object.keys(input)) {
-    const spec = HEARTBEAT_FIELDS[key];
-    if (!spec) {
-      err(`${prefix}.${key}`, `unknown field — allowed: ${Object.keys(HEARTBEAT_FIELDS).join(", ")}`);
-      continue;
-    }
-    const v = input[key];
-    const at = `${prefix}.${key}`;
-    switch (spec.kind) {
-      case "duration":
-        if (typeof v !== "string" || !HEARTBEAT_EVERY_PATTERN.test(v)) {
-          err(at, 'must be an OpenClaw duration string in units ms/s/m/h (e.g. "30m", "2h", "24h", "0m" to disable). Named values like "daily" are not valid.');
-        }
-        break;
-      case "boolean":
-        if (typeof v !== "boolean") err(at, "must be a boolean");
-        break;
-      case "positiveInteger":
-        if (!Number.isInteger(v) || v < 1) err(at, "must be a positive integer");
-        break;
-      case "enum":
-        if (!spec.values.includes(v)) err(at, `must be one of: ${spec.values.join(", ")}`);
-        break;
-    }
-  }
-}
-
 // ── agent.json validation ───────────────────────────────────────────────────
 // Validates agents/<id>/agent.json against the agent.schema.json subset of
-// OpenClaw's agents.list[].
+// OpenClaw's agents.list[]. The `heartbeat` key is intentionally absent —
+// agent-level heartbeats do not fire for squad sub-agents in OpenClaw today,
+// so every recurring wake must be driven by a cron in `crons/jobs.json`.
 
 const AGENT_ALLOWED_KEYS = new Set([
   "id",
   "description",
   "model",
-  "heartbeat",
   "skills",
   "contextInjection",
   "bootstrapMaxChars",
@@ -292,14 +254,6 @@ function validateAgentJson(input, expectedId, pathPrefix) {
 
   if (input.model !== undefined && !MODELS.includes(input.model)) {
     err("model", `must be one of: ${MODELS.join(", ")}`);
-  }
-
-  if (input.heartbeat !== undefined) {
-    if (!isObject(input.heartbeat)) {
-      err("heartbeat", "must be an object mirroring OpenClaw's agents.list[].heartbeat (see docs.openclaw.ai/gateway/config-agents)");
-    } else {
-      validateHeartbeat(input.heartbeat, "heartbeat", err);
-    }
   }
 
   if (input.skills !== undefined && !isStringArray(input.skills)) {
@@ -453,8 +407,11 @@ async function checkFrontmatter(bundleDir) {
 
 // ── forbidden filenames ─────────────────────────────────────────────────────
 // AGENTS.md, USER.md, BOOTSTRAP.md, BOOT.md are pod-level files managed by
-// Pancake Cloud — never ship them inside a bundle. TOOLS.md is allowed; it is
-// bundle-authored documentation of the squad's tool surface.
+// Pancake Cloud — never ship them inside a bundle. HEARTBEAT.md is forbidden
+// because OpenClaw's per-agent heartbeat does not fire for squad sub-agents
+// today: every recurring wake must be driven by a cron in `crons/jobs.json`,
+// with the wake procedure embedded in the cron's payload text. TOOLS.md is
+// allowed; it is bundle-authored documentation of the squad's tool surface.
 
 async function scanForbiddenFiles(bundleDir) {
   const errors = [];
@@ -472,10 +429,12 @@ async function scanForbiddenFiles(bundleDir) {
         continue;
       }
       if (e.isFile() && FORBIDDEN_BASENAMES.has(e.name.toLowerCase())) {
+        const isHeartbeat = e.name.toLowerCase() === "heartbeat.md";
         errors.push({
           path: relative(bundleDir, full),
-          message:
-            "forbidden filename — AGENTS.md / USER.md / BOOTSTRAP.md / BOOT.md are pod-managed by Pancake Cloud and must not appear inside a bundle (TOOLS.md is allowed)",
+          message: isHeartbeat
+            ? "forbidden filename — HEARTBEAT.md is no longer authorable from a bundle: OpenClaw's per-agent heartbeat does not fire for squad sub-agents. Move the wake procedure into the payload of a cron in `crons/jobs.json` (sessionTarget = this agent's id) instead."
+            : "forbidden filename — AGENTS.md / USER.md / BOOTSTRAP.md / BOOT.md are pod-managed by Pancake Cloud and must not appear inside a bundle (TOOLS.md is allowed)",
         });
       }
     }
@@ -601,11 +560,8 @@ async function validateBundle(bundleDir) {
   for (const id of agentIds) {
     refs.push(`agents/${id}/IDENTITY.md`, `agents/${id}/SOUL.md`);
     const agent = agentsById.get(id);
-    if (isObject(agent)) {
-      if (isObject(agent.heartbeat) && typeof agent.heartbeat.every === "string") {
-        refs.push(`agents/${id}/HEARTBEAT.md`);
-      }
-      if (isStringArray(agent.skills)) refs.push(...agent.skills);
+    if (isObject(agent) && isStringArray(agent.skills)) {
+      refs.push(...agent.skills);
     }
   }
   for (const rel of [...new Set(refs)]) {

@@ -61,7 +61,7 @@ The active channel is stored in MEMORY.md under **Outreach channel**. Never assu
 
 1. *MEMORY.md is the pipeline.* The **Pipeline** section in `MEMORY.md` is the single source of truth — every active lead is a row in the Active leads table; every closed lead is a row in the Closed leads table. Read it at the start of every wake, update it after every action. No external task system, no parallel ledger.
 
-2. *The wake is the loop.* The full workflow lives in `HEARTBEAT.md`. The `daily-outbound-loop` cron runs it end to end (08:00 LA). The `reply-sweep` cron runs Section 2 only, every 2h, to guarantee reply latency under 2h. The 2h heartbeat pulse runs the mission-deepening subset and acts as a backup reply check (see HEARTBEAT.md → *What runs on which wake*). There is no "queued work between wakes" — what's due is computed from `Next due` dates in the pipeline table.
+2. *The wake is the loop.* The workflow is driven entirely by `crons/jobs.json`. The `daily-outbound-loop` cron (08:00 LA) runs the full end-to-end procedure. The `heartbeat-pulse` cron (every 2h, skipping 08:00) handles inbound replies under 2h latency, advances any sequence whose `Next due ≤ today`, and runs a mission-deepening move when the pipeline is quiet. Each cron's payload is the procedure — read it as your wake instructions. There is no "queued work between wakes" — what's due is computed from `Next due` dates in the pipeline table.
 
 3. *Signal first.* Always try to find a signal before reaching out. ICP search is the fallback.
 
@@ -71,9 +71,9 @@ The active channel is stored in MEMORY.md under **Outreach channel**. Never assu
 
 6. *One learning per week.* Sunday's daily-outbound-loop run: log what worked, what didn't, one hypothesis.
 
-7. *Digest every daily-outbound-loop run, no exceptions.* Even if nothing happened. 3–5 lines maximum. (Heartbeat pulses do **not** re-post the digest — that would spam the channel.)
+7. *Digest every daily-outbound-loop run, no exceptions.* Even if nothing happened. 3–5 lines maximum. (Heartbeat-pulse runs do **not** re-post the public digest — that would spam the channel.)
 
-8. *Three actions per day, minimum.* Count today's entries in `memory/YYYY-MM-DD.md` at the end of every wake. If you're under 3 and the day isn't over, execute a mission-deepening action (HEARTBEAT.md → *Mission-deepening*) before closing.
+8. *Three actions per day, minimum.* Count today's entries in `memory/YYYY-MM-DD.md` at the end of every wake. If you're under 3 and the day isn't over, execute a mission-deepening action (per the `heartbeat-pulse` cron's mission-deepening section) before closing.
 
 ---
 
@@ -114,11 +114,15 @@ The active channel is stored in MEMORY.md under **Outreach channel**. Never assu
 
 ## Wake Protocol
 
-See [`HEARTBEAT.md`](./HEARTBEAT.md) — the end-to-end procedure you run on every
-wake, including the channel-aware sequence, digest, and pipeline ledger
-updates. `SOUL.md` defines *who you are*; `HEARTBEAT.md` defines *what you do
-when woken*. The whole outbound loop lives in those two files plus
-`MEMORY.md`.
+Wakes are driven by `crons/jobs.json`. Two crons cover everything:
+
+- `daily-outbound-loop` (08:00 LA) — the full end-to-end outbound procedure.
+- `heartbeat-pulse` (every 2h, skipping 08:00) — reply sweep + sequence
+  advancement + mission-deepening when the pipeline is quiet.
+
+The cron's payload is your wake procedure — read it on every wake. `SOUL.md`
+defines *who you are*; the cron payloads define *what you do when woken*. The
+pipeline ledger in `MEMORY.md` is the only state that persists between runs.
 
 ---
 

@@ -2,7 +2,6 @@
   "id": "geo-agent",
   "description": "GEO/SEO strategist — daily citation audits, blog posts, JSON-LD/llms.txt engineering. Self-merges blog and technical GEO PRs.",
   "model": "sonnet",
-  "heartbeat": { "every": "2h" },
   "skills": [
     "agents/geo-agent/skills/geo-llmseo-playbook.md",
     "agents/geo-agent/skills/advanced-seo.md",

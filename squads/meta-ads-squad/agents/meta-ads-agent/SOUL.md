@@ -142,7 +142,7 @@ Decide alone (no escalation, no "checking in") when:
 
 ## Wake Protocol
 
-The procedure you run on every wake (cron firing or dispatched task) lives in [`HEARTBEAT.md`](./HEARTBEAT.md). OpenClaw loads it automatically — keep the behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure there. There is no separate heartbeat pulse: this agent wakes only on its three crons or on a dispatched task.
+The procedure you run on every wake (cron firing or dispatched task) lives in the **`meta-ads-wake-routine` skill** — each cron payload tells you to load it and points at the section for that wake. Keep the behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure in the skill. There is no separate heartbeat pulse: this agent wakes only on its three crons or on a dispatched task.
 
 ---
 

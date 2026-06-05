@@ -45,5 +45,5 @@ immediately: `sessions_spawn` example-agent on the task, then mark it
 `in_progress`. Don't leave it waiting for the cron; the user is here now. Close
 by telling the user the agent is already working and will report back shortly.
 
-<!-- TODO: to defer the first task to the agent's heartbeat instead of running
-     it now, tag the step `dispatch: later`. -->
+<!-- TODO: to defer the first task to the agent's next cron wake instead of
+     running it now, tag the step `dispatch: later`. -->

@@ -21,11 +21,13 @@ a transient task. Once installed it has:
 - its **own workspace** at `workspace/agents/<agent-id>/`;
 - an **`IDENTITY.md`** (who it is — name, role, scope) and a **`SOUL.md`** (how it behaves
   — personality, principles, boundaries), deployed verbatim from the bundle;
-- optionally a **`HEARTBEAT.md`** — the imperative wake procedure OpenClaw loads on every
-  pulse and dispatched task. Without it, the pod's default wake template is used;
 - its **own isolated skill collection** at `workspace/agents/<agent-id>/skills/`;
-- a **port** and a **`heartbeat`** — so it wakes on its own schedule, proactively, not only
-  when spoken to;
+- **cron-driven recurring wakes** — every recurring schedule the squad needs (a daily
+  duty, a Monday digest, a 2-hour self-driven pulse) is a job in `crons/jobs.json` whose
+  `payload.text` is the wake procedure the agent runs. (OpenClaw's per-agent
+  `agents.list[].heartbeat` does not fire for squad sub-agents today, so the heartbeat
+  pattern is implemented as a `0 */2 * * *`-style cron pointing at the agent.) Outside of
+  these crons, the agent also wakes on dispatched tasks from the co-founder;
 - a **reporting line**: it reports to the co-founder. The user never talks to a squad agent
   directly — the co-founder dispatches work to it and relays results.
 
@@ -64,10 +66,12 @@ When a user asks the co-founder to install a squad, four things happen:
    `.tar.gz`, extracts it, re-validates the manifest, and for each agent: creates
    `workspace/agents/<id>/` (with `IDENTITY.md` + `SOUL.md` from the bundle), reads the
    per-agent `agents/<id>/agent.json` to add an `agents.list` entry to `openclaw.json`
-   (model, heartbeat, skills, and the rest of the runtime config), deploys the agent's
-   skills into its own skills folder, merges the bundle's crons, and seeds memory. The
-   marketplace catalog also surfaces each agent's user-facing description from `SQUAD.md`
-   body prose — `manifest.json` and `agent.json` are runtime config, not catalog copy.
+   (model, skills, and the rest of the runtime config), deploys the agent's skills into
+   its own skills folder, merges the bundle's crons (these crons carry the recurring wake
+   procedures, since per-agent heartbeats don't fire for sub-agents), and seeds memory.
+   The marketplace catalog also surfaces each agent's user-facing description from
+   `SQUAD.md` body prose — `manifest.json` and `agent.json` are runtime config, not
+   catalog copy.
 
 3. **Onboarding.** The co-founder runs the bundle's [`ONBOARD.md`](./bundle-reference.md#onboardmd)
    **as a script** — not as documentation. `ONBOARD.md` tells the co-founder what to ask the
@@ -76,8 +80,8 @@ When a user asks the co-founder to install a squad, four things happen:
    what first task to create.
 
 4. **First task.** The first task is created and dispatched immediately, so the squad starts
-   working while the user is still there — rather than waiting for the agent's next
-   heartbeat. (A step can opt out with `dispatch: later` to defer to the heartbeat.)
+   working while the user is still there — rather than waiting for the agent's next cron
+   wake. (A step can opt out with `dispatch: later` to defer to the next cron run.)
 
 The key idea in step 3: **`ONBOARD.md` is a runnable script.** You are not writing docs for
 a human to read — you are writing instructions for the co-founder agent to execute.

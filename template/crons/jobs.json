@@ -13,6 +13,19 @@
       },
       "failureAlert": false,
       "state": {}
+    },
+    {
+      "id": "heartbeat-pulse",
+      "name": "Example 2h heartbeat pulse — self-driven check-in",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 */2 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "example-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "TODO: the recurring wake procedure for this agent — what was previously written in HEARTBEAT.md goes here. Heartbeats on the per-agent `agent.json#/heartbeat` field do **not** fire for squad sub-agents in OpenClaw today, so every recurring wake must be driven by a cron in this file. Typical structure: (1) Orient — read MEMORY.md, skim recent `memory/YYYY-MM-DD.md` entries, `list_tasks`. (2) Decide what this wake is for — dispatched task waiting? Handle it first. Otherwise run the pulse procedure. (3) Recurring duty — the agent's specific heartbeat work (be explicit about cadence so the agent doesn't double-fire). (4) Execute — actually produce the artifact; don't just plan. (5) Digest — append a one-paragraph digest to `memory/YYYY-MM-DD.md`: what you did, what changed, what's still open, the single first move for the next wake. (6) Close the loop — `complete_task` / `fail_task`, surface blockers. **Non-negotiable:** at least one task must be EXECUTED before the session closes. `NO_REPLY` (OpenClaw's silent-turn sentinel — never write 'do not respond') is only acceptable when nothing is actionable, with the reason logged to `memory/YYYY-MM-DD.md` first."
+      },
+      "failureAlert": false,
+      "state": {}
     }
   ]
 }

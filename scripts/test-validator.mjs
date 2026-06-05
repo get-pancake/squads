@@ -66,16 +66,8 @@ function baseBundle() {
 const cases = [
   // Positive baselines
   {
-    name: "valid minimum bundle (no heartbeat)",
+    name: "valid minimum bundle",
     mutate: () => {},
-    expect: null,
-  },
-  {
-    name: "valid bundle with heartbeat object + HEARTBEAT.md",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "30m" };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake procedure\n";
-    },
     expect: null,
   },
   {
@@ -85,85 +77,35 @@ const cases = [
     },
     expect: null,
   },
-  {
-    name: "valid bundle with every curated heartbeat sub-field",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = {
-        every: "2h",
-        model: "haiku",
-        lightContext: true,
-        isolatedSession: true,
-        skipWhenBusy: true,
-        timeoutSeconds: 45,
-      };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake procedure\n";
-    },
-    expect: null,
-  },
 
-  // Negative — heartbeat shape
+  // Negative — heartbeat is no longer authorable from a bundle
   {
-    name: "heartbeat as bare string is rejected",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = "daily";
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /must be an object mirroring OpenClaw's agents\.list\[\]\.heartbeat/,
-  },
-  {
-    name: 'heartbeat.every = "daily" is rejected',
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "daily" };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /must be an OpenClaw duration string in units ms\/s\/m\/h/,
-  },
-  {
-    name: "unknown heartbeat sub-field is rejected",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "30m", bogus: true };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /heartbeat\.bogus.*unknown field/,
-  },
-  {
-    name: "heartbeat.lightContext as a string is rejected",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "30m", lightContext: "yes" };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /heartbeat\.lightContext.*must be a boolean/,
-  },
-  {
-    name: "heartbeat.model outside haiku|sonnet|opus is rejected",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "30m", model: "openai/gpt-5.4-mini" };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /heartbeat\.model.*must be one of: haiku, sonnet, opus/,
-  },
-  {
-    name: "pod-level heartbeat field (e.g. directPolicy) is rejected",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "30m", directPolicy: "allow" };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /heartbeat\.directPolicy.*unknown field/,
-  },
-  {
-    name: "heartbeat.timeoutSeconds = 0 is rejected (must be positive)",
-    mutate: (b) => {
-      b["agents/test-agent/agent.json"].heartbeat = { every: "30m", timeoutSeconds: 0 };
-      b["agents/test-agent/HEARTBEAT.md"] = "wake\n";
-    },
-    expect: /heartbeat\.timeoutSeconds.*must be a positive integer/,
-  },
-  {
-    name: "heartbeat declared but HEARTBEAT.md missing is rejected",
+    name: "heartbeat in agent.json is rejected (unknown field)",
     mutate: (b) => {
       b["agents/test-agent/agent.json"].heartbeat = { every: "30m" };
     },
-    expect: /agents\/test-agent\/HEARTBEAT\.md.*not found/,
+    expect: /agent\.json.*heartbeat.*unknown field/,
+  },
+  {
+    name: "HEARTBEAT.md is forbidden anywhere in a bundle (agent dir)",
+    mutate: (b) => {
+      b["agents/test-agent/HEARTBEAT.md"] = "wake procedure\n";
+    },
+    expect: /agents\/test-agent\/HEARTBEAT\.md.*forbidden filename.*HEARTBEAT\.md is no longer authorable from a bundle/,
+  },
+  {
+    name: "HEARTBEAT.md is forbidden at the bundle root too",
+    mutate: (b) => {
+      b["HEARTBEAT.md"] = "x\n";
+    },
+    expect: /HEARTBEAT\.md.*forbidden filename.*HEARTBEAT\.md is no longer authorable from a bundle/,
+  },
+  {
+    name: "lowercase heartbeat.md is also forbidden (case-insensitive)",
+    mutate: (b) => {
+      b["agents/test-agent/heartbeat.md"] = "x\n";
+    },
+    expect: /agents\/test-agent\/heartbeat\.md.*forbidden filename/,
   },
 
   // Negative — agent.json schema

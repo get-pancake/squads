@@ -15,7 +15,7 @@
 ## Squad
 → posthog-squad
 → My skills: posthog-discovery, posthog-daily-analysis, posthog-mcp-toolkit, posthog-funnel-debugger, posthog-release-tracker, posthog-cohort-sync
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Wake procedure: driven by `crons/jobs.json` (daily-posthog-analysis + weekly-posthog-recap + heartbeat-pulse) — each cron payload carries the procedure for that wake.
 
 ## Company context
 → Product: wiki/Company/COMPANY.md

@@ -13,6 +13,19 @@
       },
       "failureAlert": true,
       "state": {}
+    },
+    {
+      "id": "heartbeat-pulse",
+      "name": "2h heartbeat pulse — GEO-agent self-driven check-in",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 1,3,5,7,11,13,15,17,19,21,23 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "geo-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "2h heartbeat pulse — self-driven check-in between daily-citation-audit runs. **Load the `geo-llmseo-playbook` skill** (always); **load `blog-writing-guide`** before any blog post; **load `advanced-seo`** before llms.txt / JSON-LD / schema work. Run this procedure in order:\n\n(1) **Orient** — read `MEMORY.md`, skim the most recent `memory/YYYY-MM-DD.md` entries (what shipped, what's in flight, what's blocked), then `list_tasks`.\n\n(2) **Decide what this wake is for** — a dispatched task waiting? Handle it first. Otherwise this is a pulse, run the pulse procedure below.\n\n(3) **Scan the tasks tool** — any task dispatched, queued, or stuck in flight gets attention now.\n\n(4) **Advance work in flight** — any open PR awaiting a follow-up commit, any draft post that's half written, any schema fix mid-PR — move it forward one step. Self-merge anything ready (blog or technical GEO PR).\n\n(5) **Push the mission deeper** — pick one and do it:\n  - Spot-check 1–2 keywords against ChatGPT/Perplexity off-cycle; if a citation has dropped, queue a fix.\n  - Run a freshness sweep on the 5 oldest blog posts; bump `dateModified` and tighten the lede on whichever has the weakest opening.\n  - Validate `llms.txt` + the JSON-LD on the highest-traffic page.\n  - Identify one comparison-page gap (competitor cited where you aren't) and queue the draft.\n  - Review the last 7 days of citation deltas in `wiki/Knowledge/GEO/citation-share.md` — file one learning to `MEMORY.md → Weekly Learnings`.\n\n(6) **Queue the next action** — `create_task` for whatever should happen on the next pulse or the next cron run.\n\n(7) **Self-check the daily floor** — count today's entries in `memory/YYYY-MM-DD.md`. Under 3 actions? Pick another mission-deepening move and do it before closing.\n\n(8) **Execute** — actually do the work picked above. Don't just plan — draft the post, open the PR, run the audit, advance the task. Output > deliberation. Pulse work self-merges where the daily cron would (blog + technical GEO PRs); otherwise files to `wiki/Knowledge/GEO/Drafts/`.\n\n(9) **Digest** — write a one-paragraph digest to `memory/YYYY-MM-DD.md`: what you did, what changed, what's still open, the single first move for the next wake. Surface to the co-founder only on material citation movement. On Sunday, also log one Weekly Learning to `MEMORY.md → Weekly Learnings`.\n\n(10) **Close the loop** — `complete_task` / `fail_task` with outcome or blocker; never disappear silently.\n\n**Non-negotiable — two floors, both must hold.** (a) At least one action must be EXECUTED before closing — a shipped artifact (PR opened or merged, draft filed, schema fix landed) or a mission-deepening move (new keyword hypothesis, new comparison-page candidate, llms.txt diff). (b) At least 3 distinct actions must be logged in `memory/YYYY-MM-DD.md` before the day ends. `NO_REPLY` (OpenClaw's silent-turn sentinel — never write 'do not respond') is only acceptable when every dispatched task is blocked, no recurring duty is due, no open output is awaiting your hand, AND no mission-deepening move is available — log the reason in `memory/YYYY-MM-DD.md` first."
+      },
+      "failureAlert": false,
+      "state": {}
     }
   ]
 }

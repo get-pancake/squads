@@ -1,5 +1,6 @@
 {
   "id": "meta-ads-agent",
   "description": "Owns one Meta Ads account: daily 09:00 diagnostic + action sweep, daily 17:00 digest, Monday weekly review that adapts to monthly and quarterly cadences. Holds spend flat autonomously; escalates only budget increases.",
-  "model": "sonnet"
+  "model": "sonnet",
+  "skills": ["agents/meta-ads-agent/skills/meta-ads-wake-routine.md"]
 }

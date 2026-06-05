@@ -25,14 +25,14 @@ Do not invent the contract from memory — read these files.
 Ask the user what they want, and don't scaffold until you have answers for all of it:
 
 - **The squad** — its purpose, and a kebab-case `name` (globally unique, ≤ 64 chars).
-- **Each agent** — `id` (kebab-case), role / `description`, `model` (`haiku`/`sonnet`/`opus`,
-  string enum), `heartbeat` — a curated subset of [OpenClaw's
-  `agents.list[].heartbeat`](https://docs.openclaw.ai/gateway/config-agents#agents-defaults-heartbeat).
-  Only six sub-fields are accepted: `every`, `model`, `lightContext`,
-  `isolatedSession`, `skipWhenBusy`, `timeoutSeconds`. `every` is an OpenClaw duration
-  string in units `ms`/`s`/`m`/`h` (e.g. `"30m"`, `"2h"`, `"24h"`, `"0m"` to disable);
-  named values like `"daily"` are invalid. `heartbeat.model` is the same `haiku`/`sonnet`/`opus`
-  enum. Keep each agent single-lane and focused.
+- **Each agent** — `id` (kebab-case), role / `description`, `model`
+  (`haiku`/`sonnet`/`opus`, string enum). Keep each agent single-lane and focused.
+- **Recurring wakes** — for each agent, ask what schedule(s) it needs to wake on. These
+  become **crons** in `crons/jobs.json` (per-agent `agent.json#/heartbeat` does **not**
+  fire for squad sub-agents today, so every recurring wake is cron-driven). Get: each
+  cron's id + cron expression + timezone + the wake procedure that goes in `payload.text`.
+  The common pattern is one daily clock-driven cron + one `0 */2 * * *`-style pulse cron
+  for self-driven check-ins.
 - **Skills** — which are squad-wide (every agent gets them) vs agent-specific.
 - **Required identities** — external sites the squad needs connected, each with a reason.
 - **Required vault secrets** — each `{ key, label, type }`.
@@ -44,7 +44,6 @@ Ask the user what they want, and don't scaffold until you have answers for all o
   `image-generation` / `image_generate` / `image`, `cron`. Anything else is rejected by
   the validator. Slack and voice/TTS are intentionally excluded — those are user-facing
   channels owned by the co-founder, not by a sub-agent.
-- **Crons** — any scheduled jobs, and what each one does.
 - **Catalog metadata** — `tags` for the marketplace card (no `token_intensity` — it is
   deprecated and Pancake Cloud computes token usage automatically).
 
@@ -56,25 +55,30 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
   No per-agent runtime config in this file. Delete optional sections the squad doesn't use.
 - **`agents/<id>/agent.json`** for every agent — the per-agent runtime config (curated
   subset of OpenClaw's `agents.list[]`). Required: `id`, `description`. `model` is a
-  string from `haiku`/`sonnet`/`opus`. `heartbeat` is an object with up to six allowed
-  sub-fields: `every`, `model`, `lightContext`, `isolatedSession`, `skipWhenBusy`,
-  `timeoutSeconds`. `every` is an OpenClaw duration in `ms`/`s`/`m`/`h` (e.g. `"30m"`,
-  `"2h"`, `"24h"`); plain strings (`"daily"`) and named values are rejected. Pod-level
-  fields like `prompt`, `target`, `directPolicy`, `session`, `to`, `ackMaxChars` are
-  rejected. Top-level optional fields: `skills`, `contextInjection`, `bootstrapMaxChars`,
-  `params`. Unknown fields anywhere are rejected.
-- **`agents/<id>/IDENTITY.md`, `SOUL.md`, and `HEARTBEAT.md`** for every agent; add
-  `agents/<id>/MEMORY.md` if useful. `HEARTBEAT.md` is **required** when `agent.json`
-  declares a heartbeat — keep it out of `SOUL.md` (behaviour) and `MEMORY.md` (pointer
-  index).
+  string from `haiku`/`sonnet`/`opus`. Top-level optional fields: `skills`,
+  `contextInjection`, `bootstrapMaxChars`, `params`. **`heartbeat` is rejected** —
+  OpenClaw's agent-level heartbeat does not fire for squad sub-agents, so every recurring
+  wake goes in `crons/jobs.json` instead. Unknown fields anywhere are rejected.
+- **`agents/<id>/IDENTITY.md` and `SOUL.md`** for every agent; add
+  `agents/<id>/MEMORY.md` if useful. `HEARTBEAT.md` is a **forbidden filename** anywhere
+  in the bundle — move what would have gone there into the `payload.text` of a cron in
+  `crons/jobs.json` whose `sessionTarget` is the agent's id.
+- **`crons/jobs.json`** — required whenever the agent has any recurring wake (which is
+  almost always). For the "heartbeat pulse" pattern, add a cron with id `heartbeat-pulse`,
+  `schedule.expr = "0 */2 * * *"` (or whatever cadence the user wants), `sessionTarget`
+  pointing at the agent, and the imperative wake procedure embedded in `payload.text`. If
+  the procedure is long, an alternative is to ship a `heartbeat-pulse` skill under the
+  agent's `agent.json#/skills` and have the cron's payload say only *"Load the
+  `heartbeat-pulse` skill and run it end to end."* — either shape is allowed. A cron run
+  that intentionally produces no output must instruct the agent to reply with the single
+  literal token `NO_REPLY` (OpenClaw's silent-turn sentinel — never write "do not respond").
 - **Every skill file** referenced by `manifest.skills` or `agent.json#/skills`, in
   SKILL.md format (frontmatter `name` + `description`, then a procedure written as steps).
 - **`SQUAD.md`** — frontmatter is minimal: `tags` (recommended) and optional
   `preview_image`. The body is the marketplace catalog's source of truth for per-agent
   prose, so describe every agent here in user-facing language.
 - **`ONBOARD.md`** — the runnable onboarding script the co-founder executes after deploy.
-- Add or delete the optional `crons/jobs.json` and squad-wide `MEMORY.md` depending on
-  Step 2.
+- Add or delete the optional squad-wide `MEMORY.md` depending on Step 2.
 - **Strip every `<!-- TODO -->` comment and placeholder** the template ships with. The
   validator errors on any unresolved TODO marker outside `template/`.
 
@@ -101,18 +105,19 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
   `vault_request`, connect identities via `browser_identity_add`, save answers to the agent's
   `MEMORY.md`, and create + dispatch a first task. It must fit `estimated_setup_minutes`.
 - `MEMORY.md` is a **thin index of pointers**, never a notebook.
-- `HEARTBEAT.md` is the **imperative wake procedure** OpenClaw loads on every pulse —
-  not behaviour (that's `SOUL.md`), not pointers (that's `MEMORY.md`). It must require
-  the agent to **execute at least one task before closing the session** (no
-  orient-and-bail), and to write a **digest** to `memory/YYYY-MM-DD.md` before ending
-  the turn — what was done, what changed, what's still open, the next wake's first
-  move. `NO_REPLY` is only acceptable when nothing is actionable, with the reason
-  logged first.
+- The **cron payload** is the imperative wake procedure the agent runs — not behaviour
+  (that's `SOUL.md`), not pointers (that's `MEMORY.md`). It must require the agent to
+  **execute at least one task before closing the session** (no orient-and-bail), and to
+  write a **digest** to `memory/YYYY-MM-DD.md` before ending the turn — what was done,
+  what changed, what's still open, the next wake's first move. `NO_REPLY` is only
+  acceptable when nothing is actionable, with the reason logged first.
 - The **`SQUAD.md` body** is the catalog's per-agent prose surface — describe each
   agent in user-facing language there (not in `manifest.json`).
-- **Forbidden files**: do not create `AGENTS.md`, `USER.md`, `BOOTSTRAP.md`, or `BOOT.md`
-  inside the bundle — those are pod-managed by Pancake Cloud. `TOOLS.md` is allowed (it
-  is bundle-authored documentation).
+- **Forbidden files**: do not create `AGENTS.md`, `USER.md`, `BOOTSTRAP.md`, `BOOT.md`,
+  or `HEARTBEAT.md` inside the bundle. The first four are pod-managed by Pancake Cloud;
+  `HEARTBEAT.md` is forbidden because OpenClaw's per-agent heartbeat does not fire for
+  squad sub-agents (move the wake procedure into a cron's `payload.text` instead).
+  `TOOLS.md` is allowed (it is bundle-authored documentation).
 - Crons target **only this squad's own agents**.
 - **Squad crons run in the agent's *persistent* session — they cannot be isolated.** OpenClaw
   has an ephemeral `sessionTarget: "isolated"` cron mode, but it requires the target *not* be a

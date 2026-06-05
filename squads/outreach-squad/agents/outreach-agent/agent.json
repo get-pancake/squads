@@ -1,6 +1,5 @@
 {
   "id": "outreach-agent",
   "description": "Runs the full outbound loop daily: finds 1-3 leads, advances active sequences, handles replies, and posts a digest. Decides simple vs. advanced mode autonomously based on company stage.",
-  "model": "sonnet",
-  "heartbeat": { "every": "2h" }
+  "model": "sonnet"
 }

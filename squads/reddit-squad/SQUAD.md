@@ -27,6 +27,6 @@ Deploys Reddit-agent — a focused agent that builds your product's organic pres
 
 ## How it works
 
-Reddit-agent runs on a **daily monitoring cron** (14:00 America/Los_Angeles) plus a **weekly account health-check cron** (Monday 10:00 LA) — both load the right skill and execute end to end. A **2h heartbeat pulse** in between handles dispatched tasks, advances drafts, and pushes the mission deeper (new subreddits, new keywords). Reddit-agent enforces a 3-action-per-day floor. All work is filed to the wiki. Reddit-agent monitors and drafts, but never posts to Reddit without explicit co-founder sign-off.
+Reddit-agent runs on a **daily monitoring cron** (14:00 America/Los_Angeles) plus a **weekly account health-check cron** (Monday 10:00 LA) — both load the right skill and execute end to end. A **2h heartbeat-pulse cron** in between handles dispatched tasks, advances drafts, and pushes the mission deeper (new subreddits, new keywords). Reddit-agent enforces a 3-action-per-day floor. All work is filed to the wiki. Reddit-agent monitors and drafts, but never posts to Reddit without explicit co-founder sign-off.
 
 > **Why one account.** A single purchased account is safer, simpler, and avoids the Terms-of-Service issues that come with coordinated multi-account posting. If the account is banned, you've lost a few dollars — not your reputation.

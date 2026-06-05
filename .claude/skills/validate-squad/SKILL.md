@@ -31,22 +31,17 @@ The validator's checks fall into the following categories:
   `manifest.agents` must have a matching `agents/<id>/agent.json` file.
 - **`agent.json` schema** (e.g. `agents/<id>/agent.json#/model  must be one of: haiku,
   sonnet, opus`) — the per-agent config is invalid. Common causes:
-  - Wrong `model` value (string enum `haiku`/`sonnet`/`opus`) — applies to both
-    top-level `model` and `heartbeat.model`.
-  - `heartbeat` written as a plain string instead of the object shape (e.g.
-    `"heartbeat": "daily"` instead of `"heartbeat": { "every": "24h" }`).
-  - `heartbeat.every` written as a named value (`"daily"`) instead of an OpenClaw duration
-    in `ms`/`s`/`m`/`h` (`"30m"`, `"2h"`, `"24h"`, `"0m"`).
-  - Unknown field on the agent or inside `heartbeat`. Only six heartbeat sub-fields are
-    accepted (`every`, `model`, `lightContext`, `isolatedSession`, `skipWhenBusy`,
-    `timeoutSeconds`); pod-level fields like `prompt`, `target`, `directPolicy`,
-    `session`, `to`, `ackMaxChars` are rejected because they're not authorable from a
-    bundle.
+  - Wrong `model` value (string enum `haiku`/`sonnet`/`opus`).
+  - `heartbeat` declared on the agent — this is now an **unknown field**. OpenClaw's
+    per-agent heartbeat does not fire for squad sub-agents today; move the wake
+    procedure into a cron in `crons/jobs.json` whose `sessionTarget` is the agent's id,
+    and embed the procedure in `payload.text`.
+  - Other unknown field on the agent (only `id`, `description`, `model`, `skills`,
+    `contextInjection`, `bootstrapMaxChars`, `params` are accepted).
   - `id` not matching the directory name.
 - **Referenced-file errors** — a file the manifest or agent.json points to (`SQUAD.md`,
-  `ONBOARD.md`, a skill, `IDENTITY.md`, `SOUL.md`, `HEARTBEAT.md` when the agent has a
-  heartbeat) is missing, is a symlink, is not a regular file, or resolves outside the
-  bundle root.
+  `ONBOARD.md`, a skill, `IDENTITY.md`, `SOUL.md`) is missing, is a symlink, is not a
+  regular file, or resolves outside the bundle root.
 - **Unknown tool permission** (e.g. `required_tool_permissions[2]  "message" is not an
   accepted tool key`) — an entry in `manifest.required_tool_permissions` is not in the
   canonical Pancake tool list (see [`bundle-reference.md#tool-permissions`](../../../docs/bundle-reference.md#tool-permissions)).
@@ -57,9 +52,13 @@ The validator's checks fall into the following categories:
 - **Targeting errors** (`crons/jobs.json`) — a cron's `sessionTarget` names an agent the
   squad does not declare. Squad crons may target only the squad's own agents.
 - **Forbidden file** (e.g. `agents/<id>/USER.md  forbidden filename`) — the bundle
-  contains a file named `AGENTS.md`, `USER.md`, `BOOTSTRAP.md`, or `BOOT.md`. Those are
-  pod-managed by Pancake Cloud and must not appear inside a bundle. Delete the file.
-  `TOOLS.md` is *allowed* and is not flagged.
+  contains a file named `AGENTS.md`, `USER.md`, `BOOTSTRAP.md`, `BOOT.md`, or
+  `HEARTBEAT.md`. The first four are pod-managed by Pancake Cloud; `HEARTBEAT.md` is
+  forbidden because OpenClaw's per-agent heartbeat does not fire for squad sub-agents
+  today. **Migration:** move the wake procedure from `HEARTBEAT.md` into the
+  `payload.text` of a cron in `crons/jobs.json` (with `sessionTarget` set to that agent's
+  id), then delete the `HEARTBEAT.md` file and the `heartbeat` field from `agent.json`.
+  For other forbidden files, just delete them. `TOOLS.md` is *allowed* and is not flagged.
 - **Deprecated field** (e.g. `SQUAD.md  frontmatter has a deprecated 'token_intensity:'
   line`) — `token_intensity` has been removed from the contract. Pancake Cloud computes
   token usage automatically; delete the line.

@@ -26,6 +26,19 @@
       },
       "failureAlert": true,
       "state": {}
+    },
+    {
+      "id": "heartbeat-pulse",
+      "name": "2h heartbeat pulse — PostHog-agent self-driven check-in",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 1,3,5,7,11,13,15,17,19,21,23 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "posthog-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "2h heartbeat pulse — self-driven check-in between the daily-posthog-analysis (09:00) and weekly-posthog-recap (Mon 10:00) crons. Run this procedure in order:\n\n(1) **Orient** — read `MEMORY.md` (your settings, vault keys, where you file), skim the most recent `memory/YYYY-MM-DD.md` entries (what's in flight, what's blocked, what you promised the co-founder), then `list_tasks`.\n\n(2) **Decide what this wake is for** — a dispatched task waiting? Handle it first. That's why you were woken. Otherwise this is a pulse, run the pulse work below.\n\n(3) **Pulse work — pick the highest-leverage action in your lane and do it:** advance a draft; refresh the dying-users watchlist with intra-day data; scout a candidate north-star event; run the lightweight anomaly check (procedure in the `posthog-daily-analysis` skill); poll for new releases and snapshot release-impact metrics (procedure in the `posthog-release-tracker` skill — load it on the pulse). Don't bail at orient.\n\n(4) **Execute** — actually do the work picked above. Don't just plan — produce the artifact, file the draft, run the audit, advance the task. Output > deliberation. All analysis is read-only against PostHog by default; file outputs under `wiki/Knowledge/PostHog/`.\n\n(5) **Digest** — write a one-paragraph digest to `memory/YYYY-MM-DD.md`: what you ran (which queries/skill, which window), what changed, what's still open, the single first move for the next wake. Surface to the co-founder only on material news.\n\n(6) **Close the loop** — on task completion, `complete_task` with the outcome; on blocker (MCP down, auth fail, ingestion broken), `fail_task` with the exact error, log it, surface it — data-integrity issues outrank a missed digest.\n\n**Non-negotiable:** at least one task must be EXECUTED before you close the session. `NO_REPLY` (OpenClaw's silent-turn sentinel — never write 'do not respond') is only acceptable when every dispatched task is blocked, no recurring duty is due, and no open output is awaiting your hand — log *why* in `memory/YYYY-MM-DD.md` first."
+      },
+      "failureAlert": false,
+      "state": {}
     }
   ]
 }

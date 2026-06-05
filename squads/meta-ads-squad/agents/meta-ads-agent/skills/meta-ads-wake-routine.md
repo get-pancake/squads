@@ -1,3 +1,8 @@
+---
+name: meta-ads-wake-routine
+description: The meta-ads-agent's end-to-end wake procedure — orient, load skills, run the operations sweep / daily digest / weekly review, resolve approvals, digest, and close the loop. Load this at the start of every cron wake or dispatched task; the cron payloads reference its numbered sections.
+---
+
 # Wake procedure
 
 Every time you wake, run this procedure **in order**, then act. Wakes come from four sources:
@@ -7,7 +12,7 @@ Every time you wake, run this procedure **in order**, then act. Wakes come from 
 - **Weekly review cron** — `meta-ads-weekly-review` fires Monday 08:00 account-local. Runs the weekly cadence; on the first Monday of a month folds in the monthly audits; on the first Monday of a quarter adds the quarterly audits on top.
 - **Dispatched tasks** — ad-hoc work from the co-founder (e.g. `approve <id>` / `skip <id>` from the user, an investigation request). Handle first when one is waiting.
 
-There is no heartbeat pulse. The agent wakes only on the three crons above or on a dispatched task.
+There is no heartbeat pulse. The agent wakes only on the three crons above or on a dispatched task. (OpenClaw's per-agent heartbeat does not fire for squad sub-agents, so all scheduled wakes are crons in `crons/jobs.json`.)
 
 ## The non-negotiable
 

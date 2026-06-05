@@ -1,6 +1,6 @@
 {
   "name": "google-ads-squad",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Single-account Google Ads autopilot: twice-daily optimization sweeps, daily digest, 19-skill toolkit. Ships work autonomously, escalates only for budget increases.",
   "author": "pancake-official",
   "license": "MIT",

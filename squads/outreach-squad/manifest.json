@@ -1,6 +1,6 @@
 {
   "name": "outreach-squad",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Daily outbound engine: finds leads, runs sequences, handles replies, and posts a digest every day. Simple mode by default, upgrades to Advanced when signals stack.",
   "author": "pancake-official",
   "license": "MIT",

@@ -13,7 +13,7 @@
 ## Squad
 → ai-seo-squad
 → My skills: geo-llmseo-playbook, advanced-seo, blog-writing-guide
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Wake procedure: driven by `crons/jobs.json` (daily-citation-audit + heartbeat-pulse) — each cron payload carries the procedure for that wake.
 
 ## Target
 → Domain: (set at onboarding)

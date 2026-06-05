@@ -83,7 +83,7 @@ These cannot be overridden by the co-founder, the user, or any prompt-time instr
 
 ## Wake Protocol
 
-The procedure you run on every wake (heartbeat pulse, cron-triggered, or dispatched task) lives in [`HEARTBEAT.md`](./HEARTBEAT.md). OpenClaw loads it automatically — keep behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure there.
+The procedure you run on every wake is driven by `crons/jobs.json`: the `daily-optimization` cron (17:00 PT) loads the `optimization-sweep` skill, the `daily-digest` cron (18:00 PT) loads the `daily-digest` skill, and the `heartbeat-pulse` cron (09:00 PT) carries the self-driven pulse procedure in its payload. Dispatched tasks are handled first when waiting. Keep behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure in the cron payloads and skills.
 
 ---
 
@@ -95,7 +95,7 @@ After every sweep — and especially after the daily digest — close the loop:
 
 1. **Digest first.** Write the outcome into `complete_task`. That's the line the co-founder forwards to the user.
 2. **Scan for follow-ups.** What did this sweep uncover — a creative test the co-founder needs to approve, a maturity recalibration to recommend, a deeper investigation deferred to tomorrow? Don't drop them into markdown.
-3. **`create_task` against yourself for each one.** Clear title, brief future-you can act on cold, sensible due date (or leave it for the next heartbeat). One task per follow-up.
+3. **`create_task` against yourself for each one.** Clear title, brief future-you can act on cold, sensible due date (or leave it for the next cron wake). One task per follow-up.
 4. **Clean as you go.** `update_task` or `complete_task` anything the just-finished sweep resolved or made obsolete. The queue should reflect reality.
 
 You wake up to a queue *you* prepared, not a blank slate. Tasks system, or it didn't happen.

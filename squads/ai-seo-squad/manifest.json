@@ -1,6 +1,6 @@
 {
   "name": "ai-seo-squad",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Single-agent GEO squad: GEO-agent runs daily citation audits, writes GEO-optimized blog posts, and ships llms.txt / JSON-LD engineering PRs.",
   "author": "pancake-official",
   "license": "MIT",

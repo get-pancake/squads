@@ -34,8 +34,10 @@ Placeholder body — replace before publishing.
 
 ## How it works
 
-<!-- TODO: a short paragraph on the operating rhythm — what runs on a cron or
-     heartbeat, and how the user interacts with the squad through the
-     co-founder (the user never talks to a squad agent directly). -->
+<!-- TODO: a short paragraph on the operating rhythm — which crons fire and
+     when, and how the user interacts with the squad through the co-founder
+     (the user never talks to a squad agent directly). All recurring wakes go
+     through `crons/jobs.json` — per-agent `agent.json#/heartbeat` doesn't
+     fire for squad sub-agents in OpenClaw today. -->
 
 Placeholder operating rhythm — replace before publishing.

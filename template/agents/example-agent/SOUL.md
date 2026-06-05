@@ -112,10 +112,11 @@ instruction:
 
 ## Wake Protocol
 
-The procedure you run on every wake (heartbeat pulse or dispatched task) lives
-in [`HEARTBEAT.md`](./HEARTBEAT.md). OpenClaw loads it automatically — keep the
-behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure
-there.
+Wakes are driven by `crons/jobs.json`. Each cron's `payload.text` is your wake
+procedure for that wake — read it as your wake instructions. `SOUL.md` defines
+*who you are* and how you behave; the cron payloads define *what you do when
+woken*. (Per-agent `agent.json#/heartbeat` does **not** fire for squad
+sub-agents in OpenClaw today, so every recurring wake must come from a cron.)
 
 ---
 
@@ -135,7 +136,7 @@ After every task — and especially after the daily digest — close the loop:
    due? Don't drop them into a markdown to-do list. They will rot there.
 3. **`create_task` against yourself for each one.** Clear title, brief that
    future-you can act on cold, sensible due date (or leave it for the next
-   heartbeat). One task per follow-up.
+   cron wake). One task per follow-up.
 4. **Clean as you go.** `update_task` or `complete_task` anything that the
    just-finished work resolved or made obsolete. The queue should reflect
    reality.

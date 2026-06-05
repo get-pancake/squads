@@ -17,7 +17,10 @@ You don't need to read anything else first, but it helps to know:
   publishing content, whatever the squad is built for. Each agent reports to the user's
   co-founder agent; the user never talks to a squad agent directly.
 - **The runtime.** Squads run on OpenClaw inside a Pancake pod. Each agent wakes on a
-  *heartbeat* (e.g. every 2 hours, or daily) and runs a procedure you write.
+  *cron* (e.g. every 2 hours, or daily) declared in `crons/jobs.json` and runs the
+  procedure embedded in the cron's payload. (OpenClaw's per-agent
+  `agent.json#/heartbeat` does not fire for squad sub-agents today — that's why the wake
+  procedure lives in a cron, not in a `HEARTBEAT.md`.)
 - **The file contract.** A bundle is a directory of files with a specific shape. The
   validator enforces that shape; the marketplace re-checks it on ingest.
 
@@ -37,19 +40,22 @@ MEMORY.md                      ·  squad-wide seed memory
 skills/<name>.md               ·  squad-wide skills (every agent receives a copy)
 TOOLS.md                       ·  optional documentation of the squad's tool surface
 agents/<agent-id>/
-  agent.json                   ✔  per-agent runtime config (model, heartbeat, skills)
+  agent.json                   ✔  per-agent runtime config (model, skills)
   IDENTITY.md                  ✔  who the agent is (name, role, scope)
   SOUL.md                      ✔  how the agent behaves (personality, principles)
-  HEARTBEAT.md                 ·* the wake procedure (required when heartbeat is declared)
   MEMORY.md                    ·  agent-specific seed memory (overrides squad-wide)
   skills/<name>.md             ·  agent-specific skills
-crons/jobs.json                ·  native OpenClaw cron jobs
+crons/jobs.json                ·  native OpenClaw cron jobs — also the home of any
+                                  recurring wake procedure (the cron's payload text)
 ```
 
 A few things the validator *forbids* inside a bundle:
 
 - `AGENTS.md`, `USER.md`, `BOOTSTRAP.md`, `BOOT.md` — these are pod-level files managed
   by Pancake Cloud, not by squads. Don't ship them.
+- `HEARTBEAT.md` — OpenClaw's per-agent heartbeat does not fire for squad sub-agents
+  today. The wake procedure lives in a cron's `payload.text` in
+  [`crons/jobs.json`](../template/crons/jobs.json) instead.
 - `token_intensity` in `manifest.json` or `SQUAD.md` frontmatter — deprecated. Pancake
   Cloud computes token usage automatically.
 - `tasks/` directory — squads do not ship task templates. Ad-hoc work is dispatched at
@@ -129,15 +135,16 @@ For every id in `manifest.agents`, create `agents/<id>/agent.json`:
   "id": "your-agent-id",
   "description": "One line on what this agent owns.",
   "model": "sonnet",
-  "heartbeat": { "every": "24h" },
   "skills": ["agents/your-agent-id/skills/your-skill.md"]
 }
 ```
 
 This file is the bundle's slice of OpenClaw's agent runtime config. See
-[*4. agent.json reference*](#4-agentjson-reference) below for every field.
+[*4. agent.json reference*](#4-agentjson-reference) below for every field. Note that
+`heartbeat` is **not authorable** from a squad bundle — see
+[*6. Recurring wakes — the cron pattern*](#6-recurring-wakes--the-cron-pattern).
 
-### 3.4 Write `IDENTITY.md`, `SOUL.md`, and `HEARTBEAT.md`
+### 3.4 Write `IDENTITY.md` and `SOUL.md`
 
 For every agent:
 
@@ -149,8 +156,8 @@ For every agent:
   *Escalation Rules*, *Boundaries (Inviolable)*, *What Success Looks Like*. Mirror
   [`template/agents/example-agent/SOUL.md`](../template/agents/example-agent/SOUL.md).
 
-- **`HEARTBEAT.md` — the wake procedure.** *Required* when `agent.json#/heartbeat` is set.
-  See [*6. HEARTBEAT.md contract*](#6-heartbeatmd-contract) below.
+`HEARTBEAT.md` is a **forbidden filename** anywhere in a bundle — see
+[*6. Recurring wakes — the cron pattern*](#6-recurring-wakes--the-cron-pattern).
 
 ### 3.5 Write the skills
 
@@ -192,11 +199,13 @@ each agent here in user-facing language, not in `manifest.json`. Recommended sec
 **`ONBOARD.md`** is a **script the co-founder agent executes** after the mechanical deploy.
 See [*5. ONBOARD.md contract*](#5-onboardmd-contract) below.
 
-### 3.7 Optional: add `crons/jobs.json` and `MEMORY.md`
+### 3.7 Add `crons/jobs.json` (required for recurring wakes) and optionally `MEMORY.md`
 
-- `crons/jobs.json` for native OpenClaw cron jobs. Each job's `sessionTarget` must be an
-  agent id declared in your own `manifest.agents`. A cron run with nothing to report must
-  reply with the literal token `NO_REPLY`.
+- **`crons/jobs.json`** — native OpenClaw cron jobs. This is also where every recurring
+  wake lives, because per-agent heartbeats do not fire for squad sub-agents (see
+  [*6. Recurring wakes — the cron pattern*](#6-recurring-wakes--the-cron-pattern)). Each
+  job's `sessionTarget` must be an agent id declared in your own `manifest.agents`. A cron
+  run with nothing to report must reply with the literal token `NO_REPLY`.
 - A squad-wide `MEMORY.md` if multiple agents share the same seed pointers.
 
 ### 3.8 Strip every placeholder
@@ -225,7 +234,6 @@ Every field accepted in `agents/<id>/agent.json`:
 | `id` | string | ✔ | kebab-case. Must match the directory name and the `manifest.agents` entry. |
 | `description` | string | ✔ | Non-empty. One-line role description. |
 | `model` | string | · | Enum: `haiku` \| `sonnet` \| `opus`. Defaults to the pod default (`sonnet`). |
-| `heartbeat` | object | · | Curated subset of [OpenClaw's `agents.list[].heartbeat`](https://docs.openclaw.ai/gateway/config-agents#agents-defaults-heartbeat) — `{ every, model, lightContext, isolatedSession, skipWhenBusy, timeoutSeconds }`. Common shape `{ "every": "<duration>" }`. `every` is a duration in OpenClaw units `ms`/`s`/`m`/`h` (e.g. `"30m"`, `"2h"`, `"24h"`, `"0m"` to disable) — named values like `"daily"` are rejected. `heartbeat.model` is the same `haiku`/`sonnet`/`opus` enum as the top-level `model`. Pod-level fields (`prompt`, `target`, `directPolicy`, `session`, `to`, `ackMaxChars`, etc.) are not authorable from a bundle and are rejected. When the heartbeat object is present, `agents/<id>/HEARTBEAT.md` must exist. |
 | `skills` | string[] | · | Bundle-relative paths to this agent's skill files. |
 | `contextInjection` | string | · | Enum: `always` \| `continuation-skip` \| `never`. Pod default applies when omitted. |
 | `bootstrapMaxChars` | integer | · | Positive integer. OpenClaw bootstrap budget. |
@@ -233,6 +241,11 @@ Every field accepted in `agents/<id>/agent.json`:
 
 Unknown fields are rejected — the validator does not silently drop them. If you need a
 new OpenClaw field, add it to the schema first.
+
+> **`heartbeat` is not authorable from a squad bundle.** OpenClaw's
+> `agents.list[].heartbeat` does not fire for squad sub-agents today. If you put
+> a `heartbeat` object in `agent.json`, the validator rejects it as an unknown
+> field. See [*6. Recurring wakes — the cron pattern*](#6-recurring-wakes--the-cron-pattern).
 
 ## 5. `ONBOARD.md` contract
 
@@ -262,17 +275,36 @@ The body, in the imperative addressed to the co-founder:
   one matches the `site`.
 - **Save answers** to the agent's `MEMORY.md` (or a wiki page the MEMORY indexes).
 - **Create the first task** with `create_task` and dispatch it immediately — unless you
-  add `dispatch: later` to defer the first run to the agent's heartbeat.
+  add `dispatch: later` to defer the first run to the agent's next cron wake.
 
-## 6. `HEARTBEAT.md` contract
+## 6. Recurring wakes — the cron pattern
 
-OpenClaw loads `agents/<id>/HEARTBEAT.md` on **every wake** — both heartbeat pulses and
-dispatched tasks. This is the right home for the procedure the agent runs each tick;
-keeping it out of `SOUL.md` (which is for behavioural rules) and out of `MEMORY.md`
-(which is an index of pointers) lets you iterate on the procedure without touching the
-agent's personality.
+OpenClaw's per-agent `agents.list[].heartbeat` (i.e. `agent.json#/heartbeat`) does
+**not fire for squad sub-agents** today. Every recurring wake for a squad agent must
+therefore be driven by a cron in [`crons/jobs.json`](../template/crons/jobs.json), with
+the wake procedure embedded in the cron's `payload.text`. `HEARTBEAT.md` is a forbidden
+filename — the validator rejects it anywhere inside a bundle.
 
-Write it in the imperative, addressed to the agent. A solid structure:
+The typical pattern for an agent that wants to wake every 2 hours:
+
+```json
+{
+  "id": "heartbeat-pulse",
+  "name": "2h heartbeat pulse — your-agent-id self-driven check-in",
+  "enabled": true,
+  "schedule": { "kind": "cron", "expr": "0 */2 * * *", "tz": "America/Los_Angeles" },
+  "sessionTarget": "your-agent-id",
+  "payload": {
+    "kind": "systemEvent",
+    "text": "<the wake procedure — imperative, addressed to the agent>"
+  },
+  "failureAlert": false,
+  "state": {}
+}
+```
+
+Compose `payload.text` as the imperative wake procedure the agent runs every tick.
+A solid structure:
 
 1. **The non-negotiable** — at least one task must be **executed** before the session
    closes. A wake is "orient, find the highest-leverage action in the lane, do it, file
@@ -281,12 +313,23 @@ Write it in the imperative, addressed to the agent. A solid structure:
 2. **Orient** — read `MEMORY.md`, skim recent daily logs, call `list_tasks`.
 3. **Decide what this wake is for** — a dispatched task, a recurring duty, a draft to
    advance, or genuinely nothing (with a logged reason).
-4. **Recurring duty** — the agent's specific heartbeat work and its cadence.
+4. **Recurring duty** — the agent's specific cron-driven work and its cadence. If a
+   separate daily cron already covers the bulk of the work, the pulse cron typically
+   focuses on advancing in-flight items and mission-deepening between daily runs.
 5. **Execute** — actually produce the artifact; don't just plan.
 6. **Digest** — before closing the session, append a one-paragraph digest to
    `memory/YYYY-MM-DD.md`: *what you did, what changed, what's still open, and the single
    first move for the next wake.*
 7. **Close the loop** — `complete_task` / `fail_task`, surface blockers.
+
+A cron run that intentionally produces no output must instruct the agent to reply with
+the single literal token `NO_REPLY` (OpenClaw's silent-turn sentinel) — never write
+"do not respond", which trips a false-positive failure alert.
+
+> **Tip — long procedures.** When the wake procedure is too long for a comfortable
+> payload string, ship a `heartbeat-pulse` *skill* under the agent's
+> `agent.json#/skills` and have the cron's payload say only
+> *"Load the `heartbeat-pulse` skill and run it end to end."* — either shape is allowed.
 
 ## 7. Authoring principles
 
@@ -318,11 +361,12 @@ The contract tells you what's valid. This tells you what's good.
   to relay it. Only split when work is genuinely distinct: different cadence, different
   skills, different identities. When in doubt, one agent.
 
-- **Heartbeat first, cron only when timing matters.** A heartbeat is a state-driven
-  trigger — the agent wakes on its pulse and decides what to do. A cron is clock-driven:
-  it fires at an exact time with a hard-coded instruction. Reach for a cron only when the
-  time itself matters to someone outside the agent — an 18:00 PT end-of-day report, a
-  Monday-morning digest. Otherwise raise the heartbeat.
+- **Everything time-driven is a cron.** Per-agent heartbeats don't fire for squad
+  sub-agents today, so every recurring wake — whether it's a daily citation audit, a
+  Monday digest, or a 2-hour self-driven pulse — lives in `crons/jobs.json`. Reach for a
+  separate clock-time cron when the time itself matters to someone outside the agent (a
+  09:00 LA daily report), and a `0 */2 * * *`-style pulse cron for the agent's recurring
+  background work.
 
 - **Crons stay quiet unless something changed.** A scheduled run with nothing to report
   must reply with the single literal token `NO_REPLY`. A chatty cron that posts "nothing
@@ -331,9 +375,10 @@ The contract tells you what's valid. This tells you what's good.
 - **`MEMORY.md` is an index, not a notebook.** One-line pointers only. Detailed findings
   go to the shared wiki.
 
-- **Wake procedure in `HEARTBEAT.md`, behaviour in `SOUL.md`, pointers in `MEMORY.md`.**
-  Three files, three concerns. Burying wake steps in `SOUL.md` or pointers in
-  `HEARTBEAT.md` makes both hard to maintain.
+- **Wake procedure in the cron payload, behaviour in `SOUL.md`, pointers in `MEMORY.md`.**
+  Three concerns, three homes. Keep behavioural rules out of cron payloads (they belong
+  in `SOUL.md`), and keep step-by-step procedure out of `SOUL.md` (it belongs in the
+  cron's `payload.text`, or in a `heartbeat-pulse` skill the cron loads).
 
 ## 8. Testing your squad
 

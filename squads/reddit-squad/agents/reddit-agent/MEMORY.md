@@ -12,7 +12,7 @@
 ## Squad
 → reddit-squad
 → My skills: reddit-playbook, reddit-account
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Wake procedure: driven by `crons/jobs.json` (daily-reddit-monitoring + reddit-health-check + heartbeat-pulse) — each cron payload carries the procedure for that wake.
 
 ## Target Subreddits
 → (set at onboarding)
