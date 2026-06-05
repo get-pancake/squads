@@ -86,6 +86,17 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
 
 - Each agent is a **focused, single-lane specialist** that reports to the co-founder — not a
   generalist.
+- **Bounded tool output is a hard default.** Any agent that runs queries (SQL / HogQL / API)
+  or calls tools that can return large payloads must enforce result-size discipline in its
+  skills **and** `SOUL.md`: aggregate over enumerate, put a small explicit `LIMIT` on every
+  row-returning query, project named scalar fields (never `SELECT *` or a raw JSON blob), and
+  send wide or row-level extracts to a file rather than into the conversation. State the
+  rationale in the skill so it sticks: a single tool result over ~25k tokens overflows the
+  model context, **cannot be compacted away** (it exceeds the summarizer's per-message limit),
+  and wedges the agent in a fail→retry loop that burns the model fallback ladder until the
+  session is manually reset. This is a real production failure mode, not a hypothetical — see
+  `squads/posthog-squad/agents/posthog-agent/skills/posthog-mcp-toolkit.md → Result-size
+  discipline` for the reference implementation.
 - `ONBOARD.md` is a **runnable script** the co-founder executes: collect secrets via
   `vault_request`, connect identities via `browser_identity_add`, save answers to the agent's
   `MEMORY.md`, and create + dispatch a first task. It must fit `estimated_setup_minutes`.
@@ -103,6 +114,17 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
   inside the bundle — those are pod-managed by Pancake Cloud. `TOOLS.md` is allowed (it
   is bundle-authored documentation).
 - Crons target **only this squad's own agents**.
+- **Squad crons run in the agent's *persistent* session — they cannot be isolated.** OpenClaw
+  has an ephemeral `sessionTarget: "isolated"` cron mode, but it requires the target *not* be a
+  named agent and `payload.kind: "agentTurn"` — and the squad installer rejects any cron whose
+  `sessionTarget` isn't one of the bundle's own agents (which it must be). So every squad cron
+  runs as `payload.kind: "systemEvent"` in that agent's main session, which **persists and
+  accumulates across runs**. Design for two consequences: (1) a cron run that emits an oversized
+  tool result wedges that main session with no sandbox to fall back on — bounded tool output
+  (above) is the only guard; (2) each cron run must **self-clean** — do the work, file results
+  to the wiki, write the daily digest, and close — so the persistent session does not grow
+  unbounded. `heartbeat.isolatedSession` gives *heartbeat wakes* a fresh session, but there is
+  **no equivalent for crons** — never assume a cron is sandboxed.
 - A cron run with nothing to report must reply with the single literal token `NO_REPLY`.
 
 ## Step 5 — Validate (mandatory gate)

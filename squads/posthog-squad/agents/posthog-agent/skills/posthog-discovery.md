@@ -23,7 +23,18 @@ Every tenant's PostHog looks different above the platform layer. Before any anal
 Resolve and record:
 
 1. **Person identification model.** Run a small HogQL: `SELECT countIf(event = '$identify') AS identified, count() AS total FROM events WHERE timestamp >= now() - INTERVAL 7 DAY`. If `identified` is ~0, this tenant is **anonymous-only** — every later report keys on `distinct_id`, not on a human-readable handle, and the dying-users / engaged-users lists will show opaque ids. Note this explicitly in the surfaced digest each day so the founder isn't surprised.
-2. **Best display handle.** If persons are identified, sample 20 identified persons and inspect `properties` keys present in *all 20*. In priority order, pick the first that exists: `email`, `username`, `name`, `$email`, `user_email`, `handle`. If none exists on every sampled person, fall back to `distinct_id`. Record the resolved JSON path as `display_handle_path` in MEMORY (e.g. `person.properties.email` or `distinct_id`). Every later "named user" output uses this.
+2. **Best display handle.** If persons are identified, probe which handle key exists by selecting the *named candidate keys only* (never the whole `properties` object) on a small sample:
+   ```sql
+   SELECT person.properties.email      AS email,
+          person.properties.username   AS username,
+          person.properties.name       AS name,
+          person.properties.user_email AS user_email,
+          person.properties.handle     AS handle
+   FROM events
+   WHERE event = '$identify' AND timestamp >= now() - INTERVAL 7 DAY
+   LIMIT 20
+   ```
+   In priority order (`email`, `username`, `name`, `$email`, `user_email`, `handle`), pick the first column populated on (essentially) all 20 rows. If none is, fall back to `distinct_id`. Record the resolved JSON path as `display_handle_path` in MEMORY (e.g. `person.properties.email` or `distinct_id`). **Never `SELECT properties` / `SELECT person.properties` to eyeball keys** — that returns the full JSON blob for every row and can overflow context (see `posthog-mcp-toolkit → Result-size discipline`). Every later "named user" output uses this.
 3. **Person-on-events mode.** Quick probe: query the same person on two different days for one person property and see if the value can differ across rows. On Cloud this is on by default; on self-hosted it varies. Record `person_on_events: true|false`. This decides whether `person.properties.*` is point-in-time (PoE on) or current (PoE off).
 4. **Session signal availability.** Check whether `$session_id` is populated on ≥ 50% of events in the last 7 days. If yes, session-level analysis is available later; if no, all "engagement" rolls up by `person_id` only.
 5. **Volume floor.** Total events last 7 days. If < 200, every subsequent number is small-sample by default — record `low_volume_project: true` so the daily report tags everything `directional` automatically.
@@ -37,7 +48,7 @@ These are the only assumptions the squad is allowed to bake in: PostHog's primit
 2. Drop autocapture / housekeeping noise from what you'll show the user: `$pageview`, `$autocapture`, `$rageclick`, `$identify`, `$set`, `$opt_in`, `$exception`, `$pageleave`, `$web_vitals`, anything starting with `$feature_`.
 3. For each remaining event, fetch a quick stat triple: 30-day volume, 7-day volume, and number of distinct persons who triggered it in the last 7 days. The distinct-person count matters as much as raw volume — a "value" event should be triggered by many people, not 50× by one user.
 
-Tabulate the result with columns: `event_name | 30d volume | 7d volume | 7d distinct persons | first seen | example properties`. Sort by 7-day distinct-person count descending.
+Tabulate the result with columns: `event_name | 30d volume | 7d volume | 7d distinct persons | first seen`. Sort by 7-day distinct-person count descending. Do **not** add an "example properties" column that selects raw `properties` JSON — pulling the blob for ~50 events at once is exactly the unbounded pattern that overflows context. If you need to understand a *specific* event's shape, inspect its named keys on `≤ 5` rows separately (see `posthog-mcp-toolkit → Result-size discipline`).
 
 ## 2 — Build the candidate shortlist
 
