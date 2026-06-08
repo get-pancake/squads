@@ -27,6 +27,14 @@ The validator's checks fall into the following categories:
   `manifest.json` breaks a rule: bad kebab-case or semver, a missing required field, a
   value outside an enum, a duplicate agent id, or `agents` is no longer an object array
   (it must now be a string array of agent ids).
+- **Workflow schema** (e.g. `workflows[2].agent  "ads-agent" is not a declared agent id`) — an
+  entry in `manifest.workflows[]` breaks a rule. Each entry must be an object with: a non-empty
+  **`id`** that is lower-kebab/dotted (`WORKFLOW_ID`, e.g. `github.triage_issue`) and unique
+  within the squad; a non-empty **`summary`** ≤ 200 chars; a non-empty **`outcome`**; **`agent`**
+  naming one of `manifest.agents`; and an optional **`inputs`** object. Unknown fields are
+  rejected (allowed keys: `id`, `summary`, `inputs`, `outcome`, `agent`). Common fixes: kebab the
+  id (`triage issue` → `triage_issue`), point `agent` at a declared agent, remove a stray field,
+  or de-duplicate two entries with the same id.
 - **`agent.json` missing** (`agents/<id>/agent.json  not found`) — every id in
   `manifest.agents` must have a matching `agents/<id>/agent.json` file.
 - **`agent.json` schema** (e.g. `agents/<id>/agent.json#/model  must be one of: haiku,
@@ -82,3 +90,21 @@ worth keeping — e.g. `USER.md` content can move into `MEMORY.md` as a pointer)
 
 Run the validator again. Repeat Steps 2–3 until it exits 0 with no errors. Then report the
 result: confirm the bundle is valid, and list any warnings the user chose to leave.
+
+## What validation does NOT cover
+
+A green validator means the bundle's *shape* is correct — it does **not** mean the squad is
+well-scoped. The validator (and marketplace ingest) cannot see whether:
+
+- the capability should have been a **workflow or agent on an existing squad** rather than a new
+  squad (only file shape is checked, not placement);
+- the squad is **named for a tool** instead of its domain (`posthog-squad` validates fine — it's
+  still the wrong name);
+- it **duplicates a domain** another squad already owns, or two squads should be **merged**;
+- per-lane skills were left **squad-wide** in a multi-agent squad (valid, but pollutes context);
+- the `SOUL.md`/`HEARTBEAT.md` actually carry the **mute-to-user / board-as-bus** behaviour
+  (the files exist, so validation passes — but the wiring may be missing).
+
+These are design calls with no runtime guardrail. If a green bundle smells off on any of the
+above, raise it with the user and point them at
+[`creating-a-squad.md` §0](../../../docs/creating-a-squad.md) (scope, naming, merging).

@@ -1,7 +1,7 @@
 {
   "name": "outreach-squad",
-  "version": "0.1.5",
-  "description": "Daily outbound engine: finds leads, runs sequences, handles replies, and posts a digest every day. Simple mode by default, upgrades to Advanced when signals stack.",
+  "version": "0.2.0",
+  "description": "Daily outbound engine: finds leads, runs sequences, handles replies, and files a digest on the board every day. Simple mode by default, upgrades to Advanced when signals stack.",
   "author": "pancake-official",
   "license": "MIT",
   "skills": [
@@ -9,6 +9,36 @@
     "skills/advanced-outreach.md"
   ],
   "agents": ["outreach-agent"],
+  "workflows": [
+    {
+      "id": "outreach.run_campaign",
+      "summary": "Find ICP-matched leads and run a sequenced multi-touch outreach.",
+      "inputs": { "icp": "string (role/industry/size/trigger)", "volume": "int (leads to contact)" },
+      "outcome": "N leads contacted via sequenced touches, replies triaged, results filed on the board.",
+      "agent": "outreach-agent"
+    },
+    {
+      "id": "outreach.find_leads",
+      "summary": "Source and enrich ICP-matched leads (signal-first, ICP-search fallback).",
+      "inputs": { "icp": "string", "count": "int" },
+      "outcome": "A list of enriched, ICP-qualified leads appended to the pipeline ledger and filed on the board.",
+      "agent": "outreach-agent"
+    },
+    {
+      "id": "outreach.triage_replies",
+      "summary": "Sweep active channels and respond to inbound replies with the qualify-first framework.",
+      "inputs": {},
+      "outcome": "Every new reply handled (Q1→Q2→meeting), lead rows updated, closed rows moved.",
+      "agent": "outreach-agent"
+    },
+    {
+      "id": "outreach.weekly_report",
+      "summary": "Compute 7-day pipeline performance and log the week's learnings.",
+      "inputs": {},
+      "outcome": "7-day pipeline metrics + one Weekly Learning filed and summarized on the board.",
+      "agent": "outreach-agent"
+    }
+  ],
   "required_tool_permissions": [
     "browser",
     "web_search",

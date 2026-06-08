@@ -19,13 +19,16 @@ squad.
 
 ## Official squads
 
-| Squad | What it does | Agents |
-|---|---|---|
-| [`ai-seo-squad`](./squads/ai-seo-squad/) | AI-SEO / GEO — daily citation audits, blog posts, and GEO engineering PRs (self-merging). | `geo-agent` |
-| [`reddit-squad`](./squads/reddit-squad/) | Reddit growth — monitors subreddits, drafts replies, and ships founder-voice posts. | `reddit-agent` |
-| [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, and posts a digest. | `outreach-agent` |
-| [`google-ads-squad`](./squads/google-ads-squad/) | Single-account Google Ads autopilot — daily optimization sweep + digest hand-off; escalates only to raise budget. | `google-ads-agent` |
-| [`meta-ads-squad`](./squads/meta-ads-squad/) | Meta Ads operator — daily diagnostic + action sweep, daily digest, weekly review. Holds spend flat autonomously; escalates only budget increases. | `meta-ads-agent` |
+Each squad publishes a catalog of outcome-typed **workflows** and reports only through the
+company task board — the co-founder delegates by matching intent to a workflow, and relays.
+
+| Squad | What it does | Agents | Workflows |
+|---|---|---|---|
+| [`ai-seo-squad`](./squads/ai-seo-squad/) | AI-SEO / GEO — daily citation audits, blog posts, and GEO engineering PRs (self-merging). | `geo-agent` | `seo.audit_citations`, `seo.write_article`, `seo.ship_technical_fix`, `seo.weekly_report` |
+| [`community-squad`](./squads/community-squad/) | Community presence — Reddit channel: monitors subreddits, drafts value comments, runs a multi-account karma strategy. | `reddit-agent` | `reddit.scan_and_draft`, `reddit.monitor_keywords`, `reddit.account_health`, `reddit.post` |
+| [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, files a digest on the board. | `outreach-agent` | `outreach.run_campaign`, `outreach.find_leads`, `outreach.triage_replies`, `outreach.weekly_report` |
+| [`paid-ads-squad`](./squads/paid-ads-squad/) | Paid advertising — Google Ads + Meta Ads operators, each running one account end to end; holds spend flat, surfaces budget raises on the board. | `google-ads-agent`, `meta-ads-agent` | `google.optimize_account`, `google.daily_digest`, `google.root_cause`, `google.scale_budget`, `meta.daily_operations`, `meta.daily_digest`, `meta.weekly_review`, `meta.investigate` |
+| [`github-triage-squad`](./squads/github-triage-squad/) | GitHub issue triage — classifies issues P0–P3, labels them, sweeps daily, reports weekly. | `triage-agent` | `github.triage_issue`, `github.sweep_open_issues`, `github.weekly_report` |
 
 ## How squads work
 

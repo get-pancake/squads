@@ -32,6 +32,29 @@ a transient task. Once installed it has:
 A squad agent is a focused contributor: one role, clear edges. Work outside its lane it
 routes back to the co-founder rather than handling itself.
 
+## Squad, workflow, or agent — the unit of capability
+
+These three nest, from heaviest to lightest, and choosing the right one is the most consequential
+authoring decision — nothing at runtime catches a mis-scoped squad.
+
+- A **squad** owns a **domain** — a persistent goal worth an always-on autonomous owner
+  (paid advertising, community presence, analytics). It is named for the *domain*, **never a
+  tool**: a tool is one way to serve the goal, so `analytics-squad` (with `posthog.*` workflows),
+  not `posthog-squad`. Test: *could a second tool serve this same goal?* If yes, the squad is the
+  goal and the tool is a workflow namespace.
+- A **workflow** is one **input → outcome** entrypoint a squad publishes and runs via its own
+  skills (`seo.audit_citations`, `google.optimize_account`). It's the squad's public API: the
+  co-founder matches intent to a workflow and dispatches a ticket; it never reaches the squad's
+  internal tools. A *new job inside an owned domain is a workflow, not a new squad.*
+- An **agent** is one **lane** inside a squad — its own identity, cadence, and isolated skills.
+  Multiple agents share a squad (and a domain) but not context. A *new channel inside an owned
+  domain is an agent, not a new squad.*
+
+So new capability lands as the smallest unit that fits: a co-founder turn (one-shot) → a workflow
+(new job) → an agent (new lane) → a new squad (new domain). And if two squads turn out to be one
+domain reached by two tools, they get **merged**, not left to fragment it. The full decision tree,
+naming rule, and merge procedure are in [`creating-a-squad.md` §0](./creating-a-squad.md).
+
 ## The board is the bus
 
 A squad agent and the co-founder communicate **only through the company task board** (the

@@ -1,0 +1,150 @@
+{
+  "name": "paid-ads-squad",
+  "version": "1.0.0",
+  "description": "Paid-advertising squad: google-ads-agent and meta-ads-agent each run one ad account end to end — daily optimization, diagnostics, digests, and reviews — filed to the board.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "agents": ["google-ads-agent", "meta-ads-agent"],
+  "workflows": [
+    {
+      "id": "google.optimize_account",
+      "summary": "Run a full Google Ads optimization sweep and ship every reversible fix within the existing budget.",
+      "inputs": { "scope": "string (optional — campaign or campaign type to focus the sweep; defaults to the whole account)" },
+      "outcome": "Reversible fixes (negatives, bids, creative pauses, asset rotations, settings, in-total reallocations) shipped; any budget-raise opportunity surfaced on the board; the sweep filed as a routine ticket.",
+      "agent": "google-ads-agent"
+    },
+    {
+      "id": "google.daily_digest",
+      "summary": "Compile the 3-section Google Ads daily digest from the last 24h of activity.",
+      "inputs": {},
+      "outcome": "A ~200-word 3-section digest filed on the board as a digest ticket for the co-founder to relay.",
+      "agent": "google-ads-agent"
+    },
+    {
+      "id": "google.root_cause",
+      "summary": "Investigate a Google Ads metric regression and propose or ship the reversible fix.",
+      "inputs": { "metric": "string (e.g. CPA, ROAS, conversions)", "scope": "string (campaign/ad group, optional)" },
+      "outcome": "Root-cause diagnosis filed; reversible fixes shipped; any spend-increasing remedy surfaced on the board.",
+      "agent": "google-ads-agent"
+    },
+    {
+      "id": "google.scale_budget",
+      "summary": "Apply an approved budget raise or launch an opted-in campaign and verify pacing.",
+      "inputs": { "campaign": "string", "change": "string (the approved budget/campaign change)" },
+      "outcome": "Approved budget change applied, logged to the daily log, and confirmed back on the ticket.",
+      "agent": "google-ads-agent"
+    },
+    {
+      "id": "meta.daily_operations",
+      "summary": "Run the daily Meta Ads diagnostic + action sweep (eight-branch root cause), executing autonomous-allowed actions.",
+      "inputs": {},
+      "outcome": "Autonomous actions executed and audit-logged; budget-commitment actions queued; the sweep filed as a routine ticket.",
+      "agent": "meta-ads-agent"
+    },
+    {
+      "id": "meta.daily_digest",
+      "summary": "Compose the 7-section Meta Ads daily digest from today's audit log and approval queue.",
+      "inputs": {},
+      "outcome": "The structured daily digest filed to the wiki and on the board as a digest ticket for the co-founder to relay.",
+      "agent": "meta-ads-agent"
+    },
+    {
+      "id": "meta.weekly_review",
+      "summary": "Run the adaptive Meta Ads weekly review (folds in monthly audits on the first Monday of a month, quarterly on the first Monday of a quarter).",
+      "inputs": {},
+      "outcome": "Weekly/monthly/quarterly report filed to the wiki and summarized on the board as a digest ticket.",
+      "agent": "meta-ads-agent"
+    },
+    {
+      "id": "meta.investigate",
+      "summary": "Run an ad-hoc Meta Ads root-cause investigation on a specific entity or question.",
+      "inputs": { "entity": "string (campaign / ad set / ad)", "question": "string (what to investigate)" },
+      "outcome": "Investigation findings filed; any reversible fix shipped and audit-logged; results filed on the ticket.",
+      "agent": "meta-ads-agent"
+    }
+  ],
+  "required_vault_secrets": [
+    {
+      "key": "google_ads.developer_token",
+      "label": "Google Ads API developer token",
+      "type": "token"
+    },
+    {
+      "key": "google_ads.oauth_refresh_token",
+      "label": "Google Ads OAuth refresh token (long-lived)",
+      "type": "token"
+    },
+    {
+      "key": "google_ads.customer_id",
+      "label": "Google Ads customer ID (10 digits, no dashes)",
+      "type": "string"
+    },
+    {
+      "key": "google_ads.login_customer_id",
+      "label": "Google Ads login/MCC customer ID, if managed under an MCC (10 digits, no dashes; leave blank if direct)",
+      "type": "string"
+    },
+    {
+      "key": "team.meta_api_token",
+      "label": "Meta Marketing API System User access token (long-lived, never expires)",
+      "type": "token"
+    },
+    {
+      "key": "team.meta_ad_account_id",
+      "label": "Meta ad account ID (format act_XXXXX)",
+      "type": "string"
+    },
+    {
+      "key": "team.meta_pixel_id",
+      "label": "Meta Pixel ID (for measurement and EMQ tracking)",
+      "type": "string"
+    },
+    {
+      "key": "team.meta_capi_dataset_id",
+      "label": "CAPI Gateway dataset ID (optional — leave blank if not using CAPI Gateway)",
+      "type": "string"
+    },
+    {
+      "key": "team.account_currency",
+      "label": "Account currency (ISO 4217, e.g. USD, GBP, EUR)",
+      "type": "string"
+    },
+    {
+      "key": "team.account_timezone",
+      "label": "Account timezone (IANA, e.g. America/New_York)",
+      "type": "string"
+    },
+    {
+      "key": "team.account_business_model",
+      "label": "Business model: ecommerce | lead_gen | saas | app | local | dual",
+      "type": "string"
+    },
+    {
+      "key": "team.account_maturity_level",
+      "label": "Account maturity: nascent | developing | established | advanced",
+      "type": "string"
+    },
+    {
+      "key": "team.primary_kpi",
+      "label": "Primary KPI: cpa | roas | cpl | cpv | cpm",
+      "type": "string"
+    },
+    {
+      "key": "team.kpi_target",
+      "label": "Numeric target for the primary KPI (e.g. 45.00 for $45 CPA, 4.0 for 4x ROAS)",
+      "type": "string"
+    },
+    {
+      "key": "team.flag_thresholds",
+      "label": "Critical/warning thresholds as JSON (overrides skill-01 defaults — leave blank for defaults)",
+      "type": "string"
+    },
+    {
+      "key": "team.naming_conventions",
+      "label": "Campaign/ad-set/ad name templates as JSON (enables automated segmentation parsing — leave blank for defaults)",
+      "type": "string"
+    }
+  ],
+  "required_tool_permissions": ["vault", "browser", "web_fetch", "cron", "mcp-installer"],
+  "min_pancake_version": "1.0.0"
+}

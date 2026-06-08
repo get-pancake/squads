@@ -24,8 +24,11 @@ Tell the user GEO-agent is being set up and you need a few things to get it runn
 
 **4 — Analytics (optional).** Ask if they use an analytics tool (GA4, Plausible, etc.). Write the answer to GEO-agent's `MEMORY.md` under `## Analytics`.
 
-**5 — Slack channel for daily digest.** Ask which Slack channel GEO-agent should post the daily digest to (e.g. `#geo-seo`, `#growth`, or DM the co-founder). Ask them to send a message in that channel mentioning GEO-agent — the channel ID will be captured automatically. Write the channel name + ID to GEO-agent's `MEMORY.md` under `## Daily digest channel`. If no preference, default to DMing the co-founder.
+**5 — Reporting line.** GEO-agent is **mute to the user** — it files every audit, draft, and digest onto the company task board as `routine`/`digest` tickets, and you (the co-founder) read the board and relay to the user on whatever channel your pod uses. There is no separate Slack channel to configure. Note this in GEO-agent's `MEMORY.md` under `## Reporting line` so it doesn't try to post anywhere itself.
 
-**6 — First task.** When all of the above is done, create GEO-agent's first task: full citation audit of the target domain + keywords. Dispatch immediately via `sessions_spawn`.
+**6 — First task.** When all of the above is done, dispatch GEO-agent's first ticket naming the workflow, with your relay coordinates on THIS task only so the user sees it work live:
 
-Close by telling the user GEO-agent is running and will report the citation audit shortly.
+- `create_task({ assigned_to: "geo-agent", priority: "today", title: "Initial citation audit — <domain>", context: "Run the seo.audit_citations workflow for the target domain + keywords: query ChatGPT/Gemini/Perplexity, score citation share, file the table + trend to wiki/Knowledge/GEO/, then file the audit as a routine ticket and queue the top 3 follow-ups. Report the headline delta back on this ticket.", notify_channel: <your Slack channel id>, notify_session_key: <your sessionKey> })`
+- Then `sessions_spawn geo-agent` on it and `update_task_status(id, "in_progress")`.
+
+Close by telling the user GEO-agent is running, the citation audit is underway, and everything from here lands on the board for you to relay — they never talk to GEO-agent directly.
