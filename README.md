@@ -29,6 +29,7 @@ company task board — the co-founder delegates by matching intent to a workflow
 | [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, files a digest on the board. | `outreach-agent` | `outreach.run_campaign`, `outreach.find_leads`, `outreach.triage_replies`, `outreach.weekly_report` |
 | [`paid-ads-squad`](./squads/paid-ads-squad/) | Paid advertising — Google Ads + Meta Ads operators, each running one account end to end; holds spend flat, surfaces budget raises on the board. | `google-ads-agent`, `meta-ads-agent` | `google.optimize_account`, `google.daily_digest`, `google.root_cause`, `google.scale_budget`, `meta.daily_operations`, `meta.daily_digest`, `meta.weekly_review`, `meta.investigate` |
 | [`github-triage-squad`](./squads/github-triage-squad/) | GitHub issue triage — classifies issues P0–P3, labels them, sweeps daily, reports weekly. | `triage-agent` | `github.triage_issue`, `github.sweep_open_issues`, `github.weekly_report` |
+| [`posthog-squad`](./squads/posthog-squad/) | Product analytics — daily DAU/WAU/MAU + north-star digest, activation-funnel debugger, weekly recap, ad-hoc reports. | `posthog-agent` | `posthog.daily_digest`, `posthog.weekly_recap`, `posthog.debug_funnel`, `posthog.adhoc_report` |
 
 ## How squads work
 

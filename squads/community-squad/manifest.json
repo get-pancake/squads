@@ -1,6 +1,6 @@
 {
   "name": "community-squad",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Community squad: reddit-agent grows organic presence on Reddit — monitors subreddits, drafts value comments via the browser, warms up a single purchased account, and reports account health.",
   "author": "pancake-official",
   "license": "MIT",

@@ -1,10 +1,57 @@
 {
   "name": "posthog-squad",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Single-agent PostHog squad: daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, mid-day anomaly alerts, weekly recap. Opt-in add-ons: release tracker + auto cohorts.",
   "author": "pancake-official",
   "license": "MIT",
   "agents": ["posthog-agent"],
+  "workflows": [
+    {
+      "id": "posthog.daily_digest",
+      "summary": "Run the daily product-analytics digest: DAU/WAU/MAU, north-star event volume, engaged users, dying users.",
+      "inputs": {
+        "date": "ISO date (optional; defaults to yesterday in the pinned timezone)"
+      },
+      "outcome": "Digest filed to wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md and a 6-8 line summary posted on the board.",
+      "agent": "posthog-agent",
+      "secrets": ["team.posthog_api_key"],
+      "tools": ["web_fetch", "vault"]
+    },
+    {
+      "id": "posthog.weekly_recap",
+      "summary": "Roll up the week's analytics — WoW deltas on north-star events, activation rate, watchlist movement.",
+      "inputs": {
+        "week": "ISO week, e.g. 2026-W24 (optional; defaults to the week just ended)"
+      },
+      "outcome": "Recap filed to wiki/Knowledge/PostHog/Reports/weekly/YYYY-WW.md and summarized on the board.",
+      "agent": "posthog-agent",
+      "secrets": ["team.posthog_api_key"],
+      "tools": ["web_fetch", "vault"]
+    },
+    {
+      "id": "posthog.debug_funnel",
+      "summary": "Debug the signup-to-activation funnel for a cohort window and name the biggest drop-off step.",
+      "inputs": {
+        "window_days": "integer (optional; defaults to 28)"
+      },
+      "outcome": "Funnel analysis filed to wiki/Knowledge/PostHog/FunnelDebugger/YYYY-MM-DD.md with the top drop-off step + suspected cause on the board.",
+      "agent": "posthog-agent",
+      "secrets": ["team.posthog_api_key"],
+      "tools": ["web_fetch", "vault"]
+    },
+    {
+      "id": "posthog.adhoc_report",
+      "summary": "Pull a requested set of PostHog metrics and publish them as a shareable report (wiki page or HTML preview).",
+      "inputs": {
+        "metrics": "what to pull, in plain language (e.g. \"DAU last 7d, top 5 events, active users\")",
+        "format": "wiki | html (optional; defaults to wiki)"
+      },
+      "outcome": "Report produced and filed (wiki path or signed preview URL returned on the board ticket).",
+      "agent": "posthog-agent",
+      "secrets": ["team.posthog_api_key"],
+      "tools": ["web_fetch", "vault", "preview-host"]
+    }
+  ],
   "required_vault_secrets": [
     {
       "key": "team.posthog_api_key",
@@ -21,7 +68,8 @@
     "mcp-installer",
     "vault",
     "web_fetch",
-    "github"
+    "github",
+    "preview-host"
   ],
   "min_pancake_version": "1.0.0"
 }

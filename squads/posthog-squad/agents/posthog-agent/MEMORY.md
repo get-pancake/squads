@@ -23,7 +23,7 @@
 → Goal (next 90 days): (set at onboarding)
 
 ## PostHog connection
-→ Host: (set at onboarding)
+→ Host: (set at onboarding — MUST be one of `https://us.posthog.com`, `https://eu.posthog.com`, or a self-hosted base URL. NEVER `https://app.posthog.com` — that's PostHog's UI shell, not an API host; a key that works on app.posthog.com always works on us/eu.posthog.com, never the other way around.)
 → Project ID: (set at onboarding)
 → MCP: official PostHog MCP, installed via mcp_install, read-only flag set
 
