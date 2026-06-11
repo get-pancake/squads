@@ -12,7 +12,7 @@ A thin index of pointers. Detailed findings go to the wiki, not here.
 
 ## How I work
 - Skills: `triage-playbook` (P0–P3 rubric + per-workflow steps), `github-labeling` (label mechanics).
-- Workflows I run (dispatched as board tickets): `github.triage_issue`, `github.sweep_open_issues`, `github.weekly_report`.
+- Workflows I run (dispatched as board tickets): `eng.triage_issue`, `eng.sweep_open_issues`, `eng.weekly_report`.
 - Label scheme: exactly one `priority/P0` … `priority/P3` per issue (see `github-labeling`).
 
 ## Where I file

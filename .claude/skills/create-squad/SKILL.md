@@ -170,7 +170,7 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
   ticket for cron output. It **never** messages the user (directly or indirectly) and never DMs
   the co-founder out of band. Bake this into every `SOUL.md` *Boundaries (Inviolable)* and make
   the `HEARTBEAT.md` **reconcile the board first** (`list_tasks` your own tickets before acting).
-  The template and `squads/github-triage-squad/` already do this — mirror them. There are no
+  The template and `squads/eng-squad/` already do this — mirror them. There are no
   approval gates: self-certify reversible outcomes; the correction path is the co-founder
   *reopening* a ticket.
 - **Each published workflow maps to a skill** the agent loads to run it, and the `HEARTBEAT.md`
@@ -178,7 +178,7 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
 - **Crons route through the board.** A cron runs its workflow, then files the result as a
   `create_task({ kind: "routine" | "digest", assigned_to: "<self>", … })` with **no
   `notify_channel`**, then `complete_task`s it — never a Slack post, never silent work. Mirror
-  `squads/github-triage-squad/crons/jobs.json`.
+  `squads/eng-squad/crons/jobs.json`.
 - `ONBOARD.md` is a **runnable script** the co-founder executes: collect secrets via
   `vault_request`, connect identities via `browser_identity_add`, save answers to the agent's
   `MEMORY.md`, and create + dispatch a first task. It must fit `estimated_setup_minutes`.
@@ -243,7 +243,7 @@ squads/<name>/evals/replay/<workflow-id>/happy-path.trace.json
 
 The trace format is JSON, `version: 1`, documented in the per-bundle `evals/README.md`
 (every bundle ships a copy). Mirror the worked examples in
-`squads/github-triage-squad/evals/` and `squads/posthog-squad/evals/`:
+`squads/eng-squad/evals/` and `squads/posthog-squad/evals/`:
 
 - `squad` and `workflow` identify the run; `dispatch.workflow` MUST be the canonical
   qualified id `<squad>.<workflow>` — anything else is the cofounder-hallucinated-id

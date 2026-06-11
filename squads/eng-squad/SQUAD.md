@@ -5,15 +5,15 @@ preview_image: https://squads.getpancake.ai/avatars/stethoscope.png
 
 ## What this squad does
 
-Deploys **Triage** — a focused agent that keeps your GitHub issue tracker honest. It classifies
+The engineering squad. Its first agent is **Triage** — a focused agent that keeps your GitHub issue tracker honest. It classifies
 every issue on a **P0–P3 criticality scale**, labels it, and tells you in one paragraph why —
 so the critical stuff never sits unseen in a noisy backlog.
 
 **Triage** publishes three workflows your cofounder can delegate to:
 
-- **`github.triage_issue`** — classify and label one issue (e.g. "triage issue #412").
-- **`github.sweep_open_issues`** — triage the whole untriaged backlog of a repo.
-- **`github.weekly_report`** — a weekly issue-health report.
+- **`eng.triage_issue`** — classify and label one issue (e.g. "triage issue #412").
+- **`eng.sweep_open_issues`** — triage the whole untriaged backlog of a repo.
+- **`eng.weekly_report`** — a weekly issue-health report.
 
 ## What you'll need
 

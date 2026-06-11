@@ -42,7 +42,7 @@ Evidence: <the line(s) in the issue that drove the call>. Confidence: <high/med/
 Post it as an issue comment (via `github-labeling` → comment step) **and** file it to
 `wiki/Knowledge/GitHub-Triage/<repo>/issue-<n>.md`.
 
-## Workflow: `github.triage_issue`
+## Workflow: `eng.triage_issue`
 
 Inputs: `repo`, `issue_number`.
 
@@ -55,7 +55,7 @@ Inputs: `repo`, `issue_number`.
 5. `complete_task` with the P-level, the one-paragraph rationale, and the issue URL in `result`.
    If P0, also make the P0 explicit at the top of the result so the cofounder raises it now.
 
-## Workflow: `github.sweep_open_issues`
+## Workflow: `eng.sweep_open_issues`
 
 Inputs: `repo`, optional `since`.
 
@@ -69,7 +69,7 @@ Inputs: `repo`, optional `since`.
    without paging the user; the cofounder's daily report rolls it up.
 4. `complete_task` the dispatched sweep ticket with the same summary.
 
-## Workflow: `github.weekly_report`
+## Workflow: `eng.weekly_report`
 
 Inputs: `repo`.
 

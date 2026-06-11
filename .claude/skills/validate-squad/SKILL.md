@@ -29,7 +29,7 @@ The validator's checks fall into the following categories:
   (it must now be a string array of agent ids).
 - **Workflow schema** (e.g. `workflows[2].agent  "ads-agent" is not a declared agent id`) — an
   entry in `manifest.workflows[]` breaks a rule. Each entry must be an object with: a non-empty
-  **`id`** that is lower-kebab/dotted (`WORKFLOW_ID`, e.g. `github.triage_issue`) and unique
+  **`id`** that is lower-kebab/dotted (`WORKFLOW_ID`, e.g. `eng.triage_issue`) and unique
   within the squad; a non-empty **`summary`** ≤ 200 chars; a non-empty **`outcome`**; **`agent`**
   naming one of `manifest.agents`; and an optional **`inputs`** object. Unknown fields are
   rejected (allowed keys: `id`, `summary`, `inputs`, `outcome`, `agent`). Common fixes: kebab the

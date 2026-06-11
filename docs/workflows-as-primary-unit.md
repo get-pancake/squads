@@ -161,7 +161,7 @@ Convert `paid-ads-squad` to §6 Option A. Measure: cofounder context delta, line
 For each remaining squad decide ephemeral-workflows vs keep-a-standing-agent:
 - **ai-seo / community**: likely ephemeral workflows + crons (reactive, low state) — but ai-seo's daily mission-deepening is a mild argument for a thin agent.
 - **outreach**: the pipeline ledger is real accumulated state → likely *keeps* a standing agent (a clean example of "this domain earns one").
-- **github-triage**: read-mostly, reactive → ephemeral workflows.
+- **eng (github-triage)**: read-mostly, reactive → ephemeral workflows.
 
 ### Phase 6 — Per-workflow onboarding/preflight
 Because workflows now declare `secrets`/`identities`, onboarding derives per-workflow: the cofounder collects exactly what the dispatched workflow needs, and a **preflight** check fails a dispatch fast if a required secret/identity is missing (turns today's mid-run `needs_input` into an up-front, precise ask). This also structurally kills the `#gtm`-class bug: a channel is never a workflow/agent field — it's a cofounder relay concern, full stop.

@@ -67,7 +67,7 @@ band. The ticket *is* the channel.
 
 <!-- TODO: spell out the agent's recurring heartbeat duty here. Example:
      "If it has been ≥ 24h since the last citation audit, run the
-     github.sweep_open_issues workflow and file the result as a kind:'routine'
+     eng.sweep_open_issues workflow and file the result as a kind:'routine'
      ticket assigned to yourself (no notify_channel — routine output stays off
      the user's radar)." Be specific about cadence so the agent doesn't
      double-fire on a short pulse. Most recurring duty is better driven by a

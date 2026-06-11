@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "squad": "github-triage-squad",
-  "workflow": "github.triage_issue",
+  "squad": "eng-squad",
+  "workflow": "eng.triage_issue",
   "case": "happy-path",
   "description": "Cofounder dispatches a single-issue triage; triage-agent claims, fetches issue, labels it P2, files a comment, completes with the canonical result + digest.",
   "setup": {
     "vault": { "team.github_repos": "acme/api" },
-    "installed_squads": ["github-triage-squad@1.0.0"]
+    "installed_squads": ["eng-squad@2.0.0"]
   },
   "inputs": { "repo": "acme/api", "issue_number": 142 },
   "dispatch": {
     "caller_id": "main",
     "assigned_to": "triage-agent",
-    "workflow": "github-triage-squad.github.triage_issue",
+    "workflow": "eng-squad.eng.triage_issue",
     "title": "Triage acme/api#142",
     "kind": "task"
   },
@@ -24,8 +24,8 @@
         "caller_id": "main",
         "assigned_to": "triage-agent",
         "title": "Triage acme/api#142",
-        "workflow": "github-triage-squad.github.triage_issue",
-        "squad": "github-triage-squad"
+        "workflow": "eng-squad.eng.triage_issue",
+        "squad": "eng-squad"
       }
     },
     {

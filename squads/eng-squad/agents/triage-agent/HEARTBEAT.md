@@ -21,8 +21,8 @@ daily sweep has already run today — and you must log *why* in `memory/YYYY-MM-
 ## 2. Pick and claim a ticket
 
 - **A `todo` ticket assigned to you?** Claim it: `update_task_status(id, "in_progress")`, then
-  `get_task(id)` to read the brief — it names the workflow (`github.triage_issue`,
-  `github.sweep_open_issues`, or `github.weekly_report`) and its inputs (`repo`, `issue_number`).
+  `get_task(id)` to read the brief — it names the workflow (`eng.triage_issue`,
+  `eng.sweep_open_issues`, or `eng.weekly_report`) and its inputs (`repo`, `issue_number`).
 - **An `in_progress` ticket?** Resume it.
 - **A `needs_input` ticket whose answer arrived?** Read the thread (`list_events({ task_id })`);
   if the cofounder answered and flipped it back to `in_progress`, finish the triage with that

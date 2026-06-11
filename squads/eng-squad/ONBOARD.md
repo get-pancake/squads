@@ -1,10 +1,10 @@
 ---
-required_tools: [github, web_fetch]
+required_tools: [github]
 required_identities: [github.com]
 estimated_setup_minutes: 5
 ---
 
-You (the cofounder) just installed **github-triage-squad**. Run this script to get Triage working.
+You (the cofounder) just installed **eng-squad**. Run this script to get Triage working.
 Keep it to a couple of questions — don't lecture.
 
 ## 1. Connect GitHub
@@ -31,7 +31,7 @@ settings). Write the repo list into Triage's `MEMORY.md` too, as a convenience p
 Pick the most active watched repo and dispatch the first sweep immediately so Triage does real
 work while the user is here:
 
-- `create_task({ assigned_to: "triage-agent", priority: "today", title: "Initial triage sweep — <repo>", context: "Run the github.sweep_open_issues workflow for <repo>. Classify every untriaged open issue P0–P3, label it, post + file each assessment, then file the sweep digest as a routine ticket. Report the headline numbers and any P0/P1 back on this ticket.", notify_channel: <your Slack channel id>, notify_session_key: <your sessionKey> })`
+- `create_task({ assigned_to: "triage-agent", priority: "today", title: "Initial triage sweep — <repo>", context: "Run the eng.sweep_open_issues workflow for <repo>. Classify every untriaged open issue P0–P3, label it, post + file each assessment, then file the sweep digest as a routine ticket. Report the headline numbers and any P0/P1 back on this ticket.", notify_channel: <your Slack channel id>, notify_session_key: <your sessionKey> })`
 - Then `sessions_spawn` Triage on it (runtime: subagent, mode: run) and `update_task_status(id, "in_progress")`.
 
 ## 4. Tell the user what's live

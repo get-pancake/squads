@@ -209,7 +209,7 @@ catalogued entrypoint the squad runs via its own skills — not a new runtime.
 
 1. Phase 0 spike → encapsulation decision.
 2. Phase 1+2 → bus live, no behavior change yet.
-3. Phase 3 + convert **one squad** (`github-triage-squad` was the read-mostly pilot; the
+3. Phase 3 + convert **one squad** (`eng-squad` was the read-mostly pilot; the
    job-shaped `outreach-squad` / `paid-ads-squad` followed) to publish 3–5 workflows and run on
    tickets. Measure cofounder context drop.
 4. Phases 4–6, then roll the remaining squads onto the contract, deleting cofounder surface as
@@ -217,7 +217,7 @@ catalogued entrypoint the squad runs via its own skills — not a new runtime.
 
 **Status (this repo):** all official squads now publish `workflows[]` and run board-as-bus —
 `ai-seo-squad`, `outreach-squad`, `community-squad` (formerly `reddit-squad`), `paid-ads-squad`
-(merged from `google-ads-squad` + `meta-ads-squad`), and the `github-triage-squad` pilot.
+(merged from `google-ads-squad` + `meta-ads-squad`), and the `eng-squad` pilot.
 
 Existing squads keep working throughout — `workflows[]`, comments, `kind`, and the reconcile
 step are all additive.

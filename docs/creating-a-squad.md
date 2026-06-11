@@ -370,7 +370,7 @@ See [*5. ONBOARD.md contract*](#5-onboardmd-contract) below.
   `create_task({ kind: "routine" | "digest", assigned_to: "<self>", … })` with **no
   `notify_channel`**, then `complete_task`s it — never a Slack post, never silent work. Only
   `task`/`needs_input`/`failed` tickets surface to the user; `routine`/`digest` stay quiet on
-  the board for the co-founder's daily roll-up. Mirror `squads/github-triage-squad/crons/jobs.json`.
+  the board for the co-founder's daily roll-up. Mirror `squads/eng-squad/crons/jobs.json`.
 - A squad-wide `MEMORY.md` if multiple agents share the same seed pointers.
 
 ### 3.8 Strip every placeholder
@@ -483,7 +483,7 @@ The contract tells you what's valid. This tells you what's good.
   Bake this into every `SOUL.md` *Boundaries (Inviolable)*, and make the `HEARTBEAT.md`
   reconcile the board *first* (§6). There are no approval gates — self-certify reversible
   outcomes; the correction path is the co-founder *reopening* a ticket. (This is also why Slack
-  and voice/TTS are not authorable from a bundle.) The template and `squads/github-triage-squad/`
+  and voice/TTS are not authorable from a bundle.) The template and `squads/eng-squad/`
   already embody this — mirror them.
 
 - **Publish workflows, route crons through the board.** A squad's public interface is its
@@ -534,6 +534,11 @@ The contract tells you what's valid. This tells you what's good.
 - **Wake procedure in `HEARTBEAT.md`, behaviour in `SOUL.md`, pointers in `MEMORY.md`.**
   Three files, three concerns. Burying wake steps in `SOUL.md` or pointers in
   `HEARTBEAT.md` makes both hard to maintain.
+
+Before publishing, grade the finished bundle against
+[`squad-scorecard.md`](./squad-scorecard.md) — it turns the principles above into a
+0–2-scored rubric (scope, manifest hygiene, workflows, agents, board discipline,
+onboarding, evals) with invariant violations called out explicitly.
 
 ## 8. Testing your squad
 
