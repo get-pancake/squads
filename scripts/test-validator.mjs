@@ -126,6 +126,78 @@ const cases = [
     expectNoWarn: true,
   },
   {
+    name: "rich workflow input descriptors are accepted",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: {
+            target: { type: "string", description: "what to act on", example: "acme/api" },
+            mode: { type: "enum", description: "how to act", enum: ["fast", "slow"], required: false, default: "fast" },
+          },
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "legacy string-shorthand workflow inputs are rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: { target: "string (what to act on)" },
+        },
+      ];
+    },
+    expect: /workflows\[0\]\.inputs\.target.*must be an object/,
+  },
+  {
+    name: "input descriptor missing type/description, bad enum, bad name, unknown field are rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: {
+            no_type: { description: "missing type" },
+            no_desc: { type: "string" },
+            bad_enum: { type: "enum", description: "no enum array" },
+            extra_field: { type: "string", description: "ok", bogus: 1 },
+            "BAD-NAME": { type: "string", description: "bad name" },
+            enum_on_string: { type: "string", description: "ok", enum: ["a"] },
+          },
+        },
+      ];
+    },
+    expect: /inputs\.no_type\.type.*required/,
+  },
+  {
+    name: "workflow outcome_schema is an accepted field",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          outcome_schema: { type: "object", required: ["status"], properties: { status: { type: "string" } } },
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
     name: "workflow secret not defined in required_vault_secrets is rejected",
     mutate: (b) => {
       b["manifest.json"].workflows = [

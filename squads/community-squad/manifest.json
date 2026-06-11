@@ -1,28 +1,53 @@
 {
   "name": "community-squad",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "description": "Community squad: reddit-agent grows organic presence on Reddit — monitors subreddits, drafts value comments via the browser, warms up a single purchased account, and reports account health.",
   "author": "pancake-official",
   "license": "MIT",
-  "agents": ["reddit-agent"],
+  "agents": [
+    "reddit-agent"
+  ],
   "workflows": [
     {
       "id": "reddit.scan_and_draft",
       "summary": "Scan target subreddits, score threads, and draft up to 3 value-adding comments for the day.",
-      "inputs": { "subreddits": "comma-separated (optional; defaults to team.reddit_target_subreddits)" },
+      "inputs": {
+        "subreddits": {
+          "type": "string",
+          "description": "Comma-separated subreddits to scan, no r/ prefix (defaults to the team.reddit_target_subreddits vault value).",
+          "example": "Entrepreneurs,startups",
+          "required": false
+        }
+      },
       "outcome": "Up to 3 scored comment drafts filed to wiki and surfaced as a batch on the board for sign-off.",
       "agent": "reddit-agent",
-      "secrets": ["team.reddit_account", "team.reddit_target_subreddits"],
-      "tools": ["browser"]
+      "secrets": [
+        "team.reddit_account",
+        "team.reddit_target_subreddits"
+      ],
+      "tools": [
+        "browser"
+      ]
     },
     {
       "id": "reddit.monitor_keywords",
       "summary": "Monitor Reddit for brand and competitor keyword mentions and flag high-value threads.",
-      "inputs": { "keywords": "comma-separated (optional; defaults to team.target_keywords)" },
+      "inputs": {
+        "keywords": {
+          "type": "string",
+          "description": "Comma-separated brand/competitor keywords to monitor (defaults to the team.target_keywords vault value).",
+          "example": "pancake,openclaw",
+          "required": false
+        }
+      },
       "outcome": "Keyword/competitor mention hits filed and any high-value threads flagged on the board.",
       "agent": "reddit-agent",
-      "secrets": ["team.target_keywords"],
-      "tools": ["web_search"]
+      "secrets": [
+        "team.target_keywords"
+      ],
+      "tools": [
+        "web_search"
+      ]
     },
     {
       "id": "reddit.account_health",
@@ -30,17 +55,31 @@
       "inputs": {},
       "outcome": "Karma trend + shadowban status filed; a banned/suspended/shadowbanned account flagged explicitly on the board.",
       "agent": "reddit-agent",
-      "secrets": ["team.reddit_account"],
-      "tools": ["browser"]
+      "secrets": [
+        "team.reddit_account"
+      ],
+      "tools": [
+        "browser"
+      ]
     },
     {
       "id": "reddit.post",
       "summary": "Publish approved comment drafts to Reddit via the browser on old.reddit.com.",
-      "inputs": { "draft_ids": "ids of the approved drafts to post" },
+      "inputs": {
+        "draft_ids": {
+          "type": "string",
+          "description": "Comma-separated ids of the approved drafts to post.",
+          "example": "draft-2026-06-12-1,draft-2026-06-12-2"
+        }
+      },
       "outcome": "Approved comments posted from the dedicated account; permalinks filed back on the ticket.",
       "agent": "reddit-agent",
-      "secrets": ["team.reddit_account"],
-      "tools": ["browser"]
+      "secrets": [
+        "team.reddit_account"
+      ],
+      "tools": [
+        "browser"
+      ]
     }
   ],
   "required_vault_secrets": [

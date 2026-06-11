@@ -6,7 +6,7 @@
   "description": "Daily-sweep cron dispatches a repo sweep; triage-agent claims, reads team.github_repos from the vault, lists open issues missing a priority/P* label, classifies and labels three of them (P1, P2, P3) with assessment comments, files the sweep as a routine board record (no notify_channel), and completes with the canonical summary + digest.",
   "setup": {
     "vault": { "team.github_repos": "acme/api" },
-    "installed_squads": ["eng-squad@2.0.0"]
+    "installed_squads": ["eng-squad@2.1.0"]
   },
   "inputs": { "repo": "acme/api", "since": "2026-06-11" },
   "dispatch": {

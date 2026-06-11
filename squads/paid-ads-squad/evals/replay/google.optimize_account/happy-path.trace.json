@@ -10,7 +10,7 @@
       "google_ads.oauth_refresh_token": "refresh-token-redacted",
       "google_ads.customer_id": "1234567890"
     },
-    "installed_squads": ["paid-ads-squad@1.0.3"]
+    "installed_squads": ["paid-ads-squad@1.1.0"]
   },
   "inputs": { "scope": "Search campaigns" },
   "dispatch": {

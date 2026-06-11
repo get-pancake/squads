@@ -9,7 +9,7 @@
       "team.reddit_account": "{\"username\": \"quiet_builder_42\", \"password\": \"***\"}",
       "team.reddit_target_subreddits": "Entrepreneur,startups,SaaS"
     },
-    "installed_squads": ["community-squad@1.1.3"]
+    "installed_squads": ["community-squad@1.2.0"]
   },
   "inputs": { "subreddits": "Entrepreneur,startups,SaaS" },
   "dispatch": {

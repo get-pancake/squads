@@ -6,7 +6,7 @@
   "description": "Regression for the second root cause from the 2026-06-11 audit. The analytics-agent's HEARTBEAT.md mandates a digest written to memory/YYYY-MM-DD.md before closing the turn — but the contract was prompt-only and production pods showed 0 daily-log files across all agents, so each wake started blind and re-discovered known failures (5 tasks failed in 3 days on the same eu.posthog.com host bug; ~$0.71 wasted on the latest one). We folded the digest into the terminal-task tools so it's structural — fail_task / complete_task now accept a `digest` param the plugin appends to the daily log. This trace records a terminal WITHOUT a digest and goes red if the digest check is ever loosened.",
   "setup": {
     "vault": { "team.posthog_api_key": "phx_test_key" },
-    "installed_squads": ["analytics-squad@1.0.0"]
+    "installed_squads": ["analytics-squad@1.1.0"]
   },
   "inputs": { "date": "2026-06-11" },
   "dispatch": {

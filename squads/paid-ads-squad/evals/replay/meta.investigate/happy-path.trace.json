@@ -10,7 +10,7 @@
       "team.meta_ad_account_id": "act_998877",
       "team.flag_thresholds": "{}"
     },
-    "installed_squads": ["paid-ads-squad@1.0.3"]
+    "installed_squads": ["paid-ads-squad@1.1.0"]
   },
   "inputs": { "entity": "Retargeting — Warm 30d (ad set 1209...884)", "question": "Why did CPA double on Friday?" },
   "dispatch": {

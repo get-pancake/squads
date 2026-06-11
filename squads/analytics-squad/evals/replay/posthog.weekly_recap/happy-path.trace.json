@@ -6,7 +6,7 @@
   "description": "Monday weekly recap dispatched at the canonical qualified id; analytics-agent reads the read-only API key from the vault, pulls 4-week trends + activation cohort table + churn count over web_fetch, files the recap to wiki/Knowledge/PostHog/Reports/weekly/, and completes with the canonical result + digest ending in the one-paragraph hypothesis.",
   "setup": {
     "vault": { "team.posthog_api_key": "phx_test_key" },
-    "installed_squads": ["analytics-squad@1.0.0"]
+    "installed_squads": ["analytics-squad@1.1.0"]
   },
   "inputs": { "week": "2026-W24" },
   "dispatch": {

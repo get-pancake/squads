@@ -85,7 +85,9 @@ Ask the user what they want, and don't scaffold until you have answers for all o
 - **Workflows** — the squad's *published interface*: the outcome-typed entrypoints the
   co-founder delegates to. For each, get `{ id, summary, inputs, outcome, agent, secrets, tools }` — `id` is
   `<tool|subdomain>.<verb_noun>` (lower dotted, e.g. `seo.audit_citations`), `summary` ≤ 200
-  chars (what the co-founder reads to match intent), `outcome` is the done-state, `agent` must
+  chars (what the co-founder reads to match intent), `inputs` are rich descriptors
+  (`{ type, description, example?, required?, default?, enum? }` per input — not type strings;
+  a good `example` makes the co-founder's brief usable), `outcome` is the done-state, `agent` must
   be a declared agent. Aim for **3–5 per agent**; ten usually means one job parameterized.
   Every workflow must map to a skill the agent loads to run it (convention: a skill named after
   the workflow), and cron-driven routines count as workflows too. See

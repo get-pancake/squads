@@ -31,8 +31,12 @@ The validator's checks fall into the following categories:
   entry in `manifest.workflows[]` breaks a rule. Each entry must be an object with: a non-empty
   **`id`** that is lower-kebab/dotted (`WORKFLOW_ID`, e.g. `eng.triage_issue`) and unique
   within the squad; a non-empty **`summary`** ≤ 200 chars; a non-empty **`outcome`**; **`agent`**
-  naming one of `manifest.agents`; and an optional **`inputs`** object. Unknown fields are
-  rejected (allowed keys: `id`, `summary`, `inputs`, `outcome`, `agent`). Common fixes: kebab the
+  naming one of `manifest.agents`; an optional **`inputs`** object of rich descriptors
+  (`{ type, description, example?, required?, default?, enum? }` per input — string shorthand
+  like `"repo": "string"` is rejected); optional **`secrets`**/**`tools`** referencing the
+  squad-level registries; and an optional **`outcome_schema`**. Unknown fields are
+  rejected (allowed keys: `id`, `summary`, `inputs`, `outcome`, `outcome_schema`, `agent`,
+  `secrets`, `tools`). Common fixes: kebab the
   id (`triage issue` → `triage_issue`), point `agent` at a declared agent, remove a stray field,
   or de-duplicate two entries with the same id.
 - **`agent.json` missing** (`agents/<id>/agent.json  not found`) — every id in

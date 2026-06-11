@@ -11,7 +11,7 @@
       "team.primary_kpi": "cpa",
       "team.kpi_target": "45.00"
     },
-    "installed_squads": ["paid-ads-squad@1.0.3"]
+    "installed_squads": ["paid-ads-squad@1.1.0"]
   },
   "inputs": {},
   "dispatch": {

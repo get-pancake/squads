@@ -195,7 +195,13 @@ and placeholder content. Your job over the next steps is to replace all of it.
   "workflows": [
     { "id": "domain.do_the_thing",
       "summary": "One line the co-founder reads to match intent to this job.",
-      "inputs": { "target": "string" },
+      "inputs": {
+        "target": {
+          "type": "string",
+          "description": "What this input means and what the squad does with it.",
+          "example": "a concrete value the co-founder can crib from"
+        }
+      },
       "outcome": "The defined done-state this workflow guarantees.",
       "agent": "your-agent-id",
       "secrets": ["team.your_setting"],
@@ -253,7 +259,14 @@ inputs + outcome + agent), not every squad's tool schemas.
 ```json
 { "id": "seo.audit_citations",
   "summary": "Audit ChatGPT/Gemini/Perplexity citation share for the target keywords.",
-  "inputs": { "keywords": "comma-separated (optional)", "domain": "string (optional)" },
+  "inputs": {
+    "keywords": {
+      "type": "string",
+      "description": "Comma-separated keywords to audit (defaults to the team.target_keywords vault value).",
+      "example": "ai sales agent,outbound automation",
+      "required": false
+    }
+  },
   "outcome": "Per-keyword citation-share table filed to the wiki and the delta filed on the board.",
   "agent": "geo-agent" }
 ```
@@ -265,6 +278,11 @@ Authoring rules:
   sub-domain (§0.2); the verb is the job.
 - **`summary`** ≤ 200 chars — this is the *only* thing the co-founder reads to route intent, so
   make it match how a user would phrase the ask.
+- **`inputs`** are rich descriptors, not type strings: each input is
+  `{ type, description, example?, required?, default?, enum? }` (`description` required,
+  ≤ 280 chars; names lower_snake_case). The co-founder writes its dispatch brief from these —
+  a good `example` is the difference between a vague brief and a usable one. Treat the catalog
+  like a microservice API contract.
 - **`outcome`** is the done-state the workflow guarantees — what "complete" means.
 - **`agent`** must be one of `manifest.agents`. In a multi-agent squad, each workflow names the
   agent that runs it.

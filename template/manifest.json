@@ -10,7 +10,13 @@
     {
       "id": "example.do_the_thing",
       "summary": "TODO: one line the co-founder reads to match a user's intent to this workflow.",
-      "inputs": { "target": "string (TODO: describe each input, or delete `inputs` if none)" },
+      "inputs": {
+        "target": {
+          "type": "string",
+          "description": "TODO: one line of plain English — what this input means and what the squad does with it (or delete `inputs` if the workflow takes none).",
+          "example": "TODO: a concrete example value the co-founder can crib from"
+        }
+      },
       "outcome": "TODO: the defined done-state this workflow guarantees.",
       "agent": "example-agent",
       "secrets": ["team.example_setting"],

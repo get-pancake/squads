@@ -6,7 +6,7 @@
   "description": "Regression: cofounder stamps an INVENTED qualified id (`eng-squad.triage_issue`, dropping the `eng.` namespace) — the same failure mode the 2026-06-11 posthog-squad audit found (posthog-squad.daily_digest instead of posthog-squad.posthog.daily_digest; squad since renamed analytics-squad). This trace MUST fail the runner; if it passes, the workflow-id contract check has regressed.",
   "setup": {
     "vault": { "team.github_repos": "acme/api" },
-    "installed_squads": ["eng-squad@2.0.0"]
+    "installed_squads": ["eng-squad@2.1.0"]
   },
   "inputs": { "repo": "acme/api", "issue_number": 142 },
   "dispatch": {

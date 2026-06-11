@@ -77,7 +77,23 @@ const FORBIDDEN_BASENAMES = new Set(["agents.md", "user.md", "bootstrap.md", "bo
 // required_tool_permissions (the registries stay squad-level so install-time
 // collection has one source of truth).
 const WORKFLOW_ID = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
-const WORKFLOW_ALLOWED_KEYS = new Set(["id", "summary", "inputs", "outcome", "agent", "secrets", "tools"]);
+const WORKFLOW_ALLOWED_KEYS = new Set([
+  "id",
+  "summary",
+  "inputs",
+  "outcome",
+  "outcome_schema",
+  "agent",
+  "secrets",
+  "tools",
+]);
+// workflows[].inputs — rich descriptors, not string shorthand. Each input is
+// { type, description, example?, required?, default?, enum? }: the cofounder
+// writes its dispatch brief from these, so they are the workflow's API docs.
+const WORKFLOW_INPUT_TYPES = new Set(["string", "integer", "number", "boolean", "enum", "object"]);
+const WORKFLOW_INPUT_ALLOWED_KEYS = new Set(["type", "description", "example", "required", "default", "enum"]);
+const WORKFLOW_INPUT_NAME = /^[a-z][a-z0-9_]*$/;
+const MAX_INPUT_DESCRIPTION = 280;
 
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const isStringArray = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
@@ -196,8 +212,47 @@ function validateManifest(input) {
         if (typeof w.outcome !== "string" || w.outcome.length === 0) {
           err(`${at}.outcome`, "required, must be a non-empty string describing the defined outcome");
         }
-        if (w.inputs !== undefined && !isObject(w.inputs)) {
-          err(`${at}.inputs`, "must be an object mapping input name → type/description when present");
+        if (w.inputs !== undefined) {
+          if (!isObject(w.inputs)) {
+            err(`${at}.inputs`, "must be an object mapping input name → input descriptor when present");
+          } else {
+            for (const [inputName, inputSpec] of Object.entries(w.inputs)) {
+              const ipath = `${at}.inputs.${inputName}`;
+              if (!WORKFLOW_INPUT_NAME.test(inputName)) {
+                err(ipath, `"${inputName}" must be lower_snake_case starting with a letter`);
+              }
+              if (!isObject(inputSpec)) {
+                err(ipath, "must be an object — { type, description, example?, required?, default?, enum? }");
+                continue;
+              }
+              for (const key of Object.keys(inputSpec)) {
+                if (!WORKFLOW_INPUT_ALLOWED_KEYS.has(key)) {
+                  err(`${ipath}.${key}`, `unknown field — allowed: ${[...WORKFLOW_INPUT_ALLOWED_KEYS].join(", ")}`);
+                }
+              }
+              const type = inputSpec.type;
+              if (typeof type !== "string" || !WORKFLOW_INPUT_TYPES.has(type)) {
+                err(`${ipath}.type`, `required, must be one of: ${[...WORKFLOW_INPUT_TYPES].join(", ")}`);
+              }
+              if (typeof inputSpec.description !== "string" || inputSpec.description.length === 0) {
+                err(`${ipath}.description`, "required, must be a non-empty one-line description of what this input means");
+              } else if (inputSpec.description.length > MAX_INPUT_DESCRIPTION) {
+                err(`${ipath}.description`, `must be ${MAX_INPUT_DESCRIPTION} characters or fewer`);
+              }
+              if (inputSpec.required !== undefined && typeof inputSpec.required !== "boolean") {
+                err(`${ipath}.required`, "must be a boolean when present");
+              }
+              if (type === "enum") {
+                if (!Array.isArray(inputSpec.enum) || inputSpec.enum.length === 0) {
+                  err(`${ipath}.enum`, 'required when type is "enum"; must be a non-empty array of strings');
+                } else if (!inputSpec.enum.every((v) => typeof v === "string")) {
+                  err(`${ipath}.enum`, "every enum entry must be a string");
+                }
+              } else if (inputSpec.enum !== undefined) {
+                err(`${ipath}.enum`, 'only allowed when type is "enum"');
+              }
+            }
+          }
         }
         if (typeof w.agent !== "string" || w.agent.length === 0) {
           err(`${at}.agent`, "required, must name the squad agent that runs this workflow");

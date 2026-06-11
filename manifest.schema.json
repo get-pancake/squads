@@ -68,13 +68,51 @@
           },
           "inputs": {
             "type": "object",
-            "description": "Map of input name → type/description string, e.g. { \"repo\": \"string\", \"issue_number\": \"int\" }. Optional.",
-            "additionalProperties": { "type": "string" }
+            "description": "Map of input name (lower_snake_case) → rich descriptor. The cofounder writes its dispatch brief from these — treat them as the workflow's API docs. Omit when the workflow takes no inputs.",
+            "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "description"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "integer", "number", "boolean", "enum", "object"],
+                  "description": "The value shape. \"enum\" requires the enum array."
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 280,
+                  "description": "One line of plain English: what this input means and what the squad does with it."
+                },
+                "example": {
+                  "description": "A concrete example value the cofounder can crib from when briefing."
+                },
+                "required": {
+                  "type": "boolean",
+                  "description": "Default true. Set false for optional inputs (then `default` is honored)."
+                },
+                "default": {
+                  "description": "Value used when required is false and the brief omits this input."
+                },
+                "enum": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string" },
+                  "description": "Legal values — only allowed (and required) when type is \"enum\"."
+                }
+              }
+            }
           },
           "outcome": {
             "type": "string",
             "minLength": 1,
             "description": "The defined outcome / done-state, e.g. \"issue labeled with a P0–P3 criticality + assessment filed\"."
+          },
+          "outcome_schema": {
+            "type": "object",
+            "description": "Optional JSON-Schema-shaped object the workflow's complete_task result must conform to. Opt-in; the gateway validates the result against it and re-routes mismatches through fail_task (category outcome_invalid). Passed through transparently by the marketplace."
           },
           "agent": {
             "type": "string",

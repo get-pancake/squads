@@ -8,7 +8,7 @@
     "vault": {
       "team.reddit_account": "{\"username\": \"quiet_builder_42\", \"password\": \"***\"}"
     },
-    "installed_squads": ["community-squad@1.1.3"]
+    "installed_squads": ["community-squad@1.2.0"]
   },
   "inputs": {},
   "dispatch": {

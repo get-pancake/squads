@@ -1,55 +1,108 @@
 {
   "name": "analytics-squad",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Analytics squad (PostHog-backed): daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, anomaly alerts, weekly recap. Add-ons: release tracker + auto cohorts.",
   "author": "pancake-official",
   "license": "MIT",
-  "agents": ["analytics-agent"],
+  "agents": [
+    "analytics-agent"
+  ],
   "workflows": [
     {
       "id": "posthog.daily_digest",
       "summary": "Run the daily product-analytics digest: DAU/WAU/MAU, north-star event volume, engaged users, dying users.",
       "inputs": {
-        "date": "ISO date (optional; defaults to yesterday in the pinned timezone)"
+        "date": {
+          "type": "string",
+          "description": "ISO date to run the digest for (defaults to yesterday in the pinned timezone).",
+          "example": "2026-06-11",
+          "required": false
+        }
       },
       "outcome": "Digest filed to wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md and a 6-8 line summary posted on the board.",
       "agent": "analytics-agent",
-      "secrets": ["team.posthog_api_key", "team.posthog_write_api_key"],
-      "tools": ["web_fetch", "vault"]
+      "secrets": [
+        "team.posthog_api_key",
+        "team.posthog_write_api_key"
+      ],
+      "tools": [
+        "web_fetch",
+        "vault"
+      ]
     },
     {
       "id": "posthog.weekly_recap",
       "summary": "Roll up the week's analytics — WoW deltas on north-star events, activation rate, watchlist movement.",
       "inputs": {
-        "week": "ISO week, e.g. 2026-W24 (optional; defaults to the week just ended)"
+        "week": {
+          "type": "string",
+          "description": "ISO week to recap (defaults to the week just ended).",
+          "example": "2026-W24",
+          "required": false
+        }
       },
       "outcome": "Recap filed to wiki/Knowledge/PostHog/Reports/weekly/YYYY-WW.md and summarized on the board.",
       "agent": "analytics-agent",
-      "secrets": ["team.posthog_api_key"],
-      "tools": ["web_fetch", "vault"]
+      "secrets": [
+        "team.posthog_api_key"
+      ],
+      "tools": [
+        "web_fetch",
+        "vault"
+      ]
     },
     {
       "id": "posthog.debug_funnel",
       "summary": "Debug the signup-to-activation funnel for a cohort window and name the biggest drop-off step.",
       "inputs": {
-        "window_days": "integer (optional; defaults to 28)"
+        "window_days": {
+          "type": "integer",
+          "description": "Cohort window in days for the signup-to-activation funnel analysis.",
+          "example": 28,
+          "required": false,
+          "default": 28
+        }
       },
       "outcome": "Funnel analysis filed to wiki/Knowledge/PostHog/FunnelDebugger/YYYY-MM-DD.md with the top drop-off step + suspected cause on the board.",
       "agent": "analytics-agent",
-      "secrets": ["team.posthog_api_key"],
-      "tools": ["web_fetch", "vault"]
+      "secrets": [
+        "team.posthog_api_key"
+      ],
+      "tools": [
+        "web_fetch",
+        "vault"
+      ]
     },
     {
       "id": "posthog.adhoc_report",
       "summary": "Pull a requested set of PostHog metrics and publish them as a shareable report (wiki page or HTML preview).",
       "inputs": {
-        "metrics": "what to pull, in plain language (e.g. \"DAU last 7d, top 5 events, active users\")",
-        "format": "wiki | html (optional; defaults to wiki)"
+        "metrics": {
+          "type": "string",
+          "description": "What to pull, in plain language.",
+          "example": "DAU last 7d, top 5 events, active users"
+        },
+        "format": {
+          "type": "enum",
+          "description": "Where the report lands: a wiki page or a hosted HTML preview.",
+          "enum": [
+            "wiki",
+            "html"
+          ],
+          "required": false,
+          "default": "wiki"
+        }
       },
       "outcome": "Report produced and filed (wiki path or signed preview URL returned on the board ticket).",
       "agent": "analytics-agent",
-      "secrets": ["team.posthog_api_key"],
-      "tools": ["web_fetch", "vault", "preview-host"]
+      "secrets": [
+        "team.posthog_api_key"
+      ],
+      "tools": [
+        "web_fetch",
+        "vault",
+        "preview-host"
+      ]
     }
   ],
   "required_vault_secrets": [
@@ -71,6 +124,9 @@
     "github",
     "preview-host"
   ],
-  "infra_tool_permissions": ["mcp-installer", "github"],
+  "infra_tool_permissions": [
+    "mcp-installer",
+    "github"
+  ],
   "min_pancake_version": "1.0.0"
 }

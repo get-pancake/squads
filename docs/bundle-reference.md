@@ -119,7 +119,18 @@ without reading extra files:
   {
     "id": "eng.triage_issue",
     "summary": "Classify a GitHub issue's criticality and label it.",
-    "inputs": { "repo": "string", "issue_number": "int" },
+    "inputs": {
+      "repo": {
+        "type": "string",
+        "description": "GitHub owner/repo slug of the repository the issue lives in.",
+        "example": "acme/api"
+      },
+      "issue_number": {
+        "type": "integer",
+        "description": "The issue's numeric id within the repo.",
+        "example": 142
+      }
+    },
     "outcome": "Issue labeled with a P0–P3 criticality + a one-paragraph assessment filed.",
     "agent": "triage-agent",
     "secrets": ["github.bot_token"],
@@ -132,8 +143,9 @@ without reading extra files:
 |---|---|---|---|
 | `id` | string | ✔ | lower-kebab/dotted `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, e.g. `eng.triage_issue`. Unique within the squad. |
 | `summary` | string | ✔ | one line, ≤ 200 chars — what the cofounder reads to match intent → workflow. |
-| `inputs` | object | · | map of input name → type/description string, e.g. `{ "repo": "string" }`. |
+| `inputs` | object | · | map of input name (lower_snake_case) → **rich descriptor** `{ type, description, example?, required?, default?, enum? }`. `type` ∈ `string` \| `integer` \| `number` \| `boolean` \| `enum` \| `object`; `description` ≤ 280 chars is required; `enum` is required (and only legal) when `type` is `enum`; `required` defaults to true. The cofounder writes its dispatch brief from these — treat them as the workflow's API docs. |
 | `outcome` | string | ✔ | the defined done-state, e.g. "issue labeled + assessment filed". |
+| `outcome_schema` | object | · | optional JSON-Schema-shaped object the workflow's `complete_task` result must conform to; the gateway validates and re-routes mismatches through `fail_task` (`outcome_invalid`). Passed through transparently by the marketplace. |
 | `agent` | string | ✔ | the squad agent that runs it — **must be one of `manifest.agents`**. The cofounder assigns the ticket to this agent. |
 | `secrets` | string[] | · | the vault keys this workflow needs at runtime. Each entry **must reference a key defined in `required_vault_secrets`** (duplicates are an error). The agent fetches a secret only when running a workflow that lists it. |
 | `tools` | string[] | · | the tool permissions this workflow needs at runtime. Each entry **must also appear in `required_tool_permissions`** (duplicates are an error). |
