@@ -80,6 +80,18 @@
             "type": "string",
             "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
             "description": "The squad agent that runs this workflow — must be one of manifest.agents. The cofounder assigns the ticket to this agent."
+          },
+          "secrets": {
+            "type": "array",
+            "uniqueItems": true,
+            "description": "Vault keys this workflow needs at runtime. Each entry must reference a key defined in required_vault_secrets (the squad-level registry, where {key,label,type} live once). Agents fetch a secret only when running a workflow that lists it.",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "tools": {
+            "type": "array",
+            "uniqueItems": true,
+            "description": "Tool permissions this workflow needs at runtime. Each entry must also appear in required_tool_permissions (the squad-level registry the install grants).",
+            "items": { "type": "string", "minLength": 1 }
           }
         }
       }
@@ -98,6 +110,7 @@
     },
     "required_vault_secrets": {
       "type": "array",
+      "description": "The squad's secret registry — each {key,label,type} is defined once here so onboarding/install knows what to collect. Workflows reference these keys via their `secrets` array; an agent needs a secret only when running a workflow that lists it.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -111,6 +124,7 @@
     },
     "required_tool_permissions": {
       "type": "array",
+      "description": "The squad's tool-permission registry — the union of what its workflows need; the install grants these. Workflows reference these keys via their `tools` array.",
       "uniqueItems": true,
       "items": {
         "type": "string",

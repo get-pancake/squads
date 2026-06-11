@@ -1,6 +1,6 @@
 {
   "name": "github-triage-squad",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Triage-agent classifies GitHub issues by P0–P3 criticality, labels them, sweeps untriaged issues daily, and files a weekly issue-health report.",
   "author": "pancake-official",
   "license": "MIT",
@@ -11,21 +11,27 @@
       "summary": "Classify one GitHub issue's criticality (P0–P3), label it, and file a short assessment.",
       "inputs": { "repo": "owner/repo", "issue_number": "int" },
       "outcome": "Issue labeled with one of priority/P0…P3 + a one-paragraph assessment posted as an issue comment and filed to the wiki.",
-      "agent": "triage-agent"
+      "agent": "triage-agent",
+      "secrets": [],
+      "tools": ["github", "web_fetch"]
     },
     {
       "id": "github.sweep_open_issues",
       "summary": "Triage every untriaged open issue in a repo and file a digest of what was classified.",
       "inputs": { "repo": "owner/repo", "since": "ISO date (optional)" },
       "outcome": "All untriaged open issues labeled with a P0–P3 criticality; a digest of the sweep filed on the board.",
-      "agent": "triage-agent"
+      "agent": "triage-agent",
+      "secrets": ["team.github_repos"],
+      "tools": ["github", "web_fetch"]
     },
     {
       "id": "github.weekly_report",
       "summary": "Produce a weekly issue-health report — open/closed counts, criticality mix, stale and unlabeled issues.",
       "inputs": { "repo": "owner/repo" },
       "outcome": "A weekly issue-health report filed to the wiki and summarized on the board.",
-      "agent": "triage-agent"
+      "agent": "triage-agent",
+      "secrets": ["team.github_repos"],
+      "tools": ["github"]
     }
   ],
   "required_identities": [

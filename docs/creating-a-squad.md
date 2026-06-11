@@ -197,7 +197,9 @@ and placeholder content. Your job over the next steps is to replace all of it.
       "summary": "One line the co-founder reads to match intent to this job.",
       "inputs": { "target": "string" },
       "outcome": "The defined done-state this workflow guarantees.",
-      "agent": "your-agent-id" }
+      "agent": "your-agent-id",
+      "secrets": ["team.your_setting"],
+      "tools": ["web_search"] }
   ],
   "required_identities": [
     { "site": "github.com", "reason": "why the agent needs github connected" }
@@ -274,6 +276,12 @@ Authoring rules:
 - **Cron-driven routines are workflows too.** A daily sweep or weekly report is a published
   workflow that a cron fires on a schedule (filing its result through the board, §7) — the same
   workflow the co-founder could also dispatch on demand.
+- **Scope secrets and tools to the workflow that uses them.** `required_vault_secrets` and
+  `required_tool_permissions` are squad-level *registries* (secrets defined once so onboarding
+  knows what to collect; tool permissions the install grants). Each workflow's `secrets` /
+  `tools` arrays reference the registry keys it actually needs at runtime — an agent only needs
+  a secret or tool while running a workflow that lists it. Referencing an undefined key is a
+  validation error; a registry entry no workflow references draws a validator warning.
 
 Workflows are optional in the schema but expected in practice: publishing them is what turns a
 squad into a clean, repeatable, fire-and-forget unit. Full field contract:

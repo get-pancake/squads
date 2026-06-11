@@ -1,6 +1,6 @@
 {
   "name": "paid-ads-squad",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Paid-advertising squad: google-ads-agent and meta-ads-agent each run one ad account end to end — daily optimization, diagnostics, digests, and reviews — filed to the board.",
   "author": "pancake-official",
   "license": "MIT",
@@ -11,56 +11,133 @@
       "summary": "Run a full Google Ads optimization sweep and ship every reversible fix within the existing budget.",
       "inputs": { "scope": "string (optional — campaign or campaign type to focus the sweep; defaults to the whole account)" },
       "outcome": "Reversible fixes (negatives, bids, creative pauses, asset rotations, settings, in-total reallocations) shipped; any budget-raise opportunity surfaced on the board; the sweep filed as a routine ticket.",
-      "agent": "google-ads-agent"
+      "agent": "google-ads-agent",
+      "secrets": [
+        "google_ads.developer_token",
+        "google_ads.oauth_refresh_token",
+        "google_ads.customer_id",
+        "google_ads.login_customer_id"
+      ],
+      "tools": ["vault", "web_fetch", "browser", "cron"]
     },
     {
       "id": "google.daily_digest",
       "summary": "Compile the 3-section Google Ads daily digest from the last 24h of activity.",
       "inputs": {},
       "outcome": "A ~200-word 3-section digest filed on the board as a digest ticket for the co-founder to relay.",
-      "agent": "google-ads-agent"
+      "agent": "google-ads-agent",
+      "secrets": [],
+      "tools": ["cron"]
     },
     {
       "id": "google.root_cause",
       "summary": "Investigate a Google Ads metric regression and propose or ship the reversible fix.",
       "inputs": { "metric": "string (e.g. CPA, ROAS, conversions)", "scope": "string (campaign/ad group, optional)" },
       "outcome": "Root-cause diagnosis filed; reversible fixes shipped; any spend-increasing remedy surfaced on the board.",
-      "agent": "google-ads-agent"
+      "agent": "google-ads-agent",
+      "secrets": [
+        "google_ads.developer_token",
+        "google_ads.oauth_refresh_token",
+        "google_ads.customer_id",
+        "google_ads.login_customer_id"
+      ],
+      "tools": ["vault", "web_fetch", "browser"]
     },
     {
       "id": "google.scale_budget",
       "summary": "Apply an approved budget raise or launch an opted-in campaign and verify pacing.",
       "inputs": { "campaign": "string", "change": "string (the approved budget/campaign change)" },
       "outcome": "Approved budget change applied, logged to the daily log, and confirmed back on the ticket.",
-      "agent": "google-ads-agent"
+      "agent": "google-ads-agent",
+      "secrets": [
+        "google_ads.developer_token",
+        "google_ads.oauth_refresh_token",
+        "google_ads.customer_id",
+        "google_ads.login_customer_id"
+      ],
+      "tools": ["vault", "web_fetch"]
     },
     {
       "id": "meta.daily_operations",
       "summary": "Run the daily Meta Ads diagnostic + action sweep (eight-branch root cause), executing autonomous-allowed actions.",
       "inputs": {},
       "outcome": "Autonomous actions executed and audit-logged; budget-commitment actions queued; the sweep filed as a routine ticket.",
-      "agent": "meta-ads-agent"
+      "agent": "meta-ads-agent",
+      "secrets": [
+        "team.meta_api_token",
+        "team.meta_ad_account_id",
+        "team.meta_pixel_id",
+        "team.meta_capi_dataset_id",
+        "team.account_currency",
+        "team.account_timezone",
+        "team.account_business_model",
+        "team.account_maturity_level",
+        "team.primary_kpi",
+        "team.kpi_target",
+        "team.flag_thresholds",
+        "team.naming_conventions"
+      ],
+      "tools": ["vault", "cron", "mcp-installer"]
     },
     {
       "id": "meta.daily_digest",
       "summary": "Compose the 7-section Meta Ads daily digest from today's audit log and approval queue.",
       "inputs": {},
       "outcome": "The structured daily digest filed to the wiki and on the board as a digest ticket for the co-founder to relay.",
-      "agent": "meta-ads-agent"
+      "agent": "meta-ads-agent",
+      "secrets": [
+        "team.meta_api_token",
+        "team.meta_ad_account_id",
+        "team.account_currency",
+        "team.account_timezone",
+        "team.primary_kpi",
+        "team.kpi_target"
+      ],
+      "tools": ["vault", "cron"]
     },
     {
       "id": "meta.weekly_review",
       "summary": "Run the adaptive Meta Ads weekly review (folds in monthly audits on the first Monday of a month, quarterly on the first Monday of a quarter).",
       "inputs": {},
       "outcome": "Weekly/monthly/quarterly report filed to the wiki and summarized on the board as a digest ticket.",
-      "agent": "meta-ads-agent"
+      "agent": "meta-ads-agent",
+      "secrets": [
+        "team.meta_api_token",
+        "team.meta_ad_account_id",
+        "team.meta_pixel_id",
+        "team.meta_capi_dataset_id",
+        "team.account_currency",
+        "team.account_timezone",
+        "team.account_business_model",
+        "team.account_maturity_level",
+        "team.primary_kpi",
+        "team.kpi_target",
+        "team.flag_thresholds",
+        "team.naming_conventions"
+      ],
+      "tools": ["vault", "cron"]
     },
     {
       "id": "meta.investigate",
       "summary": "Run an ad-hoc Meta Ads root-cause investigation on a specific entity or question.",
       "inputs": { "entity": "string (campaign / ad set / ad)", "question": "string (what to investigate)" },
       "outcome": "Investigation findings filed; any reversible fix shipped and audit-logged; results filed on the ticket.",
-      "agent": "meta-ads-agent"
+      "agent": "meta-ads-agent",
+      "secrets": [
+        "team.meta_api_token",
+        "team.meta_ad_account_id",
+        "team.meta_pixel_id",
+        "team.meta_capi_dataset_id",
+        "team.account_currency",
+        "team.account_timezone",
+        "team.account_business_model",
+        "team.account_maturity_level",
+        "team.primary_kpi",
+        "team.kpi_target",
+        "team.flag_thresholds",
+        "team.naming_conventions"
+      ],
+      "tools": ["vault"]
     }
   ],
   "required_vault_secrets": [

@@ -63,8 +63,8 @@ package-level metadata only — per-agent runtime config lives in `agents/<id>/a
 | `agents` | string[] | ✔ | non-empty array of kebab-case agent ids. Each id must have a matching `agents/<id>/agent.json`. |
 | `workflows` | object[] | · | the squad's published outcome-typed entrypoints — see [*workflows*](#workflows--the-squads-published-interface) below |
 | `required_identities` | object[] | · | each `{ site, reason }` — both non-empty. `site` is an eTLD+1, e.g. `github.com`. |
-| `required_vault_secrets` | object[] | · | each `{ key, label, type }` — `key`/`label` non-empty; `type` ∈ `string` \| `api_key` \| `token` |
-| `required_tool_permissions` | string[] | · | each entry must be an accepted Pancake tool key (see [*Tool permissions*](#tool-permissions) below). Unknown keys are an error. |
+| `required_vault_secrets` | object[] | · | the squad's **secret registry** — each `{ key, label, type }` defined once; `key`/`label` non-empty; `type` ∈ `string` \| `api_key` \| `token`. Workflows reference these keys via `workflows[].secrets`. |
+| `required_tool_permissions` | string[] | · | the squad's **tool-permission registry** — each entry must be an accepted Pancake tool key (see [*Tool permissions*](#tool-permissions) below). Unknown keys are an error. Workflows reference these via `workflows[].tools`. |
 | `min_pancake_version` | string | · | informational only |
 
 Validation returns **all** problems found, not just the first — so a bad manifest can be
@@ -120,7 +120,9 @@ without reading extra files:
     "summary": "Classify a GitHub issue's criticality and label it.",
     "inputs": { "repo": "string", "issue_number": "int" },
     "outcome": "Issue labeled with a P0–P3 criticality + a one-paragraph assessment filed.",
-    "agent": "triage-agent"
+    "agent": "triage-agent",
+    "secrets": ["github.bot_token"],
+    "tools": ["github"]
   }
 ]
 ```
@@ -132,6 +134,16 @@ without reading extra files:
 | `inputs` | object | · | map of input name → type/description string, e.g. `{ "repo": "string" }`. |
 | `outcome` | string | ✔ | the defined done-state, e.g. "issue labeled + assessment filed". |
 | `agent` | string | ✔ | the squad agent that runs it — **must be one of `manifest.agents`**. The cofounder assigns the ticket to this agent. |
+| `secrets` | string[] | · | the vault keys this workflow needs at runtime. Each entry **must reference a key defined in `required_vault_secrets`** (duplicates are an error). The agent fetches a secret only when running a workflow that lists it. |
+| `tools` | string[] | · | the tool permissions this workflow needs at runtime. Each entry **must also appear in `required_tool_permissions`** (duplicates are an error). |
+
+**Secrets and tools are scoped to workflows.** The squad-level
+`required_vault_secrets` / `required_tool_permissions` arrays are *registries*: secrets are
+defined once (`{ key, label, type }`) so onboarding knows what to collect, and tool
+permissions are the union the install grants. What each workflow actually *uses* is declared
+on the workflow itself — agents only need a secret or tool while running a workflow that
+references it. When a squad publishes workflows, the validator warns about any registry
+entry no workflow references.
 
 **How a workflow runs.** The squad agent maps the workflow id to one of its own skills (by
 convention, a skill named after the workflow) and executes it from the ticket's brief +

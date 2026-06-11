@@ -6,6 +6,17 @@
   "license": "MIT",
   "skills": ["skills/example-playbook.md"],
   "agents": ["example-agent"],
+  "workflows": [
+    {
+      "id": "example.do_the_thing",
+      "summary": "TODO: one line the co-founder reads to match a user's intent to this workflow.",
+      "inputs": { "target": "string (TODO: describe each input, or delete `inputs` if none)" },
+      "outcome": "TODO: the defined done-state this workflow guarantees.",
+      "agent": "example-agent",
+      "secrets": ["team.example_setting"],
+      "tools": ["browser", "web_search", "web_fetch"]
+    }
+  ],
   "required_identities": [
     {
       "site": "github.com",

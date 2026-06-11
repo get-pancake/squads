@@ -71,9 +71,13 @@ const HEARTBEAT_FIELDS = {
 
 const FORBIDDEN_BASENAMES = new Set(["agents.md", "user.md", "bootstrap.md", "boot.md"]);
 
-// workflows[] — outcome-typed entrypoints the squad publishes.
+// workflows[] — outcome-typed entrypoints the squad publishes. `secrets` and
+// `tools` scope the squad-level registries to the workflow that actually uses
+// them: each entry references a key defined in required_vault_secrets /
+// required_tool_permissions (the registries stay squad-level so install-time
+// collection has one source of truth).
 const WORKFLOW_ID = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
-const WORKFLOW_ALLOWED_KEYS = new Set(["id", "summary", "inputs", "outcome", "agent"]);
+const WORKFLOW_ALLOWED_KEYS = new Set(["id", "summary", "inputs", "outcome", "agent", "secrets", "tools"]);
 
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const isStringArray = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
@@ -153,6 +157,16 @@ function validateManifest(input) {
       const declaredAgents = new Set(
         Array.isArray(input.agents) ? input.agents.filter((a) => typeof a === "string") : [],
       );
+      const declaredSecretKeys = new Set(
+        Array.isArray(input.required_vault_secrets)
+          ? input.required_vault_secrets
+              .filter((s) => isObject(s) && typeof s.key === "string")
+              .map((s) => s.key)
+          : [],
+      );
+      const declaredToolKeys = new Set(
+        isStringArray(input.required_tool_permissions) ? input.required_tool_permissions : [],
+      );
       const seenW = new Set();
       input.workflows.forEach((w, i) => {
         const at = `workflows[${i}]`;
@@ -189,6 +203,40 @@ function validateManifest(input) {
           err(`${at}.agent`, "required, must name the squad agent that runs this workflow");
         } else if (declaredAgents.size && !declaredAgents.has(w.agent)) {
           err(`${at}.agent`, `"${w.agent}" is not a declared agent id (must be one of: ${[...declaredAgents].join(", ")})`);
+        }
+        if (w.secrets !== undefined) {
+          if (!isStringArray(w.secrets)) {
+            err(`${at}.secrets`, "must be an array of vault keys (strings) when present");
+          } else {
+            const seenS = new Set();
+            w.secrets.forEach((key, j) => {
+              const sat = `${at}.secrets[${j}]`;
+              if (!declaredSecretKeys.has(key)) {
+                err(sat, `"${key}" is not defined in required_vault_secrets (workflow secrets reference the squad-level registry)`);
+              } else if (seenS.has(key)) {
+                err(sat, `duplicate secret key "${key}"`);
+              } else {
+                seenS.add(key);
+              }
+            });
+          }
+        }
+        if (w.tools !== undefined) {
+          if (!isStringArray(w.tools)) {
+            err(`${at}.tools`, "must be an array of tool keys (strings) when present");
+          } else {
+            const seenT = new Set();
+            w.tools.forEach((key, j) => {
+              const tat = `${at}.tools[${j}]`;
+              if (!declaredToolKeys.has(key)) {
+                err(tat, `"${key}" is not declared in required_tool_permissions (workflow tools reference the squad-level registry)`);
+              } else if (seenT.has(key)) {
+                err(tat, `duplicate tool key "${key}"`);
+              } else {
+                seenT.add(key);
+              }
+            });
+          }
         }
       });
     }
@@ -269,6 +317,47 @@ function validateManifest(input) {
   }
 
   return errors;
+}
+
+/**
+ * Non-fatal manifest findings. When a squad publishes workflows, every
+ * squad-level secret and tool permission should be referenced by at least one
+ * workflow's `secrets`/`tools` — an unreferenced entry usually means the
+ * author forgot to scope it (or it is dead weight from a removed workflow).
+ */
+function manifestWarnings(input) {
+  const warnings = [];
+  if (!isObject(input) || !Array.isArray(input.workflows) || input.workflows.length === 0) {
+    return warnings;
+  }
+  const workflows = input.workflows.filter(isObject);
+  const referenced = (field) =>
+    new Set(workflows.flatMap((w) => (isStringArray(w[field]) ? w[field] : [])));
+
+  const usedSecrets = referenced("secrets");
+  if (Array.isArray(input.required_vault_secrets)) {
+    for (const s of input.required_vault_secrets) {
+      if (isObject(s) && typeof s.key === "string" && !usedSecrets.has(s.key)) {
+        warnings.push({
+          path: "manifest.json",
+          message: `required_vault_secrets key "${s.key}" is not referenced by any workflow's \`secrets\` — scope it to the workflow(s) that use it`,
+        });
+      }
+    }
+  }
+
+  const usedTools = referenced("tools");
+  if (isStringArray(input.required_tool_permissions)) {
+    for (const key of input.required_tool_permissions) {
+      if (!usedTools.has(key)) {
+        warnings.push({
+          path: "manifest.json",
+          message: `required_tool_permissions key "${key}" is not referenced by any workflow's \`tools\` — scope it to the workflow(s) that use it`,
+        });
+      }
+    }
+  }
+  return warnings;
 }
 
 // ── heartbeat sub-schema validation ─────────────────────────────────────────
@@ -639,6 +728,7 @@ async function validateBundle(bundleDir) {
     }
     if (manifest !== undefined) {
       for (const e of validateManifest(manifest)) errors.push(e);
+      warnings.push(...manifestWarnings(manifest));
     }
   }
 

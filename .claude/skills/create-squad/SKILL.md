@@ -83,7 +83,7 @@ Ask the user what they want, and don't scaffold until you have answers for all o
   named values like `"daily"` are invalid. `heartbeat.model` is the same `haiku`/`sonnet`/`opus`
   enum. Keep each agent single-lane and focused.
 - **Workflows** — the squad's *published interface*: the outcome-typed entrypoints the
-  co-founder delegates to. For each, get `{ id, summary, inputs, outcome, agent }` — `id` is
+  co-founder delegates to. For each, get `{ id, summary, inputs, outcome, agent, secrets, tools }` — `id` is
   `<tool|subdomain>.<verb_noun>` (lower dotted, e.g. `seo.audit_citations`), `summary` ≤ 200
   chars (what the co-founder reads to match intent), `outcome` is the done-state, `agent` must
   be a declared agent. Aim for **3–5 per agent**; ten usually means one job parameterized.
@@ -94,14 +94,18 @@ Ask the user what they want, and don't scaffold until you have answers for all o
   **multi-agent** squad, prefer **agent-specific** for anything tool/lane-specific — squad-wide
   skills are copied into *every* agent and pollute the others' context.
 - **Required identities** — external sites the squad needs connected, each with a reason.
-- **Required vault secrets** — each `{ key, label, type }`.
+- **Required vault secrets** — each `{ key, label, type }`. This squad-level array is a
+  *registry* (defined once so onboarding knows what to collect) — each workflow's `secrets`
+  array references the keys it actually uses at runtime; the validator errors on undefined
+  references and warns on registry entries no workflow references.
 - **Required tool permissions** — must be drawn from the canonical Pancake tool list
   ([`docs/bundle-reference.md#tool-permissions`](../../../docs/bundle-reference.md#tool-permissions)).
   Accepted keys today: `browser`, `exa` / `web_search` / `web_fetch`, `github`,
   `google-workspace` / `google_workspace`, `notion`, `agentmail`, `vault`,
   `preview-host` / `publish_preview`, `mcp-installer`,
   `image-generation` / `image_generate` / `image`, `cron`. Anything else is rejected by
-  the validator. Slack and voice/TTS are intentionally excluded — those are user-facing
+  the validator. Like vault secrets, this is a squad-level *registry* — each workflow's
+  `tools` array references the permissions that workflow actually uses. Slack and voice/TTS are intentionally excluded — those are user-facing
   channels owned by the co-founder, not by a sub-agent.
 - **Crons** — any scheduled jobs, and what each one does.
 - **Catalog metadata** — `tags` for the marketplace card (no `token_intensity` — it is
@@ -112,8 +116,10 @@ Ask the user what they want, and don't scaffold until you have answers for all o
 Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file:
 
 - **`manifest.json`** — package descriptor only. `agents` is a string array of kebab ids.
-  Add the **`workflows[]`** catalog from Step 2 (each `{ id, summary, inputs, outcome, agent }`;
-  `agent` must be one of `manifest.agents`; ids unique within the squad). No per-agent runtime
+  Add the **`workflows[]`** catalog from Step 2 (each
+  `{ id, summary, inputs, outcome, agent, secrets, tools }`; `agent` must be one of
+  `manifest.agents`; ids unique within the squad; `secrets`/`tools` reference keys defined in
+  the squad-level `required_vault_secrets` / `required_tool_permissions` registries). No per-agent runtime
   config in this file. Delete optional sections the squad doesn't use.
 - **`agents/<id>/agent.json`** for every agent — the per-agent runtime config (curated
   subset of OpenClaw's `agents.list[]`). Required: `id`, `description`. `model` is a

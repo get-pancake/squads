@@ -1,6 +1,6 @@
 {
   "name": "community-squad",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Community squad: reddit-agent grows organic presence on Reddit — monitors subreddits, drafts value comments via the browser, warms up a single purchased account, and reports account health.",
   "author": "pancake-official",
   "license": "MIT",
@@ -11,28 +11,36 @@
       "summary": "Scan target subreddits, score threads, and draft up to 3 value-adding comments for the day.",
       "inputs": { "subreddits": "comma-separated (optional; defaults to team.reddit_target_subreddits)" },
       "outcome": "Up to 3 scored comment drafts filed to wiki and surfaced as a batch on the board for sign-off.",
-      "agent": "reddit-agent"
+      "agent": "reddit-agent",
+      "secrets": ["team.reddit_account", "team.reddit_target_subreddits"],
+      "tools": ["browser"]
     },
     {
       "id": "reddit.monitor_keywords",
       "summary": "Monitor Reddit for brand and competitor keyword mentions and flag high-value threads.",
       "inputs": { "keywords": "comma-separated (optional; defaults to team.target_keywords)" },
       "outcome": "Keyword/competitor mention hits filed and any high-value threads flagged on the board.",
-      "agent": "reddit-agent"
+      "agent": "reddit-agent",
+      "secrets": ["team.target_keywords"],
+      "tools": ["web_search", "web_fetch"]
     },
     {
       "id": "reddit.account_health",
       "summary": "Run the weekly karma + shadowban health check on the Reddit account.",
       "inputs": {},
       "outcome": "Karma trend + shadowban status filed; a banned/suspended/shadowbanned account flagged explicitly on the board.",
-      "agent": "reddit-agent"
+      "agent": "reddit-agent",
+      "secrets": ["team.reddit_account"],
+      "tools": ["browser"]
     },
     {
       "id": "reddit.post",
       "summary": "Publish approved comment drafts to Reddit via the browser on old.reddit.com.",
       "inputs": { "draft_ids": "ids of the approved drafts to post" },
       "outcome": "Approved comments posted from the dedicated account; permalinks filed back on the ticket.",
-      "agent": "reddit-agent"
+      "agent": "reddit-agent",
+      "secrets": ["team.reddit_account"],
+      "tools": ["browser"]
     }
   ],
   "required_vault_secrets": [

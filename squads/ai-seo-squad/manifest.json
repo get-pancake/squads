@@ -1,6 +1,6 @@
 {
   "name": "ai-seo-squad",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Single-agent GEO squad: GEO-agent runs daily citation audits, writes GEO-optimized blog posts, and ships llms.txt / JSON-LD engineering PRs.",
   "author": "pancake-official",
   "license": "MIT",
@@ -11,28 +11,36 @@
       "summary": "Audit ChatGPT/Gemini/Perplexity citation share for the target keywords and file the delta.",
       "inputs": { "keywords": "comma-separated (optional; defaults to team.target_keywords)", "domain": "string (optional; defaults to team.target_domain)" },
       "outcome": "Per-keyword citation-share table filed to wiki, rolling trend updated, and the three-line delta filed on the board.",
-      "agent": "geo-agent"
+      "agent": "geo-agent",
+      "secrets": ["team.target_domain", "team.target_keywords"],
+      "tools": ["browser", "web_search", "web_fetch", "github"]
     },
     {
       "id": "seo.write_article",
       "summary": "Write a GEO-optimized blog post and ship it as a self-merged PR (or wiki draft).",
       "inputs": { "topic": "string", "keyword": "string (target keyword to win citation for)" },
       "outcome": "Blog post drafted to the content repo, PR opened and self-merged (or filed to wiki/Knowledge/GEO/Drafts when no repo).",
-      "agent": "geo-agent"
+      "agent": "geo-agent",
+      "secrets": ["team.target_domain"],
+      "tools": ["web_search", "web_fetch", "github"]
     },
     {
       "id": "seo.ship_technical_fix",
       "summary": "Ship an llms.txt / JSON-LD / schema / metadata GEO fix as a self-merged PR.",
       "inputs": { "target": "llms.txt | json-ld | metadata | sitemap", "scope": "string (page or section, optional)" },
       "outcome": "Technical GEO fix opened and self-merged as a PR; change filed to wiki/Knowledge/GEO.",
-      "agent": "geo-agent"
+      "agent": "geo-agent",
+      "secrets": ["team.target_domain"],
+      "tools": ["web_fetch", "github"]
     },
     {
       "id": "seo.weekly_report",
       "summary": "Roll up the week's citation-share trend and movement into a digest.",
       "inputs": {},
       "outcome": "Weekly citation-share trend digest filed to wiki and summarized on the board.",
-      "agent": "geo-agent"
+      "agent": "geo-agent",
+      "secrets": ["team.target_keywords"],
+      "tools": []
     }
   ],
   "required_identities": [
