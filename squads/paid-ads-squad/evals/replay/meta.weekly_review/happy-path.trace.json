@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "meta.weekly_review",
+  "case": "happy-path",
+  "description": "Monday 08:00 weekly-review cron dispatches the adaptive review (plain week — not a first Monday, so no monthly/quarterly fold-in); meta-ads-agent claims, reads API creds + account settings from the vault, pulls 7-day and 28-day insights for trend comparison, files the report to the wiki, summarizes it on the board as a digest ticket, and completes with result + digest.",
+  "setup": {
+    "vault": {
+      "team.meta_api_token": "meta-system-user-token-redacted",
+      "team.meta_ad_account_id": "act_998877",
+      "team.account_maturity_level": "developing",
+      "team.kpi_target": "45.00"
+    },
+    "installed_squads": ["paid-ads-squad@1.0.3"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "meta-ads-agent",
+    "workflow": "paid-ads-squad.meta.weekly_review",
+    "title": "Meta Ads weekly review — week of 2026-06-08",
+    "kind": "digest"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "meta-ads-agent",
+        "title": "Meta Ads weekly review — week of 2026-06-08",
+        "workflow": "paid-ads-squad.meta.weekly_review",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "meta-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.meta_api_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.account_maturity_level" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/act_998877/insights", "method": "GET", "note": "7d window: spend/CPA/ROAS/frequency by campaign" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/act_998877/insights", "method": "GET", "note": "28d window for week-over-baseline trend comparison" }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "meta-ads-agent",
+        "assigned_to": "main",
+        "title": "Relay Meta Ads weekly review — week of 2026-06-08",
+        "body": "Weekly review summary: CPA improved $49 -> $46 WoW, spend flat at ~$2.2k, creative fatigue cleared by Tuesday's pauses, Prospecting still budget-capped (BUD-20260612-01 pending). Full report: wiki/Knowledge/MetaAds/Reviews/2026-W24.md."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "meta-ads-agent",
+        "result": "Weekly review complete (plain week, no monthly/quarterly fold-in). Report filed to wiki/Knowledge/MetaAds/Reviews/2026-W24.md and summarized to the co-founder as a digest ticket. Headline: CPA $46 vs $45 target, improving WoW; one structural recommendation (consolidate two overlapping ad sets) queued for next sweep.",
+        "digest": "Ran meta.weekly_review for W24: report filed, board summary handed off. CPA trend improving. Next wake: tomorrow's 09:00 operations cron — execute the ad-set consolidation if thresholds still hold."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "mcp-installer", "browser"]
+  }
+}

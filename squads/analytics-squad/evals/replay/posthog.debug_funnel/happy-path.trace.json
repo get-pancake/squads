@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "squad": "analytics-squad",
+  "workflow": "posthog.debug_funnel",
+  "case": "happy-path",
+  "description": "Manual funnel investigation dispatched at the canonical qualified id; analytics-agent reads the read-only API key, derives the signup cohort + intermediate steps + funnel conversion over web_fetch (posthog-funnel-debugger §1-4), files the breakdown to wiki/Knowledge/PostHog/FunnelDebugger/, and completes naming the biggest drop-off step plus a one-sentence hypothesis.",
+  "setup": {
+    "vault": { "team.posthog_api_key": "phx_test_key" },
+    "installed_squads": ["analytics-squad@1.0.0"]
+  },
+  "inputs": { "window_days": 28 },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "analytics-agent",
+    "workflow": "analytics-squad.posthog.debug_funnel",
+    "title": "Debug signup-to-activation funnel (28d window)",
+    "kind": "task"
+  },
+  "events": [
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "analytics-agent", "workflow": "analytics-squad.posthog.debug_funnel" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "analytics-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.posthog_api_key" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/query/", "note": "HogQL: signup cohort in the window (funnel-debugger §1)" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/query/", "note": "HogQL: top 5 intermediate events on activated-user paths (funnel-debugger §2)" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/query/", "note": "HogQL: reached-at-least-step counts for the derived funnel (funnel-debugger §3)" } },
+    { "kind": "tool", "name": "complete_task", "args": {
+      "caller_id": "analytics-agent",
+      "result": "Funnel analysis filed to wiki/Knowledge/PostHog/FunnelDebugger/2026-06-12.md. Cohort 84 signups; biggest drop-off between workspace_created → first_message_sent (61% of users who create a workspace never send a message). Hypothesis: the empty-workspace state gives no prompt to send a first message — check the post-create screen.",
+      "digest": "Funnel debugger ran on a 28d window, cohort 84 (above the directional threshold). Steps derived from activated paths, not guessed. Drop-off is mid-funnel, not last-mile — onboarding UX, not a bug. Logged the derived step order in MEMORY for reuse next trigger."
+    } }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "complete_task"],
+    "tools_must_exclude": ["fail_task"]
+  }
+}

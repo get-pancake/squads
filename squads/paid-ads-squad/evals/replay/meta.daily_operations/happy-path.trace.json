@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "meta.daily_operations",
+  "case": "happy-path",
+  "description": "09:00 account-local operations cron dispatches the daily sweep; meta-ads-agent claims, reads the Graph API token + ad account from the vault, pulls last-24h insights, runs the eight-branch root cause over flagged entities, executes one autonomous-allowed action (pause a fatigued ad) with before/after captured to the audit log, queues one budget-commitment action for approval, and completes with result + digest. Asserts mcp-installer is absent — it was moved off this workflow into infra_tool_permissions on 2026-06-12.",
+  "setup": {
+    "vault": {
+      "team.meta_api_token": "meta-system-user-token-redacted",
+      "team.meta_ad_account_id": "act_998877",
+      "team.flag_thresholds": "{}"
+    },
+    "installed_squads": ["paid-ads-squad@1.0.3"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "meta-ads-agent",
+    "workflow": "paid-ads-squad.meta.daily_operations",
+    "title": "Meta Ads daily operations sweep — 2026-06-12",
+    "kind": "routine"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "meta-ads-agent",
+        "title": "Meta Ads daily operations sweep — 2026-06-12",
+        "workflow": "paid-ads-squad.meta.daily_operations",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "meta-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.meta_api_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.meta_ad_account_id" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.flag_thresholds" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/act_998877/insights", "method": "GET", "note": "last-24h spend/CPA/ROAS/frequency vs rolling 7d baseline, campaign->ad level" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/23851234567890123", "method": "POST", "note": "autonomous-allowed: pause fatigued ad (frequency 4.2, hook rate -38%); before/after captured to AuditLog/2026-06-12.md" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "meta-ads-agent", "comment": "Sweep done: 1 autonomous action executed (ad 2385...123 paused, audit-logged). 1 budget-commitment queued as BUD-20260612-01 (raise Prospecting daily budget +20%) — awaiting approval, surfaced in today's digest." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "meta-ads-agent",
+        "result": "Daily operations sweep complete. Flags: 2 (creative fatigue on ad 2385...123; CPA drift on Prospecting). Autonomous action executed: fatigued ad paused, before/after audit-logged. Budget-commitment queued, not executed: BUD-20260612-01 (+20% Prospecting daily budget, rationale and expected impact in the approval queue).",
+        "digest": "Ran meta.daily_operations: 1 pause shipped (fatigue), 1 budget raise queued as BUD-20260612-01. CPA $47 vs target $45 — slight drift, watching. Next wake: 17:00 digest cron; fold BUD-20260612-01 into pending approvals."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "add_task_comment", "complete_task"],
+    "tools_must_exclude": ["fail_task", "mcp-installer", "browser", "squad_install"]
+  }
+}

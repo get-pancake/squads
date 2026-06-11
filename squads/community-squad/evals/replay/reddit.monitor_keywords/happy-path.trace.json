@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "squad": "community-squad",
+  "workflow": "reddit.monitor_keywords",
+  "case": "happy-path",
+  "description": "Cofounder dispatches the daily keyword monitor; reddit-agent claims, loads the keyword list from vault, runs one web_search per keyword/competitor with site:reddit.com scoped to the last 24h, flags one high-value competitor thread on the board, and completes with the hit summary + digest. This workflow is web_search-only — the browser must never appear (web_fetch was removed from its tools on 2026-06-12), and no Reddit login happens here.",
+  "setup": {
+    "vault": {
+      "team.target_keywords": "ai cofounder,agent squads,autonomous agents,openclaw,acme-competitor"
+    },
+    "installed_squads": ["community-squad@1.1.3"]
+  },
+  "inputs": { "keywords": "ai cofounder,agent squads,autonomous agents,openclaw,acme-competitor" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "reddit-agent",
+    "workflow": "community-squad.reddit.monitor_keywords",
+    "title": "Reddit keyword + competitor monitor — 2026-06-12",
+    "kind": "routine"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "reddit-agent",
+        "title": "Reddit keyword + competitor monitor — 2026-06-12",
+        "workflow": "community-squad.reddit.monitor_keywords",
+        "squad": "community-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "reddit-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "key": "team.target_keywords" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "site:reddit.com \"ai cofounder\"", "recency": "day" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "site:reddit.com \"agent squads\"", "recency": "day" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "site:reddit.com \"autonomous agents\" tool recommendation", "recency": "day" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "site:reddit.com openclaw", "recency": "day" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "site:reddit.com acme-competitor review", "recency": "day" }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "reddit-agent",
+        "kind": "routine",
+        "assigned_to": "reddit-agent",
+        "title": "High-value keyword hit — r/SaaS asks for an 'ai cofounder' tool",
+        "context": "r/SaaS thread from 6h ago: founder asking for exactly our category; acme-competitor recommended twice with mixed sentiment. Candidate for tomorrow's scan_and_draft batch.",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "reddit-agent",
+        "result": "Keyword monitor done: 5 keywords searched on site:reddit.com (last 24h). 3 mentions total; 1 high-value hit flagged on the board (r/SaaS thread asking for an 'ai cofounder' tool, competitor recommended twice). 2 low-signal mentions logged, no brand mentions found.",
+        "digest": "5 keyword searches, 1 high-value r/SaaS hit flagged for the next scan_and_draft batch. acme-competitor sentiment was mixed — worth a draft that answers the question without naming us. Next wake: fold the flagged thread into the daily drafting cycle."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_search", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "browser", "web_fetch", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

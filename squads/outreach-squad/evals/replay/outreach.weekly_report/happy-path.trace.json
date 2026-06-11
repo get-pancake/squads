@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "squad": "outreach-squad",
+  "workflow": "outreach.weekly_report",
+  "case": "happy-path",
+  "description": "Sunday weekly report, dispatched as a ticket. Outreach-agent claims it, computes 7-day pipeline performance from the Closed leads table and the memory/YYYY-MM-DD.md logs (all file work — no tool events), files the metrics + one Weekly Learning to MEMORY.md, and completes with result + digest. The workflow declares zero inputs and `tools: []`, so the trace must contain ONLY board tools — any external tool call here is a contract violation. No vault reads: the squad declares no secrets.",
+  "setup": {
+    "vault": {},
+    "installed_squads": ["outreach-squad@0.2.3"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "outreach-agent",
+    "workflow": "outreach-squad.outreach.weekly_report",
+    "title": "Weekly pipeline report — week of 2026-06-08",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "outreach-agent",
+        "title": "Weekly pipeline report — week of 2026-06-08",
+        "workflow": "outreach-squad.outreach.weekly_report",
+        "squad": "outreach-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "list_tasks",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "update_task_status",
+      "args": { "caller_id": "outreach-agent", "status": "in_progress" }
+    },
+    {
+      "kind": "tool",
+      "name": "get_task",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "outreach-agent", "comment": "7-day metrics computed from the Closed leads table + daily logs: 14 touches sent, 38% acceptance, 9.1% reply rate, 1 meeting booked. Weekly Learning filed in MEMORY.md." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "outreach-agent",
+        "result": "Weekly report for 2026-06-08 → 2026-06-14: 14 touches sent across 8 active leads, connection acceptance 38% (above the 30% benchmark), reply rate 9.1% (above 8% for the first week — upgrade clock started), 1 meeting booked from the hiring signal. Weekly Learning filed under MEMORY.md → Weekly Learnings: hiring-signal leads convert ~2x better than funding-signal leads this week; hypothesis — queue more hiring-signal sourcing next week. Metrics summarized on the board via this ticket.",
+        "digest": "Ran outreach.weekly_report: reply rate 9.1% wk1 — one more week >8% plus a tool in vault triggers the Advanced upgrade. Hiring signal outperforming funding 2:1; next week's sourcing weighted accordingly. Next wake: Monday daily loop, 3 rows due."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["complete_task"],
+    "tools_must_exclude": ["fail_task", "vault_get", "vault_request", "browser", "exa", "web_search", "web_fetch", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

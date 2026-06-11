@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "squad": "eng-squad",
+  "workflow": "eng.sweep_open_issues",
+  "case": "happy-path",
+  "description": "Daily-sweep cron dispatches a repo sweep; triage-agent claims, reads team.github_repos from the vault, lists open issues missing a priority/P* label, classifies and labels three of them (P1, P2, P3) with assessment comments, files the sweep as a routine board record (no notify_channel), and completes with the canonical summary + digest.",
+  "setup": {
+    "vault": { "team.github_repos": "acme/api" },
+    "installed_squads": ["eng-squad@2.0.0"]
+  },
+  "inputs": { "repo": "acme/api", "since": "2026-06-11" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "triage-agent",
+    "workflow": "eng-squad.eng.sweep_open_issues",
+    "title": "Triage sweep — acme/api 2026-06-12",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "triage-agent",
+        "title": "Triage sweep — acme/api 2026-06-12",
+        "workflow": "eng-squad.eng.sweep_open_issues",
+        "squad": "eng-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "triage-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "triage-agent", "key": "team.github_repos" }
+    },
+    {
+      "kind": "tool",
+      "name": "github_get_token",
+      "args": {}
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.list", "repo": "acme/api", "state": "open", "since": "2026-06-11", "filter": "no priority/P* label" }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.get", "repo": "acme/api", "issue": 151 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.add_labels", "repo": "acme/api", "issue": 151, "labels": ["priority/P1"] }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.create_comment", "repo": "acme/api", "issue": 151 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.get", "repo": "acme/api", "issue": 153 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.add_labels", "repo": "acme/api", "issue": 153, "labels": ["priority/P2"] }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.create_comment", "repo": "acme/api", "issue": 153 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.get", "repo": "acme/api", "issue": 154 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.add_labels", "repo": "acme/api", "issue": 154, "labels": ["priority/P3"] }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.create_comment", "repo": "acme/api", "issue": 154 }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "triage-agent",
+        "kind": "routine",
+        "assigned_to": "triage-agent",
+        "title": "Triage sweep — acme/api 2026-06-12",
+        "context": "Swept acme/api: 3 untriaged issues classified (#151 P1 retry storm on webhook delivery, #153 P2 pagination off-by-one on /v2/orders, #154 P3 docs typo in quickstart). No P0s. No ambiguous issues parked.",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "triage-agent", "comment": "Sweep done: 3 issues triaged on acme/api (1×P1, 1×P2, 1×P3); routine record filed on the board." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "triage-agent",
+        "result": "Sweep of acme/api complete: 3 untriaged open issues classified and labeled — #151 priority/P1 (webhook retry storm degrades delivery for all consumers), #153 priority/P2 (pagination off-by-one on /v2/orders, workaround exists), #154 priority/P3 (quickstart docs typo). Assessments posted as issue comments and filed to wiki/Knowledge/GitHub-Triage/acme-api/. No P0s found; no ambiguous issues needing input. Routine sweep record filed on the board.",
+        "digest": "Daily sweep acme/api: 3 triaged (P1 #151, P2 #153, P3 #154), no P0, nothing ambiguous. #151 called P1 over P0 because deliveries eventually land via retry. Next wake: re-check #151 — if retry volume grows it escalates."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "github", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

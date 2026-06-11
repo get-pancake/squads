@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "meta.daily_digest",
+  "case": "happy-path",
+  "description": "17:00 account-local digest cron dispatches the daily digest; meta-ads-agent claims, reads the API token + KPI settings from the vault, pulls today's headline metrics to anchor the numbers, composes the 7-section digest from the audit log + approval queue, hands it to the co-founder via create_task, and completes with result + digest.",
+  "setup": {
+    "vault": {
+      "team.meta_api_token": "meta-system-user-token-redacted",
+      "team.meta_ad_account_id": "act_998877",
+      "team.primary_kpi": "cpa",
+      "team.kpi_target": "45.00"
+    },
+    "installed_squads": ["paid-ads-squad@1.0.3"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "meta-ads-agent",
+    "workflow": "paid-ads-squad.meta.daily_digest",
+    "title": "Compose Meta Ads daily digest — 2026-06-12",
+    "kind": "digest"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "meta-ads-agent",
+        "title": "Compose Meta Ads daily digest — 2026-06-12",
+        "workflow": "paid-ads-squad.meta.daily_digest",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "meta-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.meta_api_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.primary_kpi" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.kpi_target" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/act_998877/insights", "method": "GET", "note": "today's headline spend/CPA/conversions to anchor digest section 1" }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "meta-ads-agent",
+        "assigned_to": "main",
+        "title": "Relay Meta Ads digest — 2026-06-12",
+        "body": "7-section digest: headline KPIs (CPA $47 vs $45 target), spend $312, actions executed today (1 fatigue pause, audit-logged), pending approvals (BUD-20260612-01: +20% Prospecting budget), flags watched, learnings, tomorrow's plan."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "meta-ads-agent",
+        "result": "Daily digest composed from today's audit log + approval queue, filed to wiki/Knowledge/MetaAds/Digests/2026-06-12.md, and handed to the co-founder as a relay task. One pending approval surfaced (BUD-20260612-01).",
+        "digest": "Composed meta.daily_digest for 2026-06-12; relay task filed. CPA $47 vs $45 — drift noted in digest. Next wake: Monday weekly-review cron; chase BUD-20260612-01 if still unanswered."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "mcp-installer", "browser"]
+  }
+}

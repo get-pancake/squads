@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "squad": "ai-seo-squad",
+  "workflow": "seo.write_article",
+  "case": "happy-path",
+  "description": "Cofounder dispatches a single article to close a citation gap. Per blog-writing-guide: geo-agent claims, reads the target domain from the vault, researches the buyer question and competitor coverage via web_search/web_fetch, drafts the .mdx with answer-first lede + FAQPage JSON-LD, opens the PR via github, self-merges (squash — blog posts need no human review), and completes with the merged-PR link + digest.",
+  "setup": {
+    "vault": { "team.target_domain": "getpancake.ai" },
+    "installed_squads": ["ai-seo-squad@1.2.2"]
+  },
+  "inputs": {
+    "topic": "Pancake vs. building your own agent stack: an honest comparison for early-stage founders",
+    "keyword": "ai cofounder"
+  },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "geo-agent",
+    "workflow": "ai-seo-squad.seo.write_article",
+    "title": "Write GEO article: close the 'ai cofounder' citation gap",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "geo-agent",
+        "title": "Write GEO article: close the 'ai cofounder' citation gap",
+        "workflow": "ai-seo-squad.seo.write_article",
+        "squad": "ai-seo-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "geo-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "geo-agent", "key": "team.target_domain" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "what is an ai cofounder and which products offer one" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://competitor.example.com/ai-cofounder" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://getpancake.ai/what-is" }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": {
+        "op": "pulls.create",
+        "repo": "pancake/website",
+        "head": "geo/ai-cofounder-comparison",
+        "title": "blog: Pancake vs. building your own agent stack (target: 'ai cofounder')"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "pulls.merge", "repo": "pancake/website", "pull_number": 318, "merge_method": "squash" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": {
+        "caller_id": "geo-agent",
+        "comment": "Article shipped: answer-first comparison post with feature table, 'choose X if…' section, and FAQPage JSON-LD. PR pancake/website#318 self-merged (squash)."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "geo-agent",
+        "result": "Published 'Pancake vs. building your own agent stack' targeting 'ai cofounder'. PR pancake/website#318 opened and self-merged (squash). Answer-first lede, honest feature table, FAQPage JSON-LD, dateModified set. Publish date recorded in wiki/Knowledge/GEO/Drafts/ for the 2-4 week impact read.",
+        "digest": "Shipped the 'ai cofounder' comparison post (PR #318, merged). Judging impact on the 2-4 week horizon per advanced-seo — re-check this keyword's citation share around 2026-06-26. Next wake: daily audit as usual; flag any movement on 'ai cofounder'."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_search", "web_fetch", "github", "complete_task"],
+    "tools_must_exclude": ["fail_task", "browser", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "squad": "community-squad",
+  "workflow": "reddit.scan_and_draft",
+  "case": "happy-path",
+  "description": "Cofounder dispatches the daily scan; reddit-agent claims, loads credentials + target subreddits from vault, logs in via browser on old.reddit.com, scans each subreddit's /new/ (last 24h), scores threads on the three-criteria checklist, drafts 3 comments per the Voice Rules, files them to wiki, surfaces the batch as a routine ticket for co-founder sign-off, and completes with the batch + digest. Per the playbook, nothing is posted in this workflow — posting is reddit.post after sign-off.",
+  "setup": {
+    "vault": {
+      "team.reddit_account": "{\"username\": \"quiet_builder_42\", \"password\": \"***\"}",
+      "team.reddit_target_subreddits": "Entrepreneur,startups,SaaS"
+    },
+    "installed_squads": ["community-squad@1.1.3"]
+  },
+  "inputs": { "subreddits": "Entrepreneur,startups,SaaS" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "reddit-agent",
+    "workflow": "community-squad.reddit.scan_and_draft",
+    "title": "Daily Reddit scan + comment drafts — 2026-06-12",
+    "kind": "routine"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "reddit-agent",
+        "title": "Daily Reddit scan + comment drafts — 2026-06-12",
+        "workflow": "community-squad.reddit.scan_and_draft",
+        "squad": "community-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "reddit-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "key": "team.reddit_account" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "key": "team.reddit_target_subreddits" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/login" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "fill_and_submit", "fields": { "#user_login": "quiet_builder_42", "#passwd_login": "***" } }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "assert_visible", "selector": ".user a", "expect": "quiet_builder_42" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/r/Entrepreneur/new/" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/r/startups/new/" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/r/SaaS/new/" }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "reddit-agent",
+        "kind": "routine",
+        "assigned_to": "reddit-agent",
+        "title": "Reddit drafts — 2026-06-12",
+        "context": "3 drafts (r/Entrepreneur churn-tooling thread, r/startups solo-founder ops question, r/SaaS onboarding-emails thread) + 0 keyword hits; co-founder signs off here, then dispatches reddit.post.",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": {
+        "caller_id": "reddit-agent",
+        "comment": "Scanned 3 subreddits (last 24h, 41 threads). 5 qualified on the three-criteria checklist; top 3 drafted and filed to wiki/Knowledge/Reddit/Drafts/2026-06-12.md. Batch surfaced for sign-off as 'Reddit drafts — 2026-06-12'."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "reddit-agent",
+        "result": "Daily scan done: 3 subreddits, 41 threads read, 5 qualified, top 3 drafted (r/Entrepreneur churn-tooling, r/startups solo-founder ops, r/SaaS onboarding-emails). Drafts filed to wiki/Knowledge/Reddit/Drafts/2026-06-12.md and batched on the board for co-founder sign-off. Nothing posted — awaiting sign-off per playbook.",
+        "digest": "Scanned Entrepreneur/startups/SaaS, 3 drafts surfaced for sign-off. r/SaaS thread was the strongest (8 comments, exact ICP pain). No rate-limit or captcha signals. Next wake: check whether the sign-off ticket flipped to approved, then run reddit.post."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "browser", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "web_search", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

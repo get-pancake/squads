@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "squad": "outreach-squad",
+  "workflow": "outreach.triage_replies",
+  "case": "happy-path",
+  "description": "Cofounder dispatches an ad-hoc reply sweep (the same Section-2-only pass the every-2h reply-sweep cron runs). Outreach-agent claims the ticket, sweeps LinkedIn DMs via the browser identity, answers two new replies with the qualify-first framework (Q1 to one, calendar link to a Q2-confirmed lead), updates the rows in the MEMORY.md pipeline ledger (file work — no tool event), and completes with result + digest. The workflow declares zero inputs and only the `browser` tool; no vault reads — the squad declares no secrets.",
+  "setup": {
+    "vault": {},
+    "installed_squads": ["outreach-squad@0.2.3"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "outreach-agent",
+    "workflow": "outreach-squad.outreach.triage_replies",
+    "title": "Sweep + triage inbound replies",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "outreach-agent",
+        "title": "Sweep + triage inbound replies",
+        "workflow": "outreach-squad.outreach.triage_replies",
+        "squad": "outreach-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "list_tasks",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "update_task_status",
+      "args": { "caller_id": "outreach-agent", "status": "in_progress" }
+    },
+    {
+      "kind": "tool",
+      "name": "get_task",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "open_inbox", "purpose": "sweep for new DMs across active sequences" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "send_message", "url": "https://www.linkedin.com/in/lead-1-cto", "message": "Fair question! Are you using anything today to keep onboarding docs in sync, or is it mostly manual?" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "send_message", "url": "https://www.linkedin.com/in/growth-lead-2", "message": "That matches what we hear. Easiest to show you live — 15 min this week? cal.com/founder/15min" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "outreach-agent", "comment": "2 new replies handled within SLA: 1 moved to qualifying (Q1 sent), 1 Q2-confirmed and offered a meeting slot. Ledger rows updated." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "outreach-agent",
+        "result": "Reply sweep complete: 2 new LinkedIn replies handled with the qualify-first framework. Lead 1 answered the opener — Q1 sent, row moved to `qualifying`. Lead 2 confirmed the pain on Q2 — calendar link sent, row updated pending booking. Pipeline ledger in MEMORY.md updated (Stage, Last touch, Notes) for both rows.",
+        "digest": "Ran outreach.triage_replies: 2 replies handled, 0 pending, reply latency under 2h held. Lead 2 is hot — if the meeting books, move the row to Closed leads with meeting_booked. Next wake: check for the booking confirmation."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["browser", "complete_task"],
+    "tools_must_exclude": ["fail_task", "vault_get", "vault_request", "exa", "web_search", "web_fetch", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

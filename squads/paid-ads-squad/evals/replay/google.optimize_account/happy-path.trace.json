@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "google.optimize_account",
+  "case": "happy-path",
+  "description": "Sweep cron dispatches an optimization sweep scoped to Search; google-ads-agent claims, reads Google Ads API creds from the vault, pulls search-terms + bidding data via the API, ships reversible fixes (negatives + a creative pause), files the sweep as a routine ticket and completes with result + digest. Budget-raise opportunity is surfaced in the result, never executed.",
+  "setup": {
+    "vault": {
+      "google_ads.developer_token": "dev-token-redacted",
+      "google_ads.oauth_refresh_token": "refresh-token-redacted",
+      "google_ads.customer_id": "1234567890"
+    },
+    "installed_squads": ["paid-ads-squad@1.0.3"]
+  },
+  "inputs": { "scope": "Search campaigns" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "google-ads-agent",
+    "workflow": "paid-ads-squad.google.optimize_account",
+    "title": "Daily Google Ads optimization sweep — Search campaigns",
+    "kind": "routine"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "google-ads-agent",
+        "title": "Daily Google Ads optimization sweep — Search campaigns",
+        "workflow": "paid-ads-squad.google.optimize_account",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "google-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.developer_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.oauth_refresh_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.customer_id" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://googleads.googleapis.com/v17/customers/1234567890/googleAds:searchStream", "method": "POST", "note": "GAQL: last-7d search terms + bidding signals for Search campaigns" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://googleads.googleapis.com/v17/customers/1234567890/campaignCriteria:mutate", "method": "POST", "note": "add 4 exact-match negatives; pause 1 fatigued RSA" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "google-ads-agent", "comment": "Sweep done: 4 negatives added, 1 RSA paused. Budget-raise opportunity on Brand Search surfaced below — not executed." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "google-ads-agent",
+        "result": "Optimization sweep on Search campaigns shipped: 4 exact-match negatives added (wasted spend $38/wk), 1 fatigued RSA paused (CTR -41% over 14d). All changes reversible, within existing budget. Budget-raise opportunity: Brand Search is impression-share limited at 71% — raise filed as its own co-founder task.",
+        "digest": "Ran google.optimize_account on Search. 4 negatives + 1 RSA pause shipped; CPA $42 vs target $45, on track. Brand Search budget-raise ask awaits co-founder. Next wake: verify the RSA pause didn't dent conversion volume."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "complete_task"],
+    "tools_must_exclude": ["fail_task", "mcp-installer", "squad_install", "workflow_remove"]
+  }
+}
