@@ -1,9 +1,9 @@
 ---
 name: posthog-funnel-debugger
-description: PostHog-agent's procedure for finding the biggest drop-off step in the signup → activation funnel. Triggered automatically when the daily digest detects activation rate dropping > 2pp WoW or sitting below a 5% floor. Load when a funnel investigation is needed.
+description: Analytics-agent's procedure for finding the biggest drop-off step in the signup → activation funnel. Triggered automatically when the daily digest detects activation rate dropping > 2pp WoW or sitting below a 5% floor. Load when a funnel investigation is needed.
 ---
 
-# PostHog funnel debugger — PostHog-agent
+# PostHog funnel debugger — Analytics-agent
 
 This skill answers one question: **between signup and activation, where do users actually drop off?**
 

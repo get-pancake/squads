@@ -1,9 +1,9 @@
 ---
 name: posthog-release-tracker
-description: PostHog-agent's procedure for tying product releases to metric movement. Polls a configured GitHub repo on every 2h heartbeat pulse, snapshots DAU / WAU / north-star metrics at T+0, T+24h, T+7d after each new release, and files a release-impact report. Load on every heartbeat pulse.
+description: Analytics-agent's procedure for tying product releases to metric movement. Polls a configured GitHub repo on every 2h heartbeat pulse, snapshots DAU / WAU / north-star metrics at T+0, T+24h, T+7d after each new release, and files a release-impact report. Load on every heartbeat pulse.
 ---
 
-# PostHog release tracker — PostHog-agent
+# PostHog release tracker — Analytics-agent
 
 This skill connects what shipped to what moved. The agent watches one configured GitHub repo for new release tags; each new release becomes three queued metric snapshots (immediate, 24h later, 7 days later) and a written report.
 

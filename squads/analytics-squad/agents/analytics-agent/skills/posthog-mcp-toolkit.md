@@ -3,7 +3,7 @@ name: posthog-mcp-toolkit
 description: Reference for operating the official PostHog MCP — auth model, tool surface, HogQL patterns, and the read-only discipline. Load this when you're about to write a non-trivial HogQL query or when the MCP behaves unexpectedly.
 ---
 
-# PostHog MCP toolkit — PostHog-agent
+# PostHog MCP toolkit — Analytics-agent
 
 This skill is reference, not procedure. Load it when you're stuck on a query, when the MCP behaves unexpectedly, or when you need to remember which tools are safe to call.
 
@@ -52,7 +52,7 @@ When the MCP starts, it should list its tools. Confirm the surface includes at m
 - An **insight / HogQL query execution** tool.
 - A **person and cohort listing** tool.
 
-If a tool prefixed with `create_`, `update_`, `delete_`, `mutate_`, or any verb that writes state appears in the surface — **do not call it**. PostHog-agent is read-only, period. The MCP may expose those if started without `--read-only`; that's an install bug. Surface it to the co-founder, don't quietly use them.
+If a tool prefixed with `create_`, `update_`, `delete_`, `mutate_`, or any verb that writes state appears in the surface — **do not call it**. Analytics-agent is read-only, period. The MCP may expose those if started without `--read-only`; that's an install bug. Surface it to the co-founder, don't quietly use them.
 
 ## What's stable across tenants vs what isn't
 
@@ -143,6 +143,6 @@ Prefer ad-hoc cohorts (`WITH cohort AS (...)`) inside HogQL over PostHog-side Co
 
 ## Read-only discipline (with one named carve-out)
 
-The default rule: **PostHog-agent never mutates the PostHog project via the read key (`team.posthog_api_key`).** No created events, no created flags, no edited dashboards, no opened experiments, no surveys, no annotations. If a future MCP version makes mutation easier, that does not change the rule — the founder runs PostHog, PostHog-agent reads from it via this key.
+The default rule: **Analytics-agent never mutates the PostHog project via the read key (`team.posthog_api_key`).** No created events, no created flags, no edited dashboards, no opened experiments, no surveys, no annotations. If a future MCP version makes mutation easier, that does not change the rule — the founder runs PostHog, Analytics-agent reads from it via this key.
 
-**The single carve-out** lives in `posthog-cohort-sync`: the agent may create + replace membership on exactly two named static cohorts (`PostHog-agent: Power Users`, `PostHog-agent: Dying Users`), authenticated by a **separate** narrowly-scoped key (`team.posthog_write_api_key`, scoped to Cohort write only). Read `posthog-cohort-sync` and `SOUL.md → Boundaries` before invoking it. The two-key separation is what makes the carve-out safe: a compromised read key can leak every event ever ingested but cannot mutate anything; a compromised write key can mutate exactly two cohort memberships and nothing else. Never collapse them into one key.
+**The single carve-out** lives in `posthog-cohort-sync`: the agent may create + replace membership on exactly two named static cohorts (`Analytics-agent: Power Users`, `Analytics-agent: Dying Users`), authenticated by a **separate** narrowly-scoped key (`team.posthog_write_api_key`, scoped to Cohort write only). Read `posthog-cohort-sync` and `SOUL.md → Boundaries` before invoking it. The two-key separation is what makes the carve-out safe: a compromised read key can leak every event ever ingested but cannot mutate anything; a compromised write key can mutate exactly two cohort memberships and nothing else. Never collapse them into one key.

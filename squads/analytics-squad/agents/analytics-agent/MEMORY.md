@@ -1,4 +1,4 @@
-# Memory — PostHog-agent
+# Memory — Analytics-agent
 
 <!-- Thin index of pointers. Onboarding fills the (set at onboarding) lines.
      Skills write their own runtime state into this file when they first need it
@@ -13,7 +13,7 @@
 → Co-founder is my coordinator. I don't talk to the user directly.
 
 ## Squad
-→ posthog-squad
+→ analytics-squad
 → My skills: posthog-discovery, posthog-daily-analysis, posthog-mcp-toolkit, posthog-funnel-debugger, posthog-release-tracker, posthog-cohort-sync
 → Wake procedure: HEARTBEAT.md (loaded on every wake)
 

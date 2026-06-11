@@ -162,7 +162,7 @@ Copy [`template/`](../../../template/) to `squads/<name>/`, then fill every file
   model context, **cannot be compacted away** (it exceeds the summarizer's per-message limit),
   and wedges the agent in a fail→retry loop that burns the model fallback ladder until the
   session is manually reset. This is a real production failure mode, not a hypothetical — see
-  `squads/posthog-squad/agents/posthog-agent/skills/posthog-mcp-toolkit.md → Result-size
+  `squads/analytics-squad/agents/analytics-agent/skills/posthog-mcp-toolkit.md → Result-size
   discipline` for the reference implementation.
 - **The board is the bus; the squad is mute to the user.** Every agent communicates *only*
   through the company task board (the `tasks` plugin) — `complete_task` with a self-certified
@@ -243,7 +243,7 @@ squads/<name>/evals/replay/<workflow-id>/happy-path.trace.json
 
 The trace format is JSON, `version: 1`, documented in the per-bundle `evals/README.md`
 (every bundle ships a copy). Mirror the worked examples in
-`squads/eng-squad/evals/` and `squads/posthog-squad/evals/`:
+`squads/eng-squad/evals/` and `squads/analytics-squad/evals/`:
 
 - `squad` and `workflow` identify the run; `dispatch.workflow` MUST be the canonical
   qualified id `<squad>.<workflow>` — anything else is the cofounder-hallucinated-id
@@ -260,7 +260,7 @@ The trace format is JSON, `version: 1`, documented in the per-bundle `evals/READ
 If your squad is being created in response to a production incident, also commit a
 **negative-case trace** of the failure (`expected: "FAIL"` + `expected_failures: [...]`)
 so the bug stays caught forever. See the `regression-2026-06-11-*.trace.json` examples
-in `squads/posthog-squad/evals/` and the per-bundle `evals/README.md` for the inverted-
+in `squads/analytics-squad/evals/` and the per-bundle `evals/README.md` for the inverted-
 expectation contract.
 
 Run the suite scoped to your bundle until it goes green:

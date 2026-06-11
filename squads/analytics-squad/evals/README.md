@@ -1,6 +1,6 @@
 # Squad workflow evals — replay tier
 
-Replay-eval traces for `posthog-squad`. Mirrors the layout every official squad will adopt; see `/Users/Shared/squads/lib/eval-runner.mjs` for the shared runner.
+Replay-eval traces for `analytics-squad`. Mirrors the layout every official squad will adopt; see `/Users/Shared/squads/lib/eval-runner.mjs` for the shared runner.
 
 ```
 evals/

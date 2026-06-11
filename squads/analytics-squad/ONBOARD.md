@@ -6,7 +6,7 @@ required_identities: []
 estimated_setup_minutes: 10
 ---
 
-## Onboarding — posthog-squad (PostHog-agent)
+## Onboarding — analytics-squad (Analytics-agent)
 
 You are the co-founder running this onboarding. The mechanical deploy has completed — agent files, both crons, and the six skills are in place. The user was promised ~10 minutes; most of that is them clicking around PostHog Settings, not waiting on you.
 
@@ -15,7 +15,7 @@ You are the co-founder running this onboarding. The mechanical deploy has comple
 - *Dumping the whole script up front* — "here's everything we'll do" lists overwhelm and cause the user to bail before step 1.
 - *Listing every optional capability* — the squad ships with three add-ons (release tracking, auto-cohorts, auto-tasks) that are deliberately disabled by default. Do not surface them during onboarding. Step 9 mentions them in one line at the end, that's it.
 
-Open with one sentence: "Setting up PostHog-agent — I'll need a few things from your PostHog account, then we'll agree on which events matter. Sound good?" Wait for confirmation, then begin Step 1. Move at the user's pace.
+Open with one sentence: "Setting up Analytics-agent — I'll need a few things from your PostHog account, then we'll agree on which events matter. Sound good?" Wait for confirmation, then begin Step 1. Move at the user's pace.
 
 ### Step 1 — Gate on PostHog prerequisites
 
@@ -28,7 +28,7 @@ Ask, plainly:
 
 **Only the API key is a secret. The host and project ID are not — don't put either through `vault_request`.** Asking the user to fill vault forms for plain configuration is bad UX and trains them to treat configuration like a credential. Discipline:
 
-- **API key** → `vault_request` at `team.posthog_api_key` (type `api_key`). Walk them to: PostHog → Settings → **Personal API keys** → "Create personal API key" → scope it to their project → grant *read* on **Query**, **Insight**, **Event definition**, **Action**, **Person**, **Cohort**. Tell them: never the project's *write* key, never an org-wide key with delete scopes — PostHog-agent reads, it does not mutate.
+- **API key** → `vault_request` at `team.posthog_api_key` (type `api_key`). Walk them to: PostHog → Settings → **Personal API keys** → "Create personal API key" → scope it to their project → grant *read* on **Query**, **Insight**, **Event definition**, **Action**, **Person**, **Cohort**. Tell them: never the project's *write* key, never an org-wide key with delete scopes — Analytics-agent reads, it does not mutate.
 - **Host** → ask in plain chat: "What's your PostHog host? `https://us.posthog.com`, `https://eu.posthog.com`, or a self-hosted URL?" If they just say "EU" or "US", fill in `https://eu.posthog.com` or `https://us.posthog.com` for them. Write to `MEMORY.md → PostHog connection → Host`. No vault. **The only valid Host values are `https://us.posthog.com`, `https://eu.posthog.com`, or a self-hosted base URL — never `https://app.posthog.com`.** `app.posthog.com` is PostHog's UI shell, not an API host; writing it to MEMORY makes every later `posthog-discovery` probe + every analysis query return 401 against an otherwise-valid key, and the agent (and the cofounder reading the failure) will mis-blame the key. If a previous wake stamped `Host: https://app.posthog.com`, overwrite it now.
 - **Project ID** → don't ask for it at all. Auto-resolve it from the API key (next).
 
@@ -37,7 +37,7 @@ Ask, plainly:
 1. Call `GET {host}/api/projects/` with the personal API key as a Bearer token (header `Authorization: Bearer <team.posthog_api_key>`) via `web_fetch`, using the host they just gave you.
 2. Parse the JSON response. The projects live in the `results` array, each with an `id` and a human-readable `name`.
    - **If there's exactly one project**, take its `id` directly — no need to ask.
-   - **If there's more than one**, don't guess. Show the user the project **names** (not the numeric IDs — those mean nothing to them) and ask which one PostHog-agent should watch. Map their choice back to that project's `id`.
+   - **If there's more than one**, don't guess. Show the user the project **names** (not the numeric IDs — those mean nothing to them) and ask which one Analytics-agent should watch. Map their choice back to that project's `id`.
 3. Write the resolved `id` to `MEMORY.md → PostHog connection → Project ID`. No vault.
 
 If the call fails (401 → bad/expired key, 403 → missing scope, or an empty `results` array → key not scoped to any project), surface the exact error and send the user back to re-issue the API key before continuing. Don't fall back to asking for the project ID by hand — fix the key.
@@ -64,7 +64,7 @@ The official PostHog MCP is a **remote streamable-HTTP server**, not a local npm
 
 Use **`https://mcp.posthog.com/mcp`** with streamable HTTP transport, period. Don't invent variants.
 
-**For self-hosted PostHog**, the user runs their own MCP — ask them for the MCP endpoint URL explicitly, store at `MEMORY → PostHog connection → MCP URL`, and pass that to `mcp_install` instead. If they don't have one running, skip the install and surface to the user: "self-hosted PostHog doesn't run an MCP by default, you'll need to deploy one before PostHog-agent can analyze the project."
+**For self-hosted PostHog**, the user runs their own MCP — ask them for the MCP endpoint URL explicitly, store at `MEMORY → PostHog connection → MCP URL`, and pass that to `mcp_install` instead. If they don't have one running, skip the install and surface to the user: "self-hosted PostHog doesn't run an MCP by default, you'll need to deploy one before Analytics-agent can analyze the project."
 
 After the install call, **smoke-test immediately, before declaring this step done**:
 
@@ -81,10 +81,10 @@ Verification used to be its own step. It's now the second half of Step 3 — if 
 
 Open `wiki/Company/COMPANY.md` and `wiki/Company/ICP.md` if they exist. Read what's already on file, then ask the user to confirm two things in plain language:
 
-- **"In one sentence, who is the ICP?"** — write the answer to PostHog-agent's `MEMORY.md` under `## Company context → ICP`.
-- **"In one sentence, what's the single goal of the company over the next 90 days?"** (e.g. "hit 200 weekly active users", "ship paid conversion above 5%"). Write it to PostHog-agent's `MEMORY.md` under `## Company context → Goal (next 90 days)`.
+- **"In one sentence, who is the ICP?"** — write the answer to Analytics-agent's `MEMORY.md` under `## Company context → ICP`.
+- **"In one sentence, what's the single goal of the company over the next 90 days?"** (e.g. "hit 200 weekly active users", "ship paid conversion above 5%"). Write it to Analytics-agent's `MEMORY.md` under `## Company context → Goal (next 90 days)`.
 
-If both are already documented in the company wiki and the user confirms they're still current, just point PostHog-agent's `MEMORY.md` at those wiki paths and move on. Don't duplicate prose.
+If both are already documented in the company wiki and the user confirms they're still current, just point Analytics-agent's `MEMORY.md` at those wiki paths and move on. Don't duplicate prose.
 
 ### Step 5.5 — Run the schema probe (hard gate)
 
@@ -115,7 +115,7 @@ Then ask the user in **one** turn — not three separate questions back-to-back.
 > 2. Which **single** event means **'this new signup is now activated'**? (often the first occurrence of one of #1)
 > 3. Which event fires when a **brand-new user signs up**? (looks like `<your best guess>` from the shortlist — confirm or correct)"
 
-Write the answers directly to PostHog-agent's `MEMORY.md` (no vault — these are configuration, not secrets):
+Write the answers directly to Analytics-agent's `MEMORY.md` (no vault — these are configuration, not secrets):
 
 All three under the single `## Events` section in MEMORY:
 - `→ North-star` — the comma-separated list + a one-line *why* per event in the user's words.
@@ -128,19 +128,19 @@ All three under the single `## Events` section in MEMORY:
 
 The two crons ship pinned to `America/Los_Angeles`. Ask the user, plainly: **"What timezone should the 09:00 daily digest and the Monday 10:00 weekly recap land in?"** Expect an IANA tz (`Europe/Paris`, `America/New_York`, etc.).
 
-If they want the default, skip — leave both crons as LA. Otherwise edit `crons/jobs.json` in PostHog-agent's installed bundle: replace the `tz` field on both `daily-posthog-analysis` and `weekly-posthog-recap` with the user's tz. Confirm the new schedule back to them in one line so they know exactly when to expect the digest.
+If they want the default, skip — leave both crons as LA. Otherwise edit `crons/jobs.json` in Analytics-agent's installed bundle: replace the `tz` field on both `daily-posthog-analysis` and `weekly-posthog-recap` with the user's tz. Confirm the new schedule back to them in one line so they know exactly when to expect the digest.
 
-### Step 8 — Dispatch the baseline scan to PostHog-agent (do NOT run it yourself)
+### Step 8 — Dispatch the baseline scan to Analytics-agent (do NOT run it yourself)
 
-**Important — read this before you act.** This step is the most common place this onboarding gets the agent architecture wrong. The baseline scan is **PostHog-agent's** work, not yours. You are the cofounder; you do not impersonate squad agents. Spawn a session targeted at `posthog-agent` and let it execute against its own IDENTITY/SOUL/MEMORY/HEARTBEAT. If you run the queries as a `main` subagent, the agent's loaded skills (`posthog-discovery`, `posthog-daily-analysis`, `posthog-mcp-toolkit`) are never in context, the per-agent MEMORY isn't read, and the report ends up missing the schema-probe-aware substitutions and the HogQL-in-report rule. (This has happened in the wild — fixed in v0.1.1.)
+**Important — read this before you act.** This step is the most common place this onboarding gets the agent architecture wrong. The baseline scan is **Analytics-agent's** work, not yours. You are the cofounder; you do not impersonate squad agents. Spawn a session targeted at `analytics-agent` and let it execute against its own IDENTITY/SOUL/MEMORY/HEARTBEAT. If you run the queries as a `main` subagent, the agent's loaded skills (`posthog-discovery`, `posthog-daily-analysis`, `posthog-mcp-toolkit`) are never in context, the per-agent MEMORY isn't read, and the report ends up missing the schema-probe-aware substitutions and the HogQL-in-report rule. (This has happened in the wild — fixed in v0.1.1.)
 
 The task brief: a **baseline analytics scan** — current DAU/WAU/MAU, north-star event volume for the last 30 days with WoW deltas, activation rate of the last 4 weeks of signups, top 10 most engaged users this week, and a first-pass list of users likely to churn (previously-active accounts with a sharp recent drop in north-star event count). Output: a single `wiki/Knowledge/PostHog/Reports/baseline/YYYY-MM-DD.md` (including the verbatim HogQL used) plus a 6–8 line summary surfaced to the co-founder. Pre-condition: §5.5 schema probe must be complete (see `MEMORY → PostHog shape`).
 
-Dispatch it via the tasks plugin with `agent: "posthog-agent"` (the exact agent id from `manifest.agents`). Mark the task `in_progress`. Don't leave it for tomorrow's 09:00 cron — the user is here and the first impression matters.
+Dispatch it via the tasks plugin with `agent: "analytics-agent"` (the exact agent id from `manifest.agents`). Mark the task `in_progress`. Don't leave it for tomorrow's 09:00 cron — the user is here and the first impression matters.
 
-**Verify before reporting setup-complete:** look up the spawned session and confirm its `agent_id` is `posthog-agent`, not `main`. If it isn't, you spawned the wrong target — kill it and re-dispatch with the correct agent id.
+**Verify before reporting setup-complete:** look up the spawned session and confirm its `agent_id` is `analytics-agent`, not `main`. If it isn't, you spawned the wrong target — kill it and re-dispatch with the correct agent id.
 
-Close by telling the user PostHog-agent is now scanning the project, and confirm the exact daily + weekly schedule using the timezone they pinned in Step 7 (e.g. "daily digest at 09:00 Europe/Paris, weekly recap Mon 10:00 Europe/Paris"). Remind them that if the north-star events ever change (new product surface, deprecated feature), they just have to tell the co-founder and PostHog-agent will refresh its definitions — no re-onboarding needed.
+Close by telling the user Analytics-agent is now scanning the project, and confirm the exact daily + weekly schedule using the timezone they pinned in Step 7 (e.g. "daily digest at 09:00 Europe/Paris, weekly recap Mon 10:00 Europe/Paris"). Remind them that if the north-star events ever change (new product surface, deprecated feature), they just have to tell the co-founder and Analytics-agent will refresh its definitions — no re-onboarding needed.
 
 ### Step 9 — Mention the opt-in add-ons (one line, then stop)
 

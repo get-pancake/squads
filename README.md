@@ -29,7 +29,7 @@ company task board — the co-founder delegates by matching intent to a workflow
 | [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, files a digest on the board. | `outreach-agent` | `outreach.run_campaign`, `outreach.find_leads`, `outreach.triage_replies`, `outreach.weekly_report` |
 | [`paid-ads-squad`](./squads/paid-ads-squad/) | Paid advertising — Google Ads + Meta Ads operators, each running one account end to end; holds spend flat, surfaces budget raises on the board. | `google-ads-agent`, `meta-ads-agent` | `google.optimize_account`, `google.daily_digest`, `google.root_cause`, `google.scale_budget`, `meta.daily_operations`, `meta.daily_digest`, `meta.weekly_review`, `meta.investigate` |
 | [`eng-squad`](./squads/eng-squad/) | Engineering squad — GitHub issue triage: classifies issues P0–P3, labels them, sweeps daily, reports weekly. | `triage-agent` | `eng.triage_issue`, `eng.sweep_open_issues`, `eng.weekly_report` |
-| [`posthog-squad`](./squads/posthog-squad/) | Product analytics — daily DAU/WAU/MAU + north-star digest, activation-funnel debugger, weekly recap, ad-hoc reports. | `posthog-agent` | `posthog.daily_digest`, `posthog.weekly_recap`, `posthog.debug_funnel`, `posthog.adhoc_report` |
+| [`analytics-squad`](./squads/analytics-squad/) | Product analytics (PostHog-backed) — daily DAU/WAU/MAU + north-star digest, activation-funnel debugger, weekly recap, ad-hoc reports. | `analytics-agent` | `posthog.daily_digest`, `posthog.weekly_recap`, `posthog.debug_funnel`, `posthog.adhoc_report` |
 
 ## How squads work
 
@@ -78,7 +78,7 @@ Traces live at `squads/<name>/evals/replay/<workflow-id>/*.trace.json`. Every of
 workflow ships a `happy-path.trace.json`; recorded production bugs are committed as
 **negative-case traces** (`expected: "FAIL"` + `expected_failures: [...]`) so a future
 refactor can't silently un-catch them. Full per-bundle docs in
-[`squads/<name>/evals/README.md`](./squads/posthog-squad/evals/README.md).
+[`squads/<name>/evals/README.md`](./squads/analytics-squad/evals/README.md).
 
 CI runs `node scripts/eval.mjs` alongside the validator on every push/PR — both gates
 must pass.

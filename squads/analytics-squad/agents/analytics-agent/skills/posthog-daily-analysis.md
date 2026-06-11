@@ -1,9 +1,9 @@
 ---
 name: posthog-daily-analysis
-description: PostHog-agent's daily analytics procedure — DAU/WAU/MAU, north-star event volumes, activation, top engaged users, dying users. Includes the weekly recap variant. Load this on every daily cron and the Monday weekly cron.
+description: Analytics-agent's daily analytics procedure — DAU/WAU/MAU, north-star event volumes, activation, top engaged users, dying users. Includes the weekly recap variant. Load this on every daily cron and the Monday weekly cron.
 ---
 
-# PostHog daily analysis — PostHog-agent
+# PostHog daily analysis — Analytics-agent
 
 This is your operating procedure for the daily digest and the Monday weekly recap. All queries are HogQL through the official PostHog MCP, read-only.
 
@@ -187,7 +187,7 @@ Cross-reference each result against the prior week's dying list in `wiki/Knowled
    ```
 
 2. **Update** `wiki/Knowledge/PostHog/Watchlist.md` with the dying-users deltas.
-3. **Sync the PostHog cohorts** — load `posthog-cohort-sync` and run it. The skill is a no-op if `team.posthog_write_api_key` is blank; otherwise it replaces membership on the two static cohorts `PostHog-agent: Power Users` (top 20 engaged) and `PostHog-agent: Dying Users` (full current dying list) so the cofounder can slice any PostHog chart by them. Every cohort write is logged to `wiki/Knowledge/PostHog/CohortSync/`.
+3. **Sync the PostHog cohorts** — load `posthog-cohort-sync` and run it. The skill is a no-op if `team.posthog_write_api_key` is blank; otherwise it replaces membership on the two static cohorts `Analytics-agent: Power Users` (top 20 engaged) and `Analytics-agent: Dying Users` (full current dying list) so the cofounder can slice any PostHog chart by them. Every cohort write is logged to `wiki/Knowledge/PostHog/CohortSync/`.
 4. **Surface** a 6–8 line summary to the co-founder via `complete_task`. Template:
 
 ```

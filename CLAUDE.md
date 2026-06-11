@@ -21,7 +21,7 @@ Node scripts: `scripts/validate.mjs` (mirrors marketplace ingestion),
   `scripts/eval.mjs`. Every bundle ships at least one happy-path trace per workflow;
   negative traces commit production incidents as living regression markers (the
   cofounder-hallucinated workflow id from the 2026-06-11 audit is one such trace in
-  `posthog-squad/evals/`).
+  `analytics-squad/evals/`).
 - `lib/eval-runner.mjs` is the shared check engine — no deps, JSON in / report out.
 - `template/` is a complete, valid skeleton bundle authors copy from.
 - `docs/` is the full contract and authoring guides.
@@ -60,5 +60,5 @@ Commit a **negative-case trace** for it alongside the fix. Set `expected: "FAIL"
 the `expected_failures: [...]` the contract check trips on. The runner inverts: exactly
 those checks must fail, and if a future refactor silently un-catches the bug, the suite
 goes red — the trace is the durable institutional memory of the incident. The two
-`posthog-squad/evals/replay/posthog.daily_digest/regression-2026-06-11-*.trace.json`
+`analytics-squad/evals/replay/posthog.daily_digest/regression-2026-06-11-*.trace.json`
 entries are the worked example.

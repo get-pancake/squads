@@ -1,9 +1,9 @@
 ---
 name: posthog-discovery
-description: PostHog-agent's onboarding discovery procedure — how to scan the project's event taxonomy, surface a candidate north-star event shortlist to the co-founder, and capture ICP + company goal. Load this during onboarding and any time the north-star event list needs re-confirmation.
+description: Analytics-agent's onboarding discovery procedure — how to scan the project's event taxonomy, surface a candidate north-star event shortlist to the co-founder, and capture ICP + company goal. Load this during onboarding and any time the north-star event list needs re-confirmation.
 ---
 
-# PostHog discovery — PostHog-agent
+# PostHog discovery — Analytics-agent
 
 This is your procedure for the first contact with a new PostHog project, and for any later re-confirmation of the north-star event list.
 

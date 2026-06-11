@@ -1,15 +1,15 @@
 ---
 name: posthog-cohort-sync
-description: PostHog-agent's procedure for maintaining two static cohorts in PostHog — "PostHog-agent: Power Users" and "PostHog-agent: Dying Users". This is the SINGLE carve-out from the read-only rule. Uses the separate write API key. Runs at the end of every daily analysis cycle. Load when syncing cohorts.
+description: Analytics-agent's procedure for maintaining two static cohorts in PostHog — "Analytics-agent: Power Users" and "Analytics-agent: Dying Users". This is the SINGLE carve-out from the read-only rule. Uses the separate write API key. Runs at the end of every daily analysis cycle. Load when syncing cohorts.
 ---
 
-# PostHog cohort sync — PostHog-agent
+# PostHog cohort sync — Analytics-agent
 
 This is the only skill in the squad that **mutates state in the user's PostHog project**. Read every line before invoking it.
 
 ## The contract
 
-- Two cohorts, named exactly: **`PostHog-agent: Power Users`** and **`PostHog-agent: Dying Users`**. No other cohorts touched, ever.
+- Two cohorts, named exactly: **`Analytics-agent: Power Users`** and **`Analytics-agent: Dying Users`**. No other cohorts touched, ever.
 - Membership replaced (not appended) on every run.
 - Auth via `team.posthog_write_api_key` — the second, narrowly-scoped key. If the key is blank, skill is disabled, exit silently.
 - Every modification logged to `wiki/Knowledge/PostHog/CohortSync/YYYY-MM-DD.md`. The wiki is the audit trail; the cofounder can always answer "what did the agent change in our PostHog?" by reading it.
@@ -57,7 +57,7 @@ Through the PostHog MCP (using `WRITE_KEY` — explicitly, not the read key from
 If the MCP exposes a write-cohort tool that takes a fully-resolved member list, use it. If it only accepts a dynamic definition, fall back: define the cohort as a dynamic query that filters `person_id IN (<list>)`. Static is preferred — dynamic cohorts are recomputed by PostHog itself on its own cadence and may not match the agent's intent.
 
 **Forbidden during sync** (each is a stop-and-escalate event):
-- Modifying any cohort whose name doesn't match exactly `PostHog-agent: Power Users` or `PostHog-agent: Dying Users`.
+- Modifying any cohort whose name doesn't match exactly `Analytics-agent: Power Users` or `Analytics-agent: Dying Users`.
 - Calling any non-cohort write tool (events, flags, dashboards, surveys, experiments, persons, insights).
 - Calling `delete` on any cohort, even one of the two — replacements only, no deletes.
 

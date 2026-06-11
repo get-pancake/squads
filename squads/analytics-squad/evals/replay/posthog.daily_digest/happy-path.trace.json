@@ -1,28 +1,28 @@
 {
   "version": 1,
-  "squad": "posthog-squad",
+  "squad": "analytics-squad",
   "workflow": "posthog.daily_digest",
   "case": "happy-path",
-  "description": "Daily digest dispatched at the canonical qualified id; posthog-agent reads the API key from the vault, queries PostHog over web_fetch, files the digest, completes with the canonical result + digest.",
+  "description": "Daily digest dispatched at the canonical qualified id; analytics-agent reads the API key from the vault, queries PostHog over web_fetch, files the digest, completes with the canonical result + digest.",
   "setup": {
     "vault": { "team.posthog_api_key": "phx_test_key" },
-    "installed_squads": ["posthog-squad@0.4.0"]
+    "installed_squads": ["analytics-squad@1.0.0"]
   },
   "inputs": { "date": "2026-06-11" },
   "dispatch": {
     "caller_id": "main",
-    "assigned_to": "posthog-agent",
-    "workflow": "posthog-squad.posthog.daily_digest",
+    "assigned_to": "analytics-agent",
+    "workflow": "analytics-squad.posthog.daily_digest",
     "title": "PostHog daily digest 2026-06-11",
     "kind": "task"
   },
   "events": [
-    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "posthog-agent", "workflow": "posthog-squad.posthog.daily_digest" } },
-    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "posthog-agent" } },
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "analytics-agent", "workflow": "analytics-squad.posthog.daily_digest" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "analytics-agent" } },
     { "kind": "tool", "name": "vault_get", "args": { "key": "team.posthog_api_key" } },
     { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/insights/trend/?events=slack_relayed&date_from=-7d" } },
     { "kind": "tool", "name": "complete_task", "args": {
-      "caller_id": "posthog-agent",
+      "caller_id": "analytics-agent",
       "result": "Daily digest 2026-06-11 filed to wiki/Knowledge/PostHog/Reports/daily/2026-06-11.md. DAU=412 (+3% WoW); slack_relayed=8214 yesterday.",
       "digest": "Ran the digest against eu.posthog.com (NOT app.posthog.com — that 401s, see MEMORY.md note). North-star slack_relayed steady; engaged users dropped 6, on the watchlist. Next wake: cross-check the trial_ended cohort."
     } }

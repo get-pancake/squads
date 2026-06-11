@@ -1,0 +1,14 @@
+{
+  "id": "analytics-agent",
+  "description": "Product analytics agent — owns the PostHog MCP, the north-star event taxonomy, and the daily DAU/WAU/MAU + engaged-users + dying-users digest.",
+  "model": "sonnet",
+  "heartbeat": { "every": "2h" },
+  "skills": [
+    "agents/analytics-agent/skills/posthog-discovery.md",
+    "agents/analytics-agent/skills/posthog-daily-analysis.md",
+    "agents/analytics-agent/skills/posthog-mcp-toolkit.md",
+    "agents/analytics-agent/skills/posthog-funnel-debugger.md",
+    "agents/analytics-agent/skills/posthog-release-tracker.md",
+    "agents/analytics-agent/skills/posthog-cohort-sync.md"
+  ]
+}

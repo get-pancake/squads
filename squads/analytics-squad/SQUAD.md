@@ -5,7 +5,7 @@ preview_image: https://squads.getpancake.ai/avatars/vr-user.png
 
 ## What this squad does
 
-Deploys PostHog-agent — a product analyst that turns your PostHog into a daily signal stream you actually read.
+The analytics squad. Its agent is a product analyst that turns your PostHog into a daily signal stream you actually read.
 
 Every morning at 09:00 you get a short digest: DAU/WAU/MAU + trend, what your north-star events did, who's most engaged, and who's about to churn. When activation drops, the agent auto-runs a funnel debugger to show you where users are dropping off.
 
@@ -26,6 +26,6 @@ Plus three opt-in add-ons you can enable later by asking the agent: **release-im
 
 ## How it works
 
-PostHog-agent runs on a **daily analysis cron** (09:00 in the timezone agreed at onboarding) and a **weekly recap cron** (Monday 10:00). A **2h heartbeat pulse** between crons handles dispatched questions and mid-day anomaly checks. All analysis is filed to the wiki under `wiki/Knowledge/PostHog/`; you only see the short digest. **Read-only against PostHog by default** — the cohort-write add-on is the single carve-out, opt-in, and uses a separate narrowly-scoped key.
+Analytics-agent runs on a **daily analysis cron** (09:00 in the timezone agreed at onboarding) and a **weekly recap cron** (Monday 10:00). A **2h heartbeat pulse** between crons handles dispatched questions and mid-day anomaly checks. All analysis is filed to the wiki under `wiki/Knowledge/PostHog/`; you only see the short digest. **Read-only against PostHog by default** — the cohort-write add-on is the single carve-out, opt-in, and uses a separate narrowly-scoped key.
 
 > **Why a single agent.** Product analytics is a coordination problem, not a parallelism problem. One agent that owns the event taxonomy, the dashboard outputs, and the founder's mental model is more useful than a swarm that each touches a slice.
