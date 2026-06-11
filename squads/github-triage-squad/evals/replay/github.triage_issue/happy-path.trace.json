@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "squad": "github-triage-squad",
+  "workflow": "github.triage_issue",
+  "case": "happy-path",
+  "description": "Cofounder dispatches a single-issue triage; triage-agent claims, fetches issue, labels it P2, files a comment, completes with the canonical result + digest.",
+  "setup": {
+    "vault": { "team.github_repos": "acme/api" },
+    "installed_squads": ["github-triage-squad@1.0.0"]
+  },
+  "inputs": { "repo": "acme/api", "issue_number": 142 },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "triage-agent",
+    "workflow": "github-triage-squad.github.triage_issue",
+    "title": "Triage acme/api#142",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "triage-agent",
+        "title": "Triage acme/api#142",
+        "workflow": "github-triage-squad.github.triage_issue",
+        "squad": "github-triage-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "triage-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "github_get_token",
+      "args": {}
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.get", "repo": "acme/api", "issue": 142 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.add_labels", "repo": "acme/api", "issue": 142, "labels": ["priority/P2"] }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.create_comment", "repo": "acme/api", "issue": 142 }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "triage-agent", "comment": "Filed P2 + assessment on acme/api#142." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "triage-agent",
+        "result": "Triaged acme/api#142 as P2 (broken auth-redirect after expiry). Comment posted; assessment filed to wiki/Knowledge/GitHub/Triage/acme-api/142.md.",
+        "digest": "Triaged #142. P2 over P1 because failure mode is recoverable on a single retry; ~2 reports/wk. Next wake: re-check the sweep queue if any net-new untriaged appeared."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "github", "add_task_comment", "complete_task"],
+    "tools_must_exclude": ["fail_task", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}
