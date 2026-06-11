@@ -1,6 +1,6 @@
 {
   "name": "posthog-squad",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Single-agent PostHog squad: daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, mid-day anomaly alerts, weekly recap. Opt-in add-ons: release tracker + auto cohorts.",
   "author": "pancake-official",
   "license": "MIT",
@@ -15,7 +15,7 @@
       "outcome": "Digest filed to wiki/Knowledge/PostHog/Reports/daily/YYYY-MM-DD.md and a 6-8 line summary posted on the board.",
       "agent": "posthog-agent",
       "secrets": ["team.posthog_api_key", "team.posthog_write_api_key"],
-      "tools": ["web_fetch", "vault", "mcp-installer", "github"]
+      "tools": ["web_fetch", "vault"]
     },
     {
       "id": "posthog.weekly_recap",
@@ -71,5 +71,6 @@
     "github",
     "preview-host"
   ],
+  "infra_tool_permissions": ["mcp-installer", "github"],
   "min_pancake_version": "1.0.0"
 }

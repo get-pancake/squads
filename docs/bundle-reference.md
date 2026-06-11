@@ -65,6 +65,7 @@ package-level metadata only — per-agent runtime config lives in `agents/<id>/a
 | `required_identities` | object[] | · | each `{ site, reason }` — both non-empty. `site` is an eTLD+1, e.g. `github.com`. |
 | `required_vault_secrets` | object[] | · | the squad's **secret registry** — each `{ key, label, type }` defined once; `key`/`label` non-empty; `type` ∈ `string` \| `api_key` \| `token`. Workflows reference these keys via `workflows[].secrets`. |
 | `required_tool_permissions` | string[] | · | the squad's **tool-permission registry** — each entry must be an accepted Pancake tool key (see [*Tool permissions*](#tool-permissions) below). Unknown keys are an error. Workflows reference these via `workflows[].tools`. |
+| `infra_tool_permissions` | string[] | · | **squad-infra tools** used at onboarding/heartbeat time rather than inside any workflow (e.g. `mcp-installer`). Each entry must also appear in `required_tool_permissions`; listed keys are exempt from the unreferenced-tool warning. |
 | `min_pancake_version` | string | · | informational only |
 
 Validation returns **all** problems found, not just the first — so a bad manifest can be
@@ -116,7 +117,7 @@ without reading extra files:
 ```json
 "workflows": [
   {
-    "id": "github.triage_issue",
+    "id": "eng.triage_issue",
     "summary": "Classify a GitHub issue's criticality and label it.",
     "inputs": { "repo": "string", "issue_number": "int" },
     "outcome": "Issue labeled with a P0–P3 criticality + a one-paragraph assessment filed.",
@@ -129,7 +130,7 @@ without reading extra files:
 
 | Field | Type | Req | Rules |
 |---|---|---|---|
-| `id` | string | ✔ | lower-kebab/dotted `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, e.g. `github.triage_issue`. Unique within the squad. |
+| `id` | string | ✔ | lower-kebab/dotted `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, e.g. `eng.triage_issue`. Unique within the squad. |
 | `summary` | string | ✔ | one line, ≤ 200 chars — what the cofounder reads to match intent → workflow. |
 | `inputs` | object | · | map of input name → type/description string, e.g. `{ "repo": "string" }`. |
 | `outcome` | string | ✔ | the defined done-state, e.g. "issue labeled + assessment filed". |
@@ -143,7 +144,12 @@ defined once (`{ key, label, type }`) so onboarding knows what to collect, and t
 permissions are the union the install grants. What each workflow actually *uses* is declared
 on the workflow itself — agents only need a secret or tool while running a workflow that
 references it. When a squad publishes workflows, the validator warns about any registry
-entry no workflow references.
+entry no workflow references. The exception is **squad-infra tools** — tools the squad
+uses at onboarding or heartbeat time rather than inside any workflow (e.g.
+`mcp-installer` to set up an MCP server during install). List those in
+`manifest.infra_tool_permissions` (still alongside their `required_tool_permissions`
+registry entry) instead of parking them on a workflow that doesn't actually use them;
+the validator exempts them from the unreferenced-tool warning.
 
 **How a workflow runs.** The squad agent maps the workflow id to one of its own skills (by
 convention, a skill named after the workflow) and executes it from the ticket's brief +

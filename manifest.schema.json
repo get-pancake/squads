@@ -58,7 +58,7 @@
           "id": {
             "type": "string",
             "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
-            "description": "Stable workflow id, lower-kebab/dotted, e.g. github.triage_issue. Unique within the squad."
+            "description": "Stable workflow id, lower-kebab/dotted, e.g. eng.triage_issue. Unique within the squad."
           },
           "summary": {
             "type": "string",
@@ -143,6 +143,12 @@
         ]
       },
       "description": "Enforced — each value must be an accepted Pancake tool key. See docs/bundle-reference.md for the canonical list."
+    },
+    "infra_tool_permissions": {
+      "type": "array",
+      "description": "Squad-infra tools used at onboarding/heartbeat time rather than inside any workflow (e.g. mcp-installer). Each entry must also appear in required_tool_permissions; listed keys are exempt from the unreferenced-tool warning.",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
     },
     "min_pancake_version": {
       "type": "string",

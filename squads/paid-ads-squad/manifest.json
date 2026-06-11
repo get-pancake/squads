@@ -1,6 +1,6 @@
 {
   "name": "paid-ads-squad",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Paid-advertising squad: google-ads-agent and meta-ads-agent each run one ad account end to end — daily optimization, diagnostics, digests, and reviews — filed to the board.",
   "author": "pancake-official",
   "license": "MIT",
@@ -77,7 +77,7 @@
         "team.flag_thresholds",
         "team.naming_conventions"
       ],
-      "tools": ["vault", "cron", "mcp-installer"]
+      "tools": ["vault", "cron"]
     },
     {
       "id": "meta.daily_digest",
@@ -223,5 +223,6 @@
     }
   ],
   "required_tool_permissions": ["vault", "browser", "web_fetch", "cron", "mcp-installer"],
+  "infra_tool_permissions": ["mcp-installer"],
   "min_pancake_version": "1.0.0"
 }

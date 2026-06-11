@@ -203,6 +203,61 @@ const cases = [
     expectNoWarn: true,
   },
 
+  // infra_tool_permissions — onboarding/heartbeat-time tools, exempt from the
+  // unreferenced-tool warning but still required to live in the registry.
+  {
+    name: "infra tool unreferenced by any workflow does not warn",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser", "mcp-installer"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer"];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          tools: ["browser"],
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "non-infra registry tool unreferenced by any workflow still warns",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser", "web_fetch", "mcp-installer"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer"];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          tools: ["browser"],
+        },
+      ];
+    },
+    expect: null,
+    expectWarn: /"web_fetch" is not referenced by any workflow/,
+  },
+  {
+    name: "infra tool not declared in required_tool_permissions is rejected",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer"];
+    },
+    expect: /infra_tool_permissions\[0\].*not declared in required_tool_permissions/,
+  },
+  {
+    name: "duplicate infra_tool_permissions key is rejected",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser", "mcp-installer"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer", "mcp-installer"];
+    },
+    expect: /infra_tool_permissions\[1\].*duplicate tool key "mcp-installer"/,
+  },
+
   // Negative — heartbeat shape
   {
     name: "heartbeat as bare string is rejected",

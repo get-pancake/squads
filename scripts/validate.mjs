@@ -182,7 +182,7 @@ function validateManifest(input) {
         if (typeof w.id !== "string" || w.id.length === 0) {
           err(`${at}.id`, "required, must be a non-empty string");
         } else if (!WORKFLOW_ID.test(w.id)) {
-          err(`${at}.id`, `"${w.id}" must be lower-kebab/dotted (e.g. github.triage_issue)`);
+          err(`${at}.id`, `"${w.id}" must be lower-kebab/dotted (e.g. eng.triage_issue)`);
         } else if (seenW.has(w.id)) {
           err(`${at}.id`, `duplicate workflow id "${w.id}"`);
         } else {
@@ -306,6 +306,31 @@ function validateManifest(input) {
     }
   }
 
+  // infra_tool_permissions — squad-infra tools used at onboarding/heartbeat
+  // time rather than inside any workflow (e.g. mcp-installer). Entries
+  // reference the required_tool_permissions registry; they are exempt from
+  // the unreferenced-tool warning.
+  if (input.infra_tool_permissions !== undefined) {
+    if (!isStringArray(input.infra_tool_permissions)) {
+      err("infra_tool_permissions", "must be an array of strings when present");
+    } else {
+      const registry = new Set(
+        isStringArray(input.required_tool_permissions) ? input.required_tool_permissions : [],
+      );
+      const seen = new Set();
+      input.infra_tool_permissions.forEach((key, i) => {
+        const at = `infra_tool_permissions[${i}]`;
+        if (!registry.has(key)) {
+          err(at, `"${key}" is not declared in required_tool_permissions (infra tools reference the squad-level registry)`);
+        } else if (seen.has(key)) {
+          err(at, `duplicate tool key "${key}"`);
+        } else {
+          seen.add(key);
+        }
+      });
+    }
+  }
+
   // min_pancake_version
   if (input.min_pancake_version !== undefined && typeof input.min_pancake_version !== "string") {
     err("min_pancake_version", "must be a string when present");
@@ -347,12 +372,15 @@ function manifestWarnings(input) {
   }
 
   const usedTools = referenced("tools");
+  const infraTools = new Set(
+    isStringArray(input.infra_tool_permissions) ? input.infra_tool_permissions : [],
+  );
   if (isStringArray(input.required_tool_permissions)) {
     for (const key of input.required_tool_permissions) {
-      if (!usedTools.has(key)) {
+      if (!usedTools.has(key) && !infraTools.has(key)) {
         warnings.push({
           path: "manifest.json",
-          message: `required_tool_permissions key "${key}" is not referenced by any workflow's \`tools\` — scope it to the workflow(s) that use it`,
+          message: `required_tool_permissions key "${key}" is not referenced by any workflow's \`tools\` — scope it to the workflow(s) that use it, or list it in infra_tool_permissions if it is an onboarding/heartbeat-time tool`,
         });
       }
     }
