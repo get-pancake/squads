@@ -1,6 +1,6 @@
 {
   "name": "community-squad",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Community squad: reddit-agent grows organic presence on Reddit — monitors subreddits, drafts value comments via the browser, warms up a single purchased account, and reports account health.",
   "author": "pancake-official",
   "license": "MIT",
@@ -22,7 +22,7 @@
       "outcome": "Keyword/competitor mention hits filed and any high-value threads flagged on the board.",
       "agent": "reddit-agent",
       "secrets": ["team.target_keywords"],
-      "tools": ["web_search", "web_fetch"]
+      "tools": ["web_search"]
     },
     {
       "id": "reddit.account_health",
@@ -62,8 +62,7 @@
   ],
   "required_tool_permissions": [
     "browser",
-    "web_search",
-    "web_fetch"
+    "web_search"
   ],
   "min_pancake_version": "1.0.0"
 }
