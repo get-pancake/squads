@@ -60,6 +60,29 @@ passes here passes ingestion. CI runs it on every push and pull request, alongsi
 `node scripts/test-validator.mjs` which self-tests the validator against negative
 fixtures (forbidden files, wrong heartbeat shape, etc.) — both must pass for a merge.
 
+## Replay-eval workflows
+
+`scripts/validate.mjs` checks what a bundle **declares**. `scripts/eval.mjs` checks what
+each workflow actually **does** at the squad↔board contract level — the qualified id
+the cofounder stamps, the tool calls the squad agent makes, the terminal it closes
+with, the digest it writes. No LLM is invoked; this is the deterministic tier between
+schema validation and live-LLM e2e.
+
+```sh
+node scripts/eval.mjs                                  # every recorded trace
+node scripts/eval.mjs squads/<bundle-name>             # one bundle
+node scripts/eval.mjs path/to/case.trace.json          # one trace
+```
+
+Traces live at `squads/<name>/evals/replay/<workflow-id>/*.trace.json`. Every official
+workflow ships a `happy-path.trace.json`; recorded production bugs are committed as
+**negative-case traces** (`expected: "FAIL"` + `expected_failures: [...]`) so a future
+refactor can't silently un-catch them. Full per-bundle docs in
+[`squads/<name>/evals/README.md`](./squads/posthog-squad/evals/README.md).
+
+CI runs `node scripts/eval.mjs` alongside the validator on every push/PR — both gates
+must pass.
+
 ## Publish
 
 See [`docs/publishing.md`](./docs/publishing.md).
@@ -79,12 +102,15 @@ squads/                          ← this repo
 ├── CONTRIBUTING.md               curation policy
 ├── manifest.schema.json          JSON Schema for manifest.json
 ├── agent.schema.json             JSON Schema for agents/<id>/agent.json
-├── .github/                      CI validator workflow + PR template
+├── .github/                      CI workflow (validator + replay evals) + PR template
 ├── .claude/skills/               create-squad, validate-squad
 ├── docs/                         how-squads-work, bundle-reference, creating-a-squad, publishing
+├── lib/eval-runner.mjs           shared replay-eval check engine, zero deps
 ├── scripts/validate.mjs          zero-dependency validator
+├── scripts/eval.mjs              replay every squad's recorded *.trace.json
 ├── template/                     a complete, valid skeleton bundle
 └── squads/                       official squad bundles, one directory each
+    └── <name>/evals/             happy-path + negative-regression traces per workflow
 ```
 
 ## License

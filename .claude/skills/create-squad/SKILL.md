@@ -220,8 +220,54 @@ node scripts/validate.mjs squads/<name>
 - **Do not declare the bundle finished** until you have run the validator at least once
   and seen it exit 0 on this specific bundle.
 
-## Step 6 — Hand off
+## Step 6 — Author one replay trace per workflow (mandatory gate)
 
-Tell the user the bundle is ready, summarize what was built, state the validator
-outcome (the last exit-0 run on this bundle), and point them to
+Validation checks the bundle's *static* shape. The replay-eval suite checks what each
+workflow actually *does* at the squad↔board contract level — the qualified id the
+cofounder stamps, the tool calls the agent makes, the terminal it closes with, the
+digest it writes. **Every published workflow ships with at least one happy-path trace.**
+The runner (`scripts/eval.mjs`) is wired into CI alongside the validator; both must be
+green.
+
+For each workflow declared in `manifest.workflows[]`, create:
+
+```
+squads/<name>/evals/replay/<workflow-id>/happy-path.trace.json
+```
+
+The trace format is JSON, `version: 1`, documented in the per-bundle `evals/README.md`
+(every bundle ships a copy). Mirror the worked examples in
+`squads/github-triage-squad/evals/` and `squads/posthog-squad/evals/`:
+
+- `squad` and `workflow` identify the run; `dispatch.workflow` MUST be the canonical
+  qualified id `<squad>.<workflow>` — anything else is the cofounder-hallucinated-id
+  failure mode the runner catches.
+- `dispatch.assigned_to` must equal `workflow.agent`.
+- `events[]` is the ordered tool calls: `create_task`, `claim_task`, the agent's tools
+  in order, and exactly one terminal (`complete_task` or `fail_task`) as the final
+  event. Squad-agent terminals MUST carry a `digest`.
+- Tools used must be in `workflow.tools ∪ required_tool_permissions`; vault reads must
+  reference `workflow.secrets ∪ required_vault_secrets`. The runner enforces both.
+- `assertions.tools_must_include` and `tools_must_exclude` are how you encode positive
+  and red-flag tool patterns.
+
+If your squad is being created in response to a production incident, also commit a
+**negative-case trace** of the failure (`expected: "FAIL"` + `expected_failures: [...]`)
+so the bug stays caught forever. See the `regression-2026-06-11-*.trace.json` examples
+in `squads/posthog-squad/evals/` and the per-bundle `evals/README.md` for the inverted-
+expectation contract.
+
+Run the suite scoped to your bundle until it goes green:
+
+```sh
+node scripts/eval.mjs squads/<name>
+```
+
+The bundle is not finished until `node scripts/eval.mjs squads/<name>` exits 0.
+
+## Step 7 — Hand off
+
+Tell the user the bundle is ready, summarize what was built (workflows declared,
+agents, traces shipped), state both gate outcomes (the last exit-0 run of the
+validator AND the replay-eval suite on this bundle), and point them to
 [`docs/publishing.md`](../../../docs/publishing.md) for getting it into the marketplace.
