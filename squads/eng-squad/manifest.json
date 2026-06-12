@@ -1,11 +1,12 @@
 {
   "name": "eng-squad",
-  "version": "2.3.0",
-  "description": "Engineering squad: triage-agent classifies GitHub issues by P0–P3 criticality, labels them, sweeps untriaged issues daily, and files a weekly issue-health report.",
+  "version": "2.4.0",
+  "description": "Engineering squad: triage-agent classifies GitHub issues P0–P3 and reports issue health; build-agent implements specified ideas, issues, and PRDs end to end as reviewable PRs.",
   "author": "pancake-official",
   "license": "MIT",
   "agents": [
-    "triage-agent"
+    "triage-agent",
+    "build-agent"
   ],
   "workflows": [
     {
@@ -75,12 +76,37 @@
       "tools": [
         "github"
       ]
+    },
+    {
+      "id": "eng.implement_idea",
+      "summary": "Implement a specified idea, GitHub issue, or PRD end to end — branch, code, tests, and an open PR (self-merged only if reversible and CI-green).",
+      "inputs": {
+        "source": {
+          "type": "string",
+          "description": "What to implement: a GitHub issue URL, a PRD/spec reference (wiki path or board ticket), or the idea written out in plain text.",
+          "example": "https://github.com/acme/api/issues/162"
+        },
+        "repo": {
+          "type": "string",
+          "description": "GitHub owner/repo slug to implement in (defaults to the matching repo in the team.github_repos vault value).",
+          "example": "acme/api",
+          "required": false
+        }
+      },
+      "outcome": "A feature branch with the implementation + tests and a PR referencing the source — squash-merged only if reversible and CI-green, otherwise left open for review; PR link and outcome filed on the ticket.",
+      "agent": "build-agent",
+      "secrets": [
+        "team.github_repos"
+      ],
+      "tools": [
+        "github"
+      ]
     }
   ],
   "required_identities": [
     {
       "site": "github.com",
-      "reason": "Triage-agent reads issues and writes labels + triage comments on your repo via the connected GitHub App."
+      "reason": "Triage-agent reads issues and writes labels + triage comments; build-agent pushes branches and opens PRs — both via the connected GitHub App."
     }
   ],
   "required_vault_secrets": [

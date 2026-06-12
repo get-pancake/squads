@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "squad": "product-squad",
+  "workflow": "product.harvest_feedback",
+  "case": "happy-path",
+  "description": "Daily feedback harvest dispatched at the canonical qualified id; feedback-agent reads the Notion token from the vault, collects the window from its configured sources (forwarded-email inbox via agentmail, meeting-notes API via web_fetch), dedupes against the feedback DB, files the new items, advances the checkpoint, and completes with result + digest.",
+  "setup": {
+    "vault": { "team.notion": "ntn_test_token" },
+    "installed_squads": ["product-squad@0.1.0"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "feedback-agent",
+    "workflow": "product-squad.product.harvest_feedback",
+    "title": "Daily feedback harvest 2026-06-12",
+    "kind": "task"
+  },
+  "events": [
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "feedback-agent", "workflow": "product-squad.product.harvest_feedback" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "feedback-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.notion" } },
+    { "kind": "tool", "name": "agentmail", "args": { "action": "list_messages", "note": "forwarded-feedback inbox, window since checkpoint — 4 messages" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://api.meetingnotes.example.com/v1/notes?since=2026-06-11T15:00:00Z", "note": "configured meeting-notes source — 2 notes with feedback mentions" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "query_database", "note": "feedback DB open entries for semantic dedupe — 1 of 6 extracted items matches an existing SSO row" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "update_page", "note": "existing SSO row: appended new source + date, priority held at P1" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "create_pages", "note": "5 novel items filed with Priority/Source/Customer/Date per the MEMORY schema, incl. 1 P0 (Acme login broken)" } },
+    { "kind": "tool", "name": "complete_task", "args": {
+      "caller_id": "feedback-agent",
+      "result": "Harvested 6 items from 2 sources (4 forwarded emails, 2 meeting notes): 5 new rows filed, 1 dedupe-merged into the existing SSO request. 1 P0 — Acme cannot log in since yesterday — flagged. Checkpoint advanced to 2026-06-12T15:00:00Z.",
+      "digest": "P0 first: Acme login broken since yesterday (forwarded email, verbatim in the DB row) — needs raising today. Otherwise: SSO now at 3 distinct customers (theme), 2 P2 UX papercuts, 2 P3. Both sources reachable; window fully covered, checkpoint advanced after writes landed."
+    } }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "agentmail", "web_fetch", "notion", "complete_task"],
+    "tools_must_exclude": ["fail_task"]
+  }
+}
