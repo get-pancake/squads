@@ -6,7 +6,7 @@
   "description": "Cofounder dispatches a signal-first campaign (devtools-CTO ICP, volume 3). Outreach-agent claims the ticket, sources hiring-signal leads via exa + web_search, enriches via web_fetch, sends Touch 1 connection requests over the LinkedIn browser identity, appends the rows to the MEMORY.md pipeline ledger (file work — no tool event), files the routine digest ticket on the board, and completes with result + digest. No vault reads: the squad declares no secrets.",
   "setup": {
     "vault": {},
-    "installed_squads": ["outreach-squad@0.5.0"]
+    "installed_squads": ["outreach-squad@0.5.1"]
   },
   "inputs": { "icp": "CTO/VP Eng at seed-to-A devtools companies (5-50 ppl), hiring for platform roles", "volume": 3 },
   "dispatch": {

@@ -6,7 +6,7 @@
   "description": "Daily feedback harvest dispatched at the canonical qualified id; feedback-agent reads the Notion token from the vault, collects the window from its configured sources (forwarded-email inbox via agentmail, meeting-notes API via web_fetch), dedupes against the feedback DB, files the new items, advances the checkpoint, and completes with result + digest.",
   "setup": {
     "vault": { "team.notion": "ntn_test_token" },
-    "installed_squads": ["product-squad@0.1.0"]
+    "installed_squads": ["product-squad@0.1.1"]
   },
   "inputs": {},
   "dispatch": {

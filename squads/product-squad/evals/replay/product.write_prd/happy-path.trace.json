@@ -6,7 +6,7 @@
   "description": "Ad-hoc PRD dispatched at the canonical qualified id with idea + context inputs; pm-agent finds no matching ideas-DB entry, creates one, researches over web_search/web_fetch, files the PRD sub-page, sets the verdict, and completes with result + digest.",
   "setup": {
     "vault": { "team.notion": "ntn_test_token" },
-    "installed_squads": ["product-squad@0.1.0"]
+    "installed_squads": ["product-squad@0.1.1"]
   },
   "inputs": {
     "idea": "Let users export any board view to CSV",

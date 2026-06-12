@@ -2,7 +2,10 @@
   "id": "meta-ads-agent",
   "description": "Owns one Meta Ads account: daily 09:00 diagnostic + action sweep, daily 17:00 digest, Monday weekly review that adapts to monthly and quarterly cadences. Holds spend flat autonomously; surfaces budget increases on the board.",
   "model": "sonnet",
-  "heartbeat": { "every": "24h" },
+  "heartbeat": {
+    "every": "24h",
+    "model": "sonnet"
+  },
   "skills": [
     "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-01-account-foundations.md",
     "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-02-campaign-architecture.md",

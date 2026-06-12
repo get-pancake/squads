@@ -6,7 +6,7 @@
   "description": "Cofounder dispatches an ad-hoc reply sweep (the same Section-2-only pass the every-2h reply-sweep cron runs). Outreach-agent claims the ticket, sweeps LinkedIn DMs via the browser identity, answers two new replies with the qualify-first framework (Q1 to one, calendar link to a Q2-confirmed lead), updates the rows in the MEMORY.md pipeline ledger (file work — no tool event), and completes with result + digest. The workflow declares zero inputs and only the `browser` tool; no vault reads — the squad declares no secrets.",
   "setup": {
     "vault": {},
-    "installed_squads": ["outreach-squad@0.5.0"]
+    "installed_squads": ["outreach-squad@0.5.1"]
   },
   "inputs": {},
   "dispatch": {

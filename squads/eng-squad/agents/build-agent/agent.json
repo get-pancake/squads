@@ -2,7 +2,10 @@
   "id": "build-agent",
   "description": "Implementation specialist — takes a specified idea, issue, or PRD and ships it end to end: branch, code, tests, and an open PR; self-merges only reversible, CI-green changes.",
   "model": "sonnet",
-  "heartbeat": { "every": "24h" },
+  "heartbeat": {
+    "every": "24h",
+    "model": "sonnet"
+  },
   "skills": [
     "agents/build-agent/skills/implement-idea.md"
   ]
