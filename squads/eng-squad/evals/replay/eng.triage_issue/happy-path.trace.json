@@ -6,7 +6,7 @@
   "description": "Cofounder dispatches a single-issue triage; triage-agent claims, fetches issue, labels it P2, files a comment, completes with the canonical result + digest.",
   "setup": {
     "vault": { "team.github_repos": "acme/api" },
-    "installed_squads": ["eng-squad@2.1.0"]
+    "installed_squads": ["eng-squad@2.1.1"]
   },
   "inputs": { "repo": "acme/api", "issue_number": 142 },
   "dispatch": {

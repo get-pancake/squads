@@ -1,5 +1,5 @@
 ---
-required_tools: [github]
+required_tools: [github_install_start, github_install_check, github_get_token, vault_set, create_task, sessions_spawn]
 required_identities: [github.com]
 estimated_setup_minutes: 5
 ---

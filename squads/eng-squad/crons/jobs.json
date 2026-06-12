@@ -18,7 +18,7 @@
       "id": "weekly-report",
       "name": "Weekly issue-health report — Triage",
       "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 10 * * MON", "tz": "America/Los_Angeles" },
+      "schedule": { "kind": "cron", "expr": "0 10 * * 1", "tz": "America/Los_Angeles" },
       "sessionTarget": "triage-agent",
       "payload": {
         "kind": "systemEvent",

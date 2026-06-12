@@ -1,6 +1,6 @@
 {
   "name": "eng-squad",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Engineering squad: triage-agent classifies GitHub issues by P0–P3 criticality, labels them, sweeps untriaged issues daily, and files a weekly issue-health report.",
   "author": "pancake-official",
   "license": "MIT",
