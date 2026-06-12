@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "squad": "product-squad",
+  "workflow": "product.write_prd",
+  "case": "happy-path",
+  "description": "Ad-hoc PRD dispatched at the canonical qualified id with idea + context inputs; pm-agent finds no matching ideas-DB entry, creates one, researches over web_search/web_fetch, files the PRD sub-page, sets the verdict, and completes with result + digest.",
+  "setup": {
+    "vault": { "team.notion": "ntn_test_token" },
+    "installed_squads": ["product-squad@0.1.0"]
+  },
+  "inputs": {
+    "idea": "Let users export any board view to CSV",
+    "context": "Requested by two design partners this week; must work without a paid plan"
+  },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "pm-agent",
+    "workflow": "product-squad.product.write_prd",
+    "title": "PRD: CSV export for board views",
+    "kind": "task"
+  },
+  "events": [
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "pm-agent", "workflow": "product-squad.product.write_prd" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "pm-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.notion" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "query_database", "note": "ideas DB semantic search for an existing 'CSV export' entry — none found" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "create_page", "note": "new ideas-DB entry 'CSV export for board views', Status=Analyzed, ticket context in Notes" } },
+    { "kind": "tool", "name": "web_search", "args": { "query": "csv export feature saas free tier prior art" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://github.com/sheetjs/sheetjs", "note": "deep source 1 — existing package check" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://linear.app/docs/exporting-data", "note": "deep source 2 — competitor implementation" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://www.papaparse.com/docs", "note": "deep source 3 — feasibility on current stack" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "create_page", "note": "PRD: CSV export for board views — child page, all 9 sections, design-partner constraint folded into scope" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "update_page", "note": "entry Status → Todo, verdict paragraph in Notes" } },
+    { "kind": "tool", "name": "complete_task", "args": {
+      "caller_id": "pm-agent",
+      "result": "PRD: CSV export for board views filed as a Notion sub-page; verdict Todo. ~1 week effort with an existing parser package; the no-paid-plan constraint is in scope explicitly. 3 research sources cited.",
+      "digest": "Ad-hoc PRD done — created the ideas-DB entry (none existed), researched 3 deep sources, verdict Todo. Key call for the co-founder: kept exports synchronous and capped at 10k rows to stay free-tier-friendly; streaming export listed as out of scope."
+    } }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "notion", "web_search", "web_fetch", "complete_task"],
+    "tools_must_exclude": ["fail_task"]
+  }
+}

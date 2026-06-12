@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "daily-idea-triage",
+      "name": "Daily product-ideas triage",
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 7 * * *",
+        "tz": "America/Los_Angeles"
+      },
+      "workflow": "product.triage_ideas"
+    },
+    {
+      "id": "daily-feedback-harvest",
+      "name": "Daily feedback harvest",
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * *",
+        "tz": "America/Los_Angeles"
+      },
+      "workflow": "product.harvest_feedback"
+    }
+  ]
+}

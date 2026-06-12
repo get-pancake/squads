@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "squad": "eng-squad",
+  "workflow": "eng.implement_idea",
+  "case": "happy-path",
+  "description": "Cofounder dispatches an implementation ticket with a concrete source (a specified GitHub issue); build-agent claims, reads team.github_repos from the vault, grounds in the issue + thread, creates a feature branch, implements with tests, verifies lint/build/CI, opens a PR referencing the source — and leaves it open for review because the change touches public API behaviour (not reversible enough to self-merge). Completes with the PR link in the result + digest.",
+  "setup": {
+    "vault": { "team.github_repos": "acme/api" },
+    "installed_squads": ["eng-squad@2.4.0"]
+  },
+  "inputs": {
+    "source": "https://github.com/acme/api/issues/162",
+    "repo": "acme/api"
+  },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "build-agent",
+    "workflow": "eng-squad.eng.implement_idea",
+    "title": "Implement: rate-limit headers on /v2/orders — acme/api#162",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "build-agent",
+        "title": "Implement: rate-limit headers on /v2/orders — acme/api#162",
+        "workflow": "eng-squad.eng.implement_idea",
+        "squad": "eng-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "build-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "build-agent", "key": "team.github_repos" }
+    },
+    {
+      "kind": "tool",
+      "name": "github_get_token",
+      "args": {}
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.get", "repo": "acme/api", "issue": 162 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.list_comments", "repo": "acme/api", "issue": 162 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "git.create_branch", "repo": "acme/api", "branch": "feat/rate-limit-headers", "from": "main" }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "git.push", "repo": "acme/api", "branch": "feat/rate-limit-headers", "commits": ["feat: emit X-RateLimit-* headers on /v2/orders (refs #162)", "test: header emission + window rollover cases"] }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "pulls.create", "repo": "acme/api", "head": "feat/rate-limit-headers", "base": "main", "title": "feat: emit rate-limit headers on /v2/orders", "body": "Implements acme/api#162. Adds X-RateLimit-Limit/Remaining/Reset to /v2/orders responses, with unit tests for header emission and window rollover. Lint + build green locally. Source: https://github.com/acme/api/issues/162; dispatched from the board ticket." }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "checks.list", "repo": "acme/api", "ref": "feat/rate-limit-headers", "status": "all green" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "build-agent", "comment": "PR open and CI green: acme/api#311. Change adds headers to a public API surface, so per merge policy it is left open for review rather than self-merged." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "build-agent",
+        "result": "Implemented acme/api#162 (rate-limit headers on /v2/orders) end to end: branch feat/rate-limit-headers, implementation + unit tests (header emission, window rollover), lint/build green locally, CI green on the PR. PR https://github.com/acme/api/pull/311 references the source issue and the board ticket. NOT self-merged: the change alters public API response surface, which fails the reversibility test — left open for human review. No follow-ups beyond merging.",
+        "digest": "acme/api#162 implemented; PR #311 open, CI green, awaiting review (public-API change — outside self-merge policy). Next move: nothing until the PR is reviewed or the ticket is reopened."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "github", "complete_task"],
+    "tools_must_exclude": ["fail_task", "notion", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

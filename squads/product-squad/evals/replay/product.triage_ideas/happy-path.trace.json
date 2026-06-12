@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "squad": "product-squad",
+  "workflow": "product.triage_ideas",
+  "case": "happy-path",
+  "description": "Daily ideas triage dispatched at the canonical qualified id; pm-agent reads the Notion token from the vault, sweeps the ideas DB for Status=New entries, researches the one new idea over web_search/web_fetch, files the PRD as a Notion sub-page, sets the Todo verdict, and completes with result + digest.",
+  "setup": {
+    "vault": { "team.notion": "ntn_test_token" },
+    "installed_squads": ["product-squad@0.1.0"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "pm-agent",
+    "workflow": "product-squad.product.triage_ideas",
+    "title": "Daily product-ideas triage 2026-06-12",
+    "kind": "task"
+  },
+  "events": [
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "pm-agent", "workflow": "product-squad.product.triage_ideas" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "pm-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.notion" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "query_database", "note": "ideas DB filtered Status=New — 1 entry: 'CSV export for board views'" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "update_page", "note": "entry Status → Analyzed (in-flight marker)" } },
+    { "kind": "tool", "name": "web_search", "args": { "query": "csv export saas board views prior art competitors" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://github.com/sheetjs/sheetjs", "note": "deep source 1 — existing package check" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://linear.app/docs/exporting-data", "note": "deep source 2 — competitor implementation" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://www.papaparse.com/docs", "note": "deep source 3 — feasibility on current stack" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "create_page", "note": "PRD: CSV export for board views — child page with all 9 sections + 3 research sources" } },
+    { "kind": "tool", "name": "notion", "args": { "action": "update_page", "note": "entry Status → Todo, verdict paragraph in Notes" } },
+    { "kind": "tool", "name": "complete_task", "args": {
+      "caller_id": "pm-agent",
+      "result": "Triaged 1 New idea: 'CSV export for board views' → Todo. Feasible in ~1 week with an existing parser package; PRD filed as a Notion sub-page with 3 cited sources. DB has no remaining New entries.",
+      "digest": "One idea triaged to Todo — CSV export, low effort, clear ICP pain, competitors all ship it. Open question flagged in the PRD: streaming vs. one-shot export for large boards. Next run: nothing pending, cron will sweep tomorrow."
+    } }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "notion", "web_search", "web_fetch", "complete_task"],
+    "tools_must_exclude": ["fail_task"]
+  }
+}
