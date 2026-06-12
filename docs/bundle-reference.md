@@ -354,9 +354,12 @@ folder, `workspace/agents/<id>/skills/<name>/SKILL.md`, and the agent's skill al
 `["<agent-id>", "shared"]`. Squad agents never inherit the main co-founder's skills, and a
 squad-wide skill is *duplicated* into each agent — not shared by reference.
 
-## `crons/jobs.json` — native cron jobs
+## `crons/jobs.json` — scheduled workflow dispatch
 
-Optional. Native OpenClaw cron jobs registered at install.
+Optional. A cron is a **schedule bound to a published workflow** — nothing more. The
+dispatch payload, the session target, and the board-as-bus / `NO_REPLY` invariants are
+all *generated at install* from the workflow's manifest entry, so authors never
+hand-write (or drift) imperative cron payloads:
 
 ```json
 {
@@ -365,24 +368,34 @@ Optional. Native OpenClaw cron jobs registered at install.
     {
       "id": "daily-citation-audit",
       "name": "Daily GEO citation audit",
-      "enabled": true,
       "schedule": { "kind": "cron", "expr": "0 18 * * *", "tz": "America/Los_Angeles" },
-      "sessionTarget": "atlas",
-      "payload": { "kind": "systemEvent", "text": "<instructions for the agent>" },
-      "failureAlert": false,
-      "state": {}
+      "workflow": "seo.audit_citations"
     }
   ]
 }
 ```
 
-- **`sessionTarget` must be an agent id declared in `manifest.agents`.** Squad crons may
-  only target the squad's own agents — this is the *squad-only targeting* invariant, and it
-  is enforced at install (and by `validate.mjs`).
-- At install, job ids are namespaced `<squad-name>__<id>` so two squads cannot collide.
-- A cron run that intentionally produces no output must instruct the agent to reply with
-  the single literal token **`NO_REPLY`** — OpenClaw's silent-turn sentinel. Never write
-  "do not respond"; that trips a false-positive failure alert.
+| Field | Type | Req | Rules |
+|---|---|---|---|
+| `id` | string | ✔ | kebab-case; namespaced `<squad-name>__<id>` at install so two squads cannot collide. |
+| `name` | string | · | human-readable; defaults to "`<qualified workflow>` — scheduled". |
+| `schedule` | object | ✔ | `{ kind: "cron", expr, tz }` — standard 5-field cron expr, numeric day-of-week, IANA tz. |
+| `workflow` | string | ✔ | an id from `manifest.workflows[]` — the validator rejects unknown refs. The session target is the workflow's `agent`. |
+| `inputs` | object | · | optional fixed inputs passed in the dispatch brief; keys must be declared by the workflow. |
+| `enabled` | boolean | · | author default (`true`). The **readiness gate** below can still land the job disabled. |
+
+**Readiness-gated enablement.** A cron whose workflow declares vault `secrets` that are
+not present yet is registered **disabled**. The cofounder calls `workflow_preflight` at
+the end of onboarding (and again any time a credential is added later) — workflows whose
+keys are all present get their crons switched on. A squad installed before its secrets
+exist never fires a doomed cron.
+
+The legacy shape (`sessionTarget` + hand-written `payload`) still deploys verbatim for
+old bundles, but the validator warns on it — migrate to the workflow binding.
+
+- A cron run that intentionally produces no output replies with the single literal token
+  **`NO_REPLY`** — the generated dispatch brief instructs this. Never write "do not
+  respond"; that trips a false-positive failure alert.
 
 ### Crons through the board
 

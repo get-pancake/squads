@@ -592,45 +592,113 @@ function collectAgentIds(manifest) {
   return ids;
 }
 
-async function checkTargeting(bundleDir, agentIds) {
+async function checkTargeting(bundleDir, agentIds, manifest) {
   const errors = [];
   const warnings = [];
   const allowed = agentIds.size ? [...agentIds].join(", ") : "(none declared)";
+  const relPath = "crons/jobs.json";
 
-  const checkFile = async (relPath, arrayKey, idKey, targetKey, label) => {
-    const raw = await readFileOrNull(join(bundleDir, ...relPath.split("/")));
-    if (raw === null) return;
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      errors.push({ path: relPath, message: "is not valid JSON" });
+  const workflowIds = new Map(); // id -> workflow (for inputs check)
+  if (isObject(manifest) && Array.isArray(manifest.workflows)) {
+    for (const w of manifest.workflows) {
+      if (isObject(w) && typeof w.id === "string") workflowIds.set(w.id, w);
+    }
+  }
+
+  const raw = await readFileOrNull(join(bundleDir, "crons", "jobs.json"));
+  if (raw === null) return { errors, warnings };
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    errors.push({ path: relPath, message: "is not valid JSON" });
+    return { errors, warnings };
+  }
+  const list = isObject(parsed) ? parsed.jobs : undefined;
+  if (!Array.isArray(list)) {
+    warnings.push({
+      path: relPath,
+      message: "has no `jobs` array — nothing will be registered from it",
+    });
+    return { errors, warnings };
+  }
+
+  list.forEach((job, i) => {
+    const itemId = isObject(job) && typeof job.id === "string" ? job.id : `index ${i}`;
+    if (!isObject(job)) {
+      errors.push({ path: relPath, message: `cron job at index ${i} must be an object` });
       return;
     }
-    const list = isObject(parsed) ? parsed[arrayKey] : undefined;
-    if (!Array.isArray(list)) {
-      warnings.push({
+    const sched = job.schedule;
+    if (!isObject(sched) || sched.kind !== "cron" || typeof sched.expr !== "string" || typeof sched.tz !== "string") {
+      errors.push({
         path: relPath,
-        message: `has no \`${arrayKey}\` array — nothing will be registered from it`,
+        message: `cron job "${itemId}" needs a schedule { kind: "cron", expr, tz }`,
       });
-      return;
     }
-    list.forEach((item, i) => {
-      const itemId =
-        isObject(item) && typeof item[idKey] === "string" ? item[idKey] : `index ${i}`;
-      const target = isObject(item) ? item[targetKey] : undefined;
-      if (typeof target !== "string" || !agentIds.has(target)) {
+
+    if (typeof job.workflow === "string") {
+      // Workflow-ref shape: { id, schedule, workflow, inputs?, name?, enabled? }.
+      // sessionTarget and payload are GENERATED at deploy from the workflow —
+      // declaring them here is drift waiting to happen.
+      if (!workflowIds.has(job.workflow)) {
         errors.push({
           path: relPath,
           message:
-            `${label} "${itemId}" ${targetKey} ${JSON.stringify(target)} is not a ` +
-            `declared agent id (squad ${label}s may only target: ${allowed})`,
+            `cron job "${itemId}" references workflow "${job.workflow}", which is not ` +
+            `declared in manifest.workflows`,
         });
+      } else if (job.inputs !== undefined) {
+        if (!isObject(job.inputs)) {
+          errors.push({ path: relPath, message: `cron job "${itemId}" inputs must be an object` });
+        } else {
+          const declared = new Set(Object.keys(workflowIds.get(job.workflow).inputs ?? {}));
+          for (const key of Object.keys(job.inputs)) {
+            if (!declared.has(key)) {
+              errors.push({
+                path: relPath,
+                message:
+                  `cron job "${itemId}" passes input "${key}" that workflow ` +
+                  `"${job.workflow}" does not declare`,
+              });
+            }
+          }
+        }
       }
-    });
-  };
+      for (const forbidden of ["sessionTarget", "payload"]) {
+        if (job[forbidden] !== undefined) {
+          errors.push({
+            path: relPath,
+            message:
+              `cron job "${itemId}" declares both \`workflow\` and \`${forbidden}\` — ` +
+              `the deploy generates ${forbidden} from the workflow; remove it`,
+          });
+        }
+      }
+      return;
+    }
 
-  await checkFile("crons/jobs.json", "jobs", "id", "sessionTarget", "cron job");
+    // Legacy shape: sessionTarget + hand-written payload. Still deployable,
+    // but the workflow-ref shape gets generated dispatch briefs and
+    // readiness-gated enablement — migrate.
+    const target = job.sessionTarget;
+    if (typeof target !== "string" || !agentIds.has(target)) {
+      errors.push({
+        path: relPath,
+        message:
+          `cron job "${itemId}" sessionTarget ${JSON.stringify(target)} is not a ` +
+          `declared agent id (squad cron jobs may only target: ${allowed})`,
+      });
+    }
+    warnings.push({
+      path: relPath,
+      message:
+        `cron job "${itemId}" uses the legacy sessionTarget+payload shape — bind it to a ` +
+        `published workflow instead ({ id, schedule, workflow }) to get the generated ` +
+        `dispatch brief and readiness-gated enablement`,
+    });
+  });
+
   return { errors, warnings };
 }
 
@@ -841,7 +909,7 @@ async function validateBundle(bundleDir) {
   }
 
   // 4. cron / task targeting
-  const targeting = await checkTargeting(bundleDir, agentIds);
+  const targeting = await checkTargeting(bundleDir, agentIds, manifest);
   errors.push(...targeting.errors);
   warnings.push(...targeting.warnings);
 

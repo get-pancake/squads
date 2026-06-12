@@ -109,8 +109,9 @@ don't ship a third squad beside them. The procedure (worked example: `squads/pai
    in that agent's `agent.json#/skills`; leave `manifest.skills[]` for genuinely shared skills
    only (often none).
 4. **Union the workflow catalog** — `toolA.*` + `toolB.*`, each `agent` pointing at its own agent.
-5. **Combine the crons** into one `crons/jobs.json`, each `sessionTarget` its own agent, each
-   routing output through the board (§7).
+5. **Combine the crons** into one `crons/jobs.json`, each bound to its own platform's
+   workflow (`workflow: "toolA.daily_x"` / `"toolB.daily_y"`) — readiness gating then keeps
+   the un-onboarded platform's crons dark automatically.
 6. **Write one `SQUAD.md`** describing both agents and one **`ONBOARD.md` that branches by
    platform** ("Run Section A for Google, Section B for Meta") so a user installing one tool
    isn't dragged through the other's setup.
@@ -381,14 +382,14 @@ See [*5. ONBOARD.md contract*](#5-onboardmd-contract) below.
 
 ### 3.7 Optional: add `crons/jobs.json` and `MEMORY.md`
 
-- `crons/jobs.json` for native OpenClaw cron jobs. Each job's `sessionTarget` must be an
-  agent id declared in your own `manifest.agents`. A cron run with nothing to report must
-  reply with the literal token `NO_REPLY`. **Route cron output through the board:** the
-  payload runs a workflow, then files the result as
-  `create_task({ kind: "routine" | "digest", assigned_to: "<self>", … })` with **no
-  `notify_channel`**, then `complete_task`s it — never a Slack post, never silent work. Only
-  `task`/`needs_input`/`failed` tickets surface to the user; `routine`/`digest` stay quiet on
-  the board for the co-founder's daily roll-up. Mirror `squads/eng-squad/crons/jobs.json`.
+- `crons/jobs.json` for scheduled workflow dispatch. Each job is just
+  `{ id, schedule, workflow }` — bind it to a published workflow from your catalog and the
+  install **generates** the dispatch payload (session target = the workflow's agent,
+  board-as-bus routing, the `NO_REPLY` quiet-run rule) from the manifest entry. Don't
+  hand-write imperative payloads; the procedure lives in the workflow's skill. Crons whose
+  workflow declares vault secrets land **disabled** until the secrets exist —
+  `workflow_preflight` (run at the end of onboarding, or any time later) switches them on.
+  Mirror `squads/eng-squad/crons/jobs.json`.
 - A squad-wide `MEMORY.md` if multiple agents share the same seed pointers.
 
 ### 3.8 Strip every placeholder

@@ -523,6 +523,101 @@ const cases = [
     expect: null,
   },
 
+  // Workflow-ref crons — schedule + workflow binding, generated dispatch
+  {
+    name: "workflow-ref cron bound to a declared workflow is accepted, no warnings",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        { id: "test.do_thing", summary: "does the thing", outcome: "thing done", agent: "test-agent" },
+      ];
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          { id: "daily", schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" }, workflow: "test.do_thing" },
+        ],
+      });
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "workflow-ref cron referencing an undeclared workflow is rejected",
+    mutate: (b) => {
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          { id: "daily", schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" }, workflow: "ghost.flow" },
+        ],
+      });
+    },
+    expect: /cron job "daily" references workflow "ghost\.flow"/,
+  },
+  {
+    name: "workflow-ref cron also declaring sessionTarget/payload is rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        { id: "test.do_thing", summary: "does the thing", outcome: "thing done", agent: "test-agent" },
+      ];
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          {
+            id: "daily",
+            schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" },
+            workflow: "test.do_thing",
+            sessionTarget: "test-agent",
+            payload: { kind: "systemEvent", text: "hand-written" },
+          },
+        ],
+      });
+    },
+    expect: /declares both `workflow` and `sessionTarget`/,
+  },
+  {
+    name: "workflow-ref cron passing an undeclared input is rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: { target: { type: "string", description: "what to act on" } },
+        },
+      ];
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          {
+            id: "daily",
+            schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" },
+            workflow: "test.do_thing",
+            inputs: { bogus: 1 },
+          },
+        ],
+      });
+    },
+    expect: /passes input "bogus" that workflow "test\.do_thing" does not declare/,
+  },
+  {
+    name: "legacy sessionTarget+payload cron still validates but warns to migrate",
+    mutate: (b) => {
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          {
+            id: "old-style",
+            sessionTarget: "test-agent",
+            schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" },
+            payload: { kind: "systemEvent", text: "hi" },
+          },
+        ],
+      });
+    },
+    expect: null,
+    expectWarn: /"old-style" uses the legacy sessionTarget\+payload shape/,
+  },
+
   // Negative — cron targeting
   {
     name: "cron sessionTarget naming a non-declared agent is rejected",

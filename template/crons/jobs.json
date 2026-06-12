@@ -3,16 +3,13 @@
   "jobs": [
     {
       "id": "example-daily-job",
-      "name": "Example daily job",
-      "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 18 * * *", "tz": "America/Los_Angeles" },
-      "sessionTarget": "example-agent",
-      "payload": {
-        "kind": "systemEvent",
-        "text": "TODO: the instructions the agent runs on this schedule. Be explicit — tell it which skill to load and to follow it end to end. If a run intentionally produces no output, instruct the agent to reply with the single literal token NO_REPLY (OpenClaw's silent-turn sentinel) — never write 'do not respond', which trips a false-positive failure alert."
+      "name": "TODO: human-readable job name",
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 18 * * *",
+        "tz": "America/Los_Angeles"
       },
-      "failureAlert": false,
-      "state": {}
+      "workflow": "example.do_the_thing"
     }
   ]
 }
