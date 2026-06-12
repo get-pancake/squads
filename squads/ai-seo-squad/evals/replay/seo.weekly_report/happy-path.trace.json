@@ -8,7 +8,7 @@
     "vault": {
       "team.target_keywords": "ai agent platform, autonomous sub-agents, agent squads, proactive ai assistant, ai cofounder"
     },
-    "installed_squads": ["ai-seo-squad@1.5.0"]
+    "installed_squads": ["ai-seo-squad@1.5.1"]
   },
   "inputs": {},
   "dispatch": {

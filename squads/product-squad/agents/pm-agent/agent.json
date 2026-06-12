@@ -1,6 +1,7 @@
 {
   "id": "pm-agent",
   "description": "Product manager agent — owns the idea-to-PRD pipeline: triages Status=New entries in the Notion ideas DB, researches each idea, writes complete PRD sub-pages, and sets the build/reject verdict.",
+  "model": "sonnet",
   "heartbeat": {
     "every": "24h",
     "model": "sonnet"

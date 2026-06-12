@@ -6,7 +6,7 @@
   "description": "Daily ideas triage dispatched at the canonical qualified id; pm-agent reads the Notion token from the vault, sweeps the ideas DB for Status=New entries, researches the one new idea over web_search/web_fetch, files the PRD as a Notion sub-page, sets the Todo verdict, and completes with result + digest.",
   "setup": {
     "vault": { "team.notion": "ntn_test_token" },
-    "installed_squads": ["product-squad@0.1.0"]
+    "installed_squads": ["product-squad@0.1.1"]
   },
   "inputs": {},
   "dispatch": {

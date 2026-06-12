@@ -1,6 +1,7 @@
 {
   "id": "feedback-agent",
   "description": "Feedback harvester agent — collects user feedback daily from the configured sources, deduplicates it, files it into the Notion feedback DB with priority labels, and flags recurring themes.",
+  "model": "sonnet",
   "heartbeat": {
     "every": "24h",
     "model": "sonnet"

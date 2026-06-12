@@ -6,7 +6,7 @@
   "description": "Cofounder dispatches a lead-sourcing run (count 2). Outreach-agent claims the ticket, runs the signal-first ladder (exa semantic LinkedIn search, GitHub-stars check via web_fetch, hiring check via web_search), verifies each profile in the LinkedIn browser identity, dedupes against the MEMORY.md pipeline ledger and appends the qualified rows there (file work — no tool event), and completes with result + digest. No sequence touches are sent — that is run_campaign's job. No vault reads: the squad declares no secrets.",
   "setup": {
     "vault": {},
-    "installed_squads": ["outreach-squad@0.5.0"]
+    "installed_squads": ["outreach-squad@0.5.1"]
   },
   "inputs": { "icp": "Head of Growth at B2B SaaS, 20-100 ppl, just raised a seed round", "count": 2 },
   "dispatch": {

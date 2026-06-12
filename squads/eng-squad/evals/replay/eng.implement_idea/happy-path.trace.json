@@ -6,7 +6,7 @@
   "description": "Cofounder dispatches an implementation ticket with a concrete source (a specified GitHub issue); build-agent claims, reads team.github_repos from the vault, grounds in the issue + thread, creates a feature branch, implements with tests, verifies lint/build/CI, opens a PR referencing the source — and leaves it open for review because the change touches public API behaviour (not reversible enough to self-merge). Completes with the PR link in the result + digest.",
   "setup": {
     "vault": { "team.github_repos": "acme/api" },
-    "installed_squads": ["eng-squad@2.4.0"]
+    "installed_squads": ["eng-squad@2.4.1"]
   },
   "inputs": {
     "source": "https://github.com/acme/api/issues/162",

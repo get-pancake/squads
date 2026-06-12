@@ -10,7 +10,7 @@
       "google_ads.oauth_refresh_token": "refresh-token-redacted",
       "google_ads.customer_id": "1234567890"
     },
-    "installed_squads": ["paid-ads-squad@1.3.0"]
+    "installed_squads": ["paid-ads-squad@1.3.1"]
   },
   "inputs": { "campaign": "Brand Search", "change": "Raise daily budget from $120 to $160 (approved BUD-114)" },
   "dispatch": {
