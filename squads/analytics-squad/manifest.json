@@ -1,6 +1,6 @@
 {
   "name": "analytics-squad",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Analytics squad (PostHog-backed): daily digest (DAU/WAU/MAU, north-star, engaged + dying), activation-funnel debugger, anomaly alerts, weekly recap. Add-ons: release tracker + auto cohorts.",
   "author": "pancake-official",
   "license": "MIT",

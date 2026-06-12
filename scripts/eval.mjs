@@ -10,10 +10,11 @@
 // Exit 0 if every trace passes; 1 otherwise.
 
 import { readdir, stat } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { runOne } from '../lib/eval-runner.mjs';
 
-const ROOT = resolve(new URL('..', import.meta.url).pathname);
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 async function* findTraces(start) {
   let entries;

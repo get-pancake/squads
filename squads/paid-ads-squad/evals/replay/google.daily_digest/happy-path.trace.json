@@ -6,7 +6,7 @@
   "description": "18:00 PT digest cron dispatches the daily digest; google-ads-agent claims, compiles the 3-section digest from today's memory/daily log (no API calls, no vault reads — the workflow declares secrets: [] and tools: [cron]), hands the digest to the co-founder via create_task, and completes with result + digest.",
   "setup": {
     "vault": {},
-    "installed_squads": ["paid-ads-squad@1.1.0"]
+    "installed_squads": ["paid-ads-squad@1.2.0"]
   },
   "inputs": {},
   "dispatch": {

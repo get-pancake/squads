@@ -3,68 +3,53 @@
   "jobs": [
     {
       "id": "google-daily-optimization",
-      "name": "Google Ads — daily optimization sweep",
-      "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 17 * * *", "tz": "America/Los_Angeles" },
-      "sessionTarget": "google-ads-agent",
-      "payload": {
-        "kind": "systemEvent",
-        "text": "Run the `google.optimize_account` workflow end to end against the configured Google Ads account. Load `pancake_account_foundations` + `pancake_orchestrator` first, route to the right inspect/evaluate/diagnose skills via the `optimization-sweep` skill, and ship every reversible fix (negatives, bid moves, creative pauses, asset rotations, settings corrections, in-total reallocations). A budget-raise opportunity is NOT executed unilaterally — surface it in the sweep result with rationale + projected impact so the co-founder can relay and, if approved, dispatch a `google.scale_budget` ticket. When done, file the sweep on the board: create_task({ kind: 'routine', assigned_to: 'google-ads-agent', title: 'Google Ads sweep — <date>', context: '<actions shipped + any budget-raise proposal>', priority: 'later' }) with NO notify_channel, then complete_task it. Write the wake digest to memory/YYYY-MM-DD.md. If nothing material changed since yesterday's sweep and no actions are warranted, reply with the single literal token NO_REPLY after logging the reason."
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 17 * * *",
+        "tz": "America/Los_Angeles"
       },
-      "failureAlert": false,
-      "state": {}
+      "workflow": "google.optimize_account",
+      "name": "Daily Google Ads optimization sweep"
     },
     {
       "id": "google-daily-digest",
-      "name": "Google Ads — daily digest",
-      "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 18 * * *", "tz": "America/Los_Angeles" },
-      "sessionTarget": "google-ads-agent",
-      "payload": {
-        "kind": "systemEvent",
-        "text": "Run the `google.daily_digest` workflow. Load the `daily-digest` skill, compile the last 24h of activity into the 3-section digest, then file it on the board: create_task({ kind: 'digest', assigned_to: 'google-ads-agent', title: 'Google Ads digest — <date>', context: '<the digest body>', priority: 'later' }) with NO notify_channel, then complete_task it with the digest body so the co-founder can relay it on the pod's preferred channel. Do not post to Slack or any external surface yourself. A genuinely urgent finding stays explicit at the top of the digest so the co-founder raises it now. Write the wake digest to memory/YYYY-MM-DD.md. If literally nothing happened in the last 24h, reply with the single literal token NO_REPLY after logging the reason."
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 18 * * *",
+        "tz": "America/Los_Angeles"
       },
-      "failureAlert": false,
-      "state": {}
+      "workflow": "google.daily_digest",
+      "name": "Daily Google Ads digest"
     },
     {
       "id": "meta-daily-operations",
-      "name": "Meta Ads — daily operations sweep",
-      "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 9 * * *", "tz": "America/Los_Angeles" },
-      "sessionTarget": "meta-ads-agent",
-      "payload": {
-        "kind": "systemEvent",
-        "text": "Run the `meta.daily_operations` workflow. **Load `pancake-meta-ads-01-account-foundations`, `pancake-meta-ads-10-root-cause-analysis`, and `pancake-meta-ads-13-operational-routines`** (the always-on set), then follow Section 4 of HEARTBEAT.md end to end. Pull the last 24h of account performance via the Meta MCP, run the eight-branch root-cause framework over every flagged entity, classify each finding against the autonomy model in SOUL.md, **execute every autonomous-allowed action immediately** (capturing before/after state and appending to `wiki/Knowledge/MetaAds/AuditLog/YYYY-MM-DD.md`), and **queue every budget-commitment action** in `MEMORY.md → Approval queue` with a unique id and expected impact. Load the per-branch methodology skill (03, 04, 05, 06, 07, 08, 09, 11) when its branch fires. If `MEMORY.md → Mode` is `recommendation-only`, queue all actions — autonomous-allowed ones too — and execute nothing. File the sweep on the board: create_task({ kind: 'routine', assigned_to: 'meta-ads-agent', title: 'Meta Ads sweep — <date>', context: '<actions executed + approvals queued>', priority: 'later' }) with NO notify_channel, then complete_task it. End the wake with the Section 9 digest in `memory/YYYY-MM-DD.md`. If no flags fired and the audit log is empty, write a single-line `all systems normal` entry to today's audit log so the 17:00 digest cron has something to read, then reply with the single literal token `NO_REPLY`."
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9 * * *",
+        "tz": "America/Los_Angeles"
       },
-      "failureAlert": true,
-      "state": {}
+      "workflow": "meta.daily_operations",
+      "name": "Daily Meta Ads operations sweep"
     },
     {
       "id": "meta-daily-digest",
-      "name": "Meta Ads — daily digest",
-      "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 17 * * *", "tz": "America/Los_Angeles" },
-      "sessionTarget": "meta-ads-agent",
-      "payload": {
-        "kind": "systemEvent",
-        "text": "Run the `meta.daily_digest` workflow. Follow Section 5 of HEARTBEAT.md exactly: read today's `wiki/Knowledge/MetaAds/AuditLog/YYYY-MM-DD.md` and the current `MEMORY.md → Approval queue`, pull yesterday's headline metrics (blended CPA, blended ROAS, spend, conversions) plus the 7-day trend, compose the digest in the documented 7-section structure, file the full copy to `wiki/Knowledge/MetaAds/Digests/YYYY-MM-DD.md`, then file it on the board: create_task({ kind: 'digest', assigned_to: 'meta-ads-agent', title: 'Meta Ads digest — <date>', context: '<the digest body, with any Awaiting-approval items explicit>', priority: 'later' }) with NO notify_channel, then complete_task it with the digest body so the co-founder can relay it. Do not post externally yourself. If yesterday produced zero spend, zero actions, zero pending approvals, and metrics are flat, reply with the single literal token `NO_REPLY` and log the reason in `memory/YYYY-MM-DD.md` — never post a no-news digest."
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 17 * * *",
+        "tz": "America/Los_Angeles"
       },
-      "failureAlert": false,
-      "state": {}
+      "workflow": "meta.daily_digest",
+      "name": "Daily Meta Ads digest"
     },
     {
       "id": "meta-weekly-review",
-      "name": "Meta Ads — weekly review (adapts to monthly + quarterly)",
-      "enabled": true,
-      "schedule": { "kind": "cron", "expr": "0 8 * * 1", "tz": "America/Los_Angeles" },
-      "sessionTarget": "meta-ads-agent",
-      "payload": {
-        "kind": "systemEvent",
-        "text": "Run the `meta.weekly_review` workflow. **Load `pancake-meta-ads-12-review-cadence`** and follow Section 6 of HEARTBEAT.md. Always run the weekly cadence: 7-day pipeline (spend pacing, KPI trend, creative refresh signals, audit log throughput), weekly creative analysis (which ads gained share, which fatigued — file creative briefs for any unit due for refresh), and an automated-rules sweep (`pancake-meta-ads-11-guardian-rules`). **If today is the first Monday of the month**, fold in the monthly audits: audiences (`05` + `13`), structure (`02`), measurement (`08`), budget allocation (`03`). **If today is the first Monday of the quarter**, add the quarterly audits on top: compliance (`09`) and account maturity reassessment (`01`) — if maturity has shifted, update `team.account_maturity_level` via `vault_request` and note in `MEMORY.md`. File the appropriate report to `wiki/Knowledge/MetaAds/Reports/<weekly|monthly|quarterly>/YYYY-MM-DD.md`, then file it on the board: create_task({ kind: 'digest', assigned_to: 'meta-ads-agent', title: 'Meta Ads weekly review — <date>', context: '<one-paragraph summary>', priority: 'later' }) with NO notify_channel, then complete_task it."
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * 1",
+        "tz": "America/Los_Angeles"
       },
-      "failureAlert": true,
-      "state": {}
+      "workflow": "meta.weekly_review",
+      "name": "Weekly Meta Ads review"
     }
   ]
 }

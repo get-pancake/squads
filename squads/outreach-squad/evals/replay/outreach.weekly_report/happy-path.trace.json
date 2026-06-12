@@ -6,7 +6,7 @@
   "description": "Sunday weekly report, dispatched as a ticket. Outreach-agent claims it, computes 7-day pipeline performance from the Closed leads table and the memory/YYYY-MM-DD.md logs (all file work — no tool events), files the metrics + one Weekly Learning to MEMORY.md, and completes with result + digest. The workflow declares zero inputs and `tools: []`, so the trace must contain ONLY board tools — any external tool call here is a contract violation. No vault reads: the squad declares no secrets.",
   "setup": {
     "vault": {},
-    "installed_squads": ["outreach-squad@0.3.0"]
+    "installed_squads": ["outreach-squad@0.4.0"]
   },
   "inputs": {},
   "dispatch": {
