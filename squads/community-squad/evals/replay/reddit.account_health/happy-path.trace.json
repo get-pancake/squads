@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "squad": "community-squad",
+  "workflow": "reddit.account_health",
+  "case": "happy-path",
+  "description": "Weekly Monday health check: reddit-agent claims, loads credentials from vault, logs in via browser on old.reddit.com, reads karma + account age from /user/<username>/, verifies a recent comment is visible logged-out (no shadowban), confirms no suspension banner, files the result table to wiki, posts a healthy digest ticket on the board, and completes with the status + digest. The banned/suspended/shadowbanned path is a separate negative trace when it occurs in production.",
+  "setup": {
+    "vault": {
+      "team.reddit_account": "{\"username\": \"quiet_builder_42\", \"password\": \"***\"}"
+    },
+    "installed_squads": ["community-squad@1.2.0"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "reddit-agent",
+    "workflow": "community-squad.reddit.account_health",
+    "title": "Weekly Reddit account health check — 2026-06-08",
+    "kind": "digest"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "reddit-agent",
+        "title": "Weekly Reddit account health check — 2026-06-08",
+        "workflow": "community-squad.reddit.account_health",
+        "squad": "community-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "reddit-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "key": "team.reddit_account" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/login" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "fill_and_submit", "fields": { "#user_login": "quiet_builder_42", "#passwd_login": "***" } }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/user/quiet_builder_42/" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "extract", "selectors": { "comment_karma": ".karma.comment-karma", "link_karma": ".karma", "account_age": ".age time" } }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "navigate", "url": "https://old.reddit.com/r/startups/comments/abc123/comment/def456", "session": "incognito" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "op": "assert_visible", "selector": ".comment[data-author=quiet_builder_42]", "session": "incognito" }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "reddit-agent",
+        "kind": "digest",
+        "assigned_to": "reddit-agent",
+        "title": "Reddit account health — 2026-06-08",
+        "context": "Healthy. Comment karma 142 (up from 118 last week), link karma 12, no shadowban (recent comment visible logged-out), no suspension banner.",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "reddit-agent",
+        "result": "Weekly health check done: comment karma 142 (+24 WoW), link karma 12, account age 9 months. Shadowban: no (recent comment visible logged-out). Suspended: no. Status: ok. Results table logged to wiki/Knowledge/Reddit/AccountHealth.md; healthy digest filed on the board.",
+        "digest": "Account healthy, karma trending up (+24 WoW). No captcha/rate-limit signals during the check. Next health check Monday; nothing to escalate. Next wake: resume the daily scan cycle."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "browser", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "web_search", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

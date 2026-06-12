@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "meta.investigate",
+  "case": "happy-path",
+  "description": "Co-founder dispatches an ad-hoc investigation (why did Retargeting CPA double on Friday?); meta-ads-agent claims, reads API creds + thresholds from the vault, pulls entity-level insights via the Graph API (web_fetch, declared on the workflow), ships the reversible fix (re-tightens an audience expansion) with audit-log capture, files findings on the ticket, and completes with result + digest.",
+  "setup": {
+    "vault": {
+      "team.meta_api_token": "meta-system-user-token-redacted",
+      "team.meta_ad_account_id": "act_998877",
+      "team.flag_thresholds": "{}"
+    },
+    "installed_squads": ["paid-ads-squad@1.1.0"]
+  },
+  "inputs": { "entity": "Retargeting — Warm 30d (ad set 1209...884)", "question": "Why did CPA double on Friday?" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "meta-ads-agent",
+    "workflow": "paid-ads-squad.meta.investigate",
+    "title": "Investigate CPA doubling on Retargeting — Warm 30d",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "meta-ads-agent",
+        "title": "Investigate CPA doubling on Retargeting — Warm 30d",
+        "workflow": "paid-ads-squad.meta.investigate",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "meta-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.meta_api_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.meta_ad_account_id" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/120998877001884/insights", "method": "GET", "note": "ad-set daily breakdown Thu-Sun + delivery estimate; Advantage audience expansion toggled on Friday" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://graph.facebook.com/v21.0/120998877001884", "method": "POST", "note": "reversible fix: disable Advantage audience expansion (tighten audience — autonomous-allowed); before/after to AuditLog/2026-06-12.md" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "meta-ads-agent", "comment": "Root cause: Advantage audience expansion auto-enabled Friday widened Warm 30d to cold traffic — CPA $44 -> $91. Expansion disabled (reversible, audit-logged); CPA should normalize within 48h." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "meta-ads-agent",
+        "result": "Investigation complete: Retargeting — Warm 30d CPA doubled because Advantage audience expansion was enabled Friday, diluting the warm pool with cold traffic (CPA $44 -> $91, frequency dropped 3.1 -> 1.4). Reversible fix shipped: expansion disabled, before/after audit-logged. Watch item: confirm CPA back under $50 by Sunday.",
+        "digest": "Ran meta.investigate on Warm 30d retargeting: cause was Advantage expansion, now disabled and audit-logged. Next wake: 09:00 sweep — verify CPA normalizing on this ad set."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "add_task_comment", "complete_task"],
+    "tools_must_exclude": ["fail_task", "mcp-installer", "browser", "cron"]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "squad": "outreach-squad",
+  "workflow": "outreach.find_leads",
+  "case": "happy-path",
+  "description": "Cofounder dispatches a lead-sourcing run (count 2). Outreach-agent claims the ticket, runs the signal-first ladder (exa semantic LinkedIn search, GitHub-stars check via web_fetch, hiring check via web_search), verifies each profile in the LinkedIn browser identity, dedupes against the MEMORY.md pipeline ledger and appends the qualified rows there (file work — no tool event), and completes with result + digest. No sequence touches are sent — that is run_campaign's job. No vault reads: the squad declares no secrets.",
+  "setup": {
+    "vault": {},
+    "installed_squads": ["outreach-squad@0.3.0"]
+  },
+  "inputs": { "icp": "Head of Growth at B2B SaaS, 20-100 ppl, just raised a seed round", "count": 2 },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "outreach-agent",
+    "workflow": "outreach-squad.outreach.find_leads",
+    "title": "Source 2 leads: heads of growth, fresh seed rounds",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "outreach-agent",
+        "title": "Source 2 leads: heads of growth, fresh seed rounds",
+        "workflow": "outreach-squad.outreach.find_leads",
+        "squad": "outreach-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "update_task_status",
+      "args": { "caller_id": "outreach-agent", "status": "in_progress" }
+    },
+    {
+      "kind": "tool",
+      "name": "get_task",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "B2B SaaS seed round announced June 2026 20-100 employees" }
+    },
+    {
+      "kind": "tool",
+      "name": "exa",
+      "args": { "op": "search", "query": "LinkedIn profiles: Head of Growth at B2B SaaS company that raised a seed round in the last 30 days" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://www.crunchbase.com/organization/saasco-1", "purpose": "confirm the funding signal + headcount range for candidate 1" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://www.crunchbase.com/organization/saasco-2", "purpose": "confirm the funding signal + headcount range for candidate 2" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "open_profile", "url": "https://www.linkedin.com/in/growth-lead-1", "purpose": "verify role matches ICP exactly" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "open_profile", "url": "https://www.linkedin.com/in/growth-lead-2", "purpose": "verify role matches ICP exactly" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "outreach-agent", "comment": "2/2 leads qualified on the funding signal, deduped against Active + Closed leads, rows appended to the pipeline ledger with Next due = today." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "outreach-agent",
+        "result": "Sourced 2 ICP-qualified leads on the funding signal (Heads of Growth at 20-100-person B2B SaaS, seed rounds closed this month). Both verified on LinkedIn, deduped against the pipeline, and appended to Pipeline → Active leads in MEMORY.md as `queued` with Next due today so Touch 1 fires on the next outbound pass.",
+        "digest": "Ran outreach.find_leads: 2/2 qualified (funding signal). One candidate rejected — role was 'Growth Marketing Manager', not Head of Growth; bar held. Next wake: Touch 1 for both queued rows in the daily loop."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["exa", "web_search", "browser", "complete_task"],
+    "tools_must_exclude": ["fail_task", "vault_get", "vault_request", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

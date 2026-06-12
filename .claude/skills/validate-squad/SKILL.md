@@ -27,6 +27,18 @@ The validator's checks fall into the following categories:
   `manifest.json` breaks a rule: bad kebab-case or semver, a missing required field, a
   value outside an enum, a duplicate agent id, or `agents` is no longer an object array
   (it must now be a string array of agent ids).
+- **Workflow schema** (e.g. `workflows[2].agent  "ads-agent" is not a declared agent id`) — an
+  entry in `manifest.workflows[]` breaks a rule. Each entry must be an object with: a non-empty
+  **`id`** that is lower-kebab/dotted (`WORKFLOW_ID`, e.g. `eng.triage_issue`) and unique
+  within the squad; a non-empty **`summary`** ≤ 200 chars; a non-empty **`outcome`**; **`agent`**
+  naming one of `manifest.agents`; an optional **`inputs`** object of rich descriptors
+  (`{ type, description, example?, required?, default?, enum? }` per input — string shorthand
+  like `"repo": "string"` is rejected); optional **`secrets`**/**`tools`** referencing the
+  squad-level registries; and an optional **`outcome_schema`**. Unknown fields are
+  rejected (allowed keys: `id`, `summary`, `inputs`, `outcome`, `outcome_schema`, `agent`,
+  `secrets`, `tools`). Common fixes: kebab the
+  id (`triage issue` → `triage_issue`), point `agent` at a declared agent, remove a stray field,
+  or de-duplicate two entries with the same id.
 - **`agent.json` missing** (`agents/<id>/agent.json  not found`) — every id in
   `manifest.agents` must have a matching `agents/<id>/agent.json` file.
 - **`agent.json` schema** (e.g. `agents/<id>/agent.json#/model  must be one of: haiku,
@@ -82,3 +94,48 @@ worth keeping — e.g. `USER.md` content can move into `MEMORY.md` as a pointer)
 
 Run the validator again. Repeat Steps 2–3 until it exits 0 with no errors. Then report the
 result: confirm the bundle is valid, and list any warnings the user chose to leave.
+
+## Step 4 — Run the replay-eval suite (second blocking gate)
+
+`scripts/validate.mjs` covers the bundle's *static* shape. `scripts/eval.mjs` covers what
+each workflow actually *does* at the squad↔board contract level — recorded
+`*.trace.json` files at `squads/<name>/evals/replay/<workflow-id>/` are replayed against
+the manifest. Both gates run in CI; both must be green.
+
+```sh
+node scripts/eval.mjs                          # every recorded trace
+node scripts/eval.mjs squads/<name>            # one bundle
+```
+
+If the bundle has no traces yet, point the user at the `create-squad` skill Step 6 (or
+the per-bundle `evals/README.md`) and walk them through authoring a `happy-path.trace.json`
+for each declared workflow. A bundle without traces is not a publishable bundle.
+
+If an existing trace fails:
+
+- A **happy-path** trace failing means a real contract drift — the bundle declared one
+  thing and the trace recorded another. Fix the bundle so the trace passes (or fix the
+  trace if the *intended* behaviour changed and the new behaviour is correct).
+- A **negative-case** trace failing with `expected "X" to fail; it passed — the
+  contract check it guards has regressed` means a production bug the trace was guarding
+  against has come back. Treat it as P0 — the trace is institutional memory of an
+  incident and the runner is telling you the fix has been undone.
+
+## What validation does NOT cover
+
+A green validator + green replay-eval means the bundle's *shape* and its workflow
+contracts are correct — neither tells you the squad is **well-scoped**. Neither gate can see whether:
+
+- the capability should have been a **workflow or agent on an existing squad** rather than a new
+  squad (only file shape and trace-level contracts are checked, not placement);
+- the squad is **named for a tool** instead of its domain (`posthog-squad` validates fine — it's
+  still the wrong name);
+- it **duplicates a domain** another squad already owns, or two squads should be **merged**;
+- per-lane skills were left **squad-wide** in a multi-agent squad (valid, but pollutes context);
+- the `SOUL.md`/`HEARTBEAT.md` actually carry the **mute-to-user / board-as-bus** behaviour
+  (the files exist, so validation passes — but the wiring may be missing);
+- LLM behaviour is correct (the replay tier stubs no model — that's the live-LLM e2e tier).
+
+These are design calls with no runtime guardrail. If a green bundle smells off on any of the
+above, raise it with the user and point them at
+[`creating-a-squad.md` §0](../../../docs/creating-a-squad.md) (scope, naming, merging).

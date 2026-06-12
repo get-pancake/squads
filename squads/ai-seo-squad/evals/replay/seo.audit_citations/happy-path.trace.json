@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "squad": "ai-seo-squad",
+  "workflow": "seo.audit_citations",
+  "case": "happy-path",
+  "description": "The daily 09:00 cron audit per geo-llmseo-playbook: geo-agent claims the routine ticket, reads the target domain + keywords from the vault, poses buyer questions to ChatGPT/Gemini/Perplexity via web_search/web_fetch (browser for the logged-in engine), scores citation share, files the table to wiki/Knowledge/GEO/Audits/, updates citation-share.md, posts the three-line delta as a board comment, queues the top follow-up, and completes with the canonical result + digest.",
+  "setup": {
+    "vault": {
+      "team.target_domain": "getpancake.ai",
+      "team.target_keywords": "ai agent platform, autonomous sub-agents, agent squads, proactive ai assistant, ai cofounder"
+    },
+    "installed_squads": ["ai-seo-squad@1.3.0"]
+  },
+  "inputs": {
+    "keywords": "ai agent platform, autonomous sub-agents, agent squads, proactive ai assistant, ai cofounder",
+    "domain": "getpancake.ai"
+  },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "geo-agent",
+    "workflow": "ai-seo-squad.seo.audit_citations",
+    "title": "Citation audit — 2026-06-12",
+    "kind": "routine"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "geo-agent",
+        "title": "Citation audit — 2026-06-12",
+        "workflow": "ai-seo-squad.seo.audit_citations",
+        "squad": "ai-seo-squad",
+        "kind": "routine"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "geo-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "geo-agent", "key": "team.target_domain" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "geo-agent", "key": "team.target_keywords" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "what is the best ai agent platform for startups" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://www.perplexity.ai/search?q=what%20is%20the%20best%20ai%20agent%20platform%20for%20startups" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "tools for running autonomous sub-agents on a schedule" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "task": "Ask Gemini (logged-in identity): 'what's the best way to deploy a squad of proactive AI agents for a small team?' — capture whether getpancake.ai is mentioned, cited, or outranked, and which competitors appear." }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "proactive ai assistant that works while you sleep" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://getpancake.ai/llms.txt" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": {
+        "caller_id": "geo-agent",
+        "comment": "Citation delta: overall share 0.53 (+0.07 vs yesterday). Biggest mover: 'agent squads' 0.33 → 0.67 after Tuesday's comparison page. Recommended action: 'ai cofounder' is the worst gap (0.00, competitor owns all three citations) — comparison-page draft queued. Full table: wiki/Knowledge/GEO/Audits/2026-06-12.md."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "geo-agent",
+        "assigned_to": "geo-agent",
+        "title": "Draft comparison page to close the 'ai cofounder' citation gap",
+        "priority": "today"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "geo-agent",
+        "result": "Daily citation audit done for getpancake.ai across 5 keywords x 3 engines. Overall citation share 0.53 (+0.07). Full per-keyword table filed to wiki/Knowledge/GEO/Audits/2026-06-12.md; rolling trend updated in wiki/Knowledge/GEO/citation-share.md. Worst gap: 'ai cofounder' at 0.00 — comparison-page draft queued as the top follow-up.",
+        "digest": "Audit shipped: share 0.53 (+0.07), 'agent squads' jumped after the comparison page — the comparison format works, repeat it. 'ai cofounder' is fully owned by a competitor; queued the comparison draft. Next wake: execute that draft via seo.write_article."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_search", "web_fetch", "add_task_comment", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "squad_install", "squad_uninstall", "workflow_remove", "vault_set"]
+  }
+}

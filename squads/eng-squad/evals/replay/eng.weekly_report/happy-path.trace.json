@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "squad": "eng-squad",
+  "workflow": "eng.weekly_report",
+  "case": "happy-path",
+  "description": "Weekly-report cron dispatches the issue-health report; triage-agent claims, reads team.github_repos from the vault, gathers the week's stats from GitHub (open vs closed, criticality mix, stale >30d, unlabeled, oldest untriaged), writes the report to the wiki, files it as a digest board record (no notify_channel), and completes with the headline numbers + digest.",
+  "setup": {
+    "vault": { "team.github_repos": "acme/api" },
+    "installed_squads": ["eng-squad@2.1.1"]
+  },
+  "inputs": { "repo": "acme/api" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "triage-agent",
+    "workflow": "eng-squad.eng.weekly_report",
+    "title": "Weekly issue health — acme/api 2026-06-08",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "triage-agent",
+        "title": "Weekly issue health — acme/api 2026-06-08",
+        "workflow": "eng-squad.eng.weekly_report",
+        "squad": "eng-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "triage-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "triage-agent", "key": "team.github_repos" }
+    },
+    {
+      "kind": "tool",
+      "name": "github_get_token",
+      "args": {}
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.list", "repo": "acme/api", "state": "open", "per_page": 100 }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "issues.list", "repo": "acme/api", "state": "closed", "since": "2026-06-01" }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "search.issues", "repo": "acme/api", "query": "is:open is:issue -label:priority/P0 -label:priority/P1 -label:priority/P2 -label:priority/P3" }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "search.issues", "repo": "acme/api", "query": "is:open is:issue updated:<2026-05-09", "note": "stale >30d" }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "triage-agent",
+        "kind": "digest",
+        "assigned_to": "triage-agent",
+        "title": "Weekly issue health — 2026-06-08",
+        "context": "acme/api week of 2026-06-01: 9 opened / 12 closed (net -3). Criticality mix: 0×P0, 2×P1, 11×P2, 14×P3. Stale >30d: 5. Unlabeled: 2 (oldest untriaged #149, 4d). Full report at wiki/Knowledge/GitHub-Triage/acme-api/weekly-2026-06-08.md.",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "triage-agent", "comment": "Weekly report written to wiki/Knowledge/GitHub-Triage/acme-api/weekly-2026-06-08.md and filed as a digest record on the board." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "triage-agent",
+        "result": "Weekly issue-health report for acme/api (week of 2026-06-01): 9 opened / 12 closed (net -3 open). Criticality mix 0×P0, 2×P1, 11×P2, 14×P3. 5 issues stale >30d; 2 still unlabeled, oldest untriaged is #149 (4 days). Report written to wiki/Knowledge/GitHub-Triage/acme-api/weekly-2026-06-08.md and filed as a digest record on the board.",
+        "digest": "Weekly report acme/api: net -3 open, no P0s, both P1s have owners. Watch item: stale count crept 3→5; flag for the cofounder if it crosses 8 next week. Next wake: sweep queue as usual."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "github", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

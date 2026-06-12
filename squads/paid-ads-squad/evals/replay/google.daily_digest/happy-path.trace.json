@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "google.daily_digest",
+  "case": "happy-path",
+  "description": "18:00 PT digest cron dispatches the daily digest; google-ads-agent claims, compiles the 3-section digest from today's memory/daily log (no API calls, no vault reads — the workflow declares secrets: [] and tools: [cron]), hands the digest to the co-founder via create_task, and completes with result + digest.",
+  "setup": {
+    "vault": {},
+    "installed_squads": ["paid-ads-squad@1.1.0"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "google-ads-agent",
+    "workflow": "paid-ads-squad.google.daily_digest",
+    "title": "Compile Google Ads daily digest — 2026-06-12",
+    "kind": "digest"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "google-ads-agent",
+        "title": "Compile Google Ads daily digest — 2026-06-12",
+        "workflow": "paid-ads-squad.google.daily_digest",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "google-ads-agent" } },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "google-ads-agent",
+        "assigned_to": "main",
+        "title": "Relay Google Ads digest — 2026-06-12",
+        "body": "*State* — CPA $42 vs target $45, on track.\n\n*Actions shipped today*\n• 4 exact-match negatives added — cut $38/wk wasted spend\n• 1 fatigued RSA paused — CTR -41% over 14d\n\n*Open items*\n• Brand Search budget-raise ask awaiting co-founder (task #BUD-114)\n• Tomorrow: verify RSA pause held conversion volume"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "google-ads-agent",
+        "result": "Daily digest compiled (3 sections, ~120 words) and handed off to the co-founder as a relay task. Covers today's sweep actions, KPI state vs target, and the open Brand Search budget-raise ask.",
+        "digest": "Compiled google.daily_digest for 2026-06-12; relay task filed for the co-founder. Account on track (CPA $42 vs $45). Next wake: nothing digest-side until tomorrow's cron."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "vault_get", "web_fetch", "browser", "mcp-installer"]
+  }
+}

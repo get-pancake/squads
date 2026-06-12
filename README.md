@@ -19,13 +19,17 @@ squad.
 
 ## Official squads
 
-| Squad | What it does | Agents |
-|---|---|---|
-| [`ai-seo-squad`](./squads/ai-seo-squad/) | AI-SEO / GEO — daily citation audits, blog posts, and GEO engineering PRs (self-merging). | `geo-agent` |
-| [`reddit-squad`](./squads/reddit-squad/) | Reddit growth — monitors subreddits, drafts replies, and ships founder-voice posts. | `reddit-agent` |
-| [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, and posts a digest. | `outreach-agent` |
-| [`google-ads-squad`](./squads/google-ads-squad/) | Single-account Google Ads autopilot — daily optimization sweep + digest hand-off; escalates only to raise budget. | `google-ads-agent` |
-| [`meta-ads-squad`](./squads/meta-ads-squad/) | Meta Ads operator — daily diagnostic + action sweep, daily digest, weekly review. Holds spend flat autonomously; escalates only budget increases. | `meta-ads-agent` |
+Each squad publishes a catalog of outcome-typed **workflows** and reports only through the
+company task board — the co-founder delegates by matching intent to a workflow, and relays.
+
+| Squad | What it does | Agents | Workflows |
+|---|---|---|---|
+| [`ai-seo-squad`](./squads/ai-seo-squad/) | AI-SEO / GEO — daily citation audits, blog posts, and GEO engineering PRs (self-merging). | `geo-agent` | `seo.audit_citations`, `seo.write_article`, `seo.ship_technical_fix`, `seo.weekly_report` |
+| [`community-squad`](./squads/community-squad/) | Community presence — Reddit channel: monitors subreddits, drafts value comments, runs a multi-account karma strategy. | `reddit-agent` | `reddit.scan_and_draft`, `reddit.monitor_keywords`, `reddit.account_health`, `reddit.post` |
+| [`outreach-squad`](./squads/outreach-squad/) | Daily outbound — finds leads, runs sequences, handles replies, files a digest on the board. | `outreach-agent` | `outreach.run_campaign`, `outreach.find_leads`, `outreach.triage_replies`, `outreach.weekly_report` |
+| [`paid-ads-squad`](./squads/paid-ads-squad/) | Paid advertising — Google Ads + Meta Ads operators, each running one account end to end; holds spend flat, surfaces budget raises on the board. | `google-ads-agent`, `meta-ads-agent` | `google.optimize_account`, `google.daily_digest`, `google.root_cause`, `google.scale_budget`, `meta.daily_operations`, `meta.daily_digest`, `meta.weekly_review`, `meta.investigate` |
+| [`eng-squad`](./squads/eng-squad/) | Engineering squad — GitHub issue triage: classifies issues P0–P3, labels them, sweeps daily, reports weekly. | `triage-agent` | `eng.triage_issue`, `eng.sweep_open_issues`, `eng.weekly_report` |
+| [`analytics-squad`](./squads/analytics-squad/) | Product analytics (PostHog-backed) — daily DAU/WAU/MAU + north-star digest, activation-funnel debugger, weekly recap, ad-hoc reports. | `analytics-agent` | `posthog.daily_digest`, `posthog.weekly_recap`, `posthog.debug_funnel`, `posthog.adhoc_report` |
 
 ## How squads work
 
@@ -56,6 +60,29 @@ passes here passes ingestion. CI runs it on every push and pull request, alongsi
 `node scripts/test-validator.mjs` which self-tests the validator against negative
 fixtures (forbidden files, wrong heartbeat shape, etc.) — both must pass for a merge.
 
+## Replay-eval workflows
+
+`scripts/validate.mjs` checks what a bundle **declares**. `scripts/eval.mjs` checks what
+each workflow actually **does** at the squad↔board contract level — the qualified id
+the cofounder stamps, the tool calls the squad agent makes, the terminal it closes
+with, the digest it writes. No LLM is invoked; this is the deterministic tier between
+schema validation and live-LLM e2e.
+
+```sh
+node scripts/eval.mjs                                  # every recorded trace
+node scripts/eval.mjs squads/<bundle-name>             # one bundle
+node scripts/eval.mjs path/to/case.trace.json          # one trace
+```
+
+Traces live at `squads/<name>/evals/replay/<workflow-id>/*.trace.json`. Every official
+workflow ships a `happy-path.trace.json`; recorded production bugs are committed as
+**negative-case traces** (`expected: "FAIL"` + `expected_failures: [...]`) so a future
+refactor can't silently un-catch them. Full per-bundle docs in
+[`squads/<name>/evals/README.md`](./squads/analytics-squad/evals/README.md).
+
+CI runs `node scripts/eval.mjs` alongside the validator on every push/PR — both gates
+must pass.
+
 ## Publish
 
 See [`docs/publishing.md`](./docs/publishing.md).
@@ -75,12 +102,15 @@ squads/                          ← this repo
 ├── CONTRIBUTING.md               curation policy
 ├── manifest.schema.json          JSON Schema for manifest.json
 ├── agent.schema.json             JSON Schema for agents/<id>/agent.json
-├── .github/                      CI validator workflow + PR template
+├── .github/                      CI workflow (validator + replay evals) + PR template
 ├── .claude/skills/               create-squad, validate-squad
-├── docs/                         how-squads-work, bundle-reference, creating-a-squad, publishing
+├── docs/                         how-squads-work, bundle-reference, creating-a-squad, squad-scorecard, publishing
+├── lib/eval-runner.mjs           shared replay-eval check engine, zero deps
 ├── scripts/validate.mjs          zero-dependency validator
+├── scripts/eval.mjs              replay every squad's recorded *.trace.json
 ├── template/                     a complete, valid skeleton bundle
 └── squads/                       official squad bundles, one directory each
+    └── <name>/evals/             happy-path + negative-regression traces per workflow
 ```
 
 ## License

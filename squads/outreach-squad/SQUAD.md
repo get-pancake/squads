@@ -24,10 +24,10 @@ It starts in Simple mode (LinkedIn-only, 4 leads/week) and upgrades autonomously
 - 1–3 outreach actions executed autonomously every day
 - Active sequences advanced without any manual follow-up
 - Replies drafted and sent within 24h using the qualify-first framework
-- A daily digest posted to your chosen channel (Slack by default, or email/iMessage)
+- A daily digest filed on the company task board for your co-founder to relay
 - A/B test log and weekly learnings tracked automatically
 - Graceful upgrade path: the agent tells you when it's time to move from Simple to Advanced mode
 
 ## How it works
 
-`outreach-agent` runs on three wake sources: a **daily outbound loop cron** (08:00 America/Los_Angeles — full procedure: pipeline check, new leads, sequence advancement, reply handling, A/B test, mode-upgrade check, digest), a **reply-sweep cron every 2h** (00:00, 02:00, 04:00, 06:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00, 22:00 LA — guaranteed reply latency under 2h, no digest spam), and a **2h heartbeat pulse** for mission-deepening between cron runs (signal scouting, A/B tightening, ICP refinement). The agent enforces a 3-action-per-day floor. Crons load the right skill in their payload (`simple-outreach`, plus `advanced-outreach` once the agent has self-upgraded). The user never needs to talk to the agent directly — route requests through your Pancake co-founder.
+`outreach-agent` runs on three wake sources: a **daily outbound loop cron** (08:00 America/Los_Angeles — full procedure: pipeline check, new leads, sequence advancement, reply handling, A/B test, mode-upgrade check, digest), a **reply-sweep cron every 2h** (00:00, 02:00, 04:00, 06:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00, 22:00 LA — guaranteed reply latency under 2h, no digest spam), and a **2h heartbeat pulse** for mission-deepening between cron runs (signal scouting, A/B tightening, ICP refinement). The agent enforces a 3-action-per-day floor. Crons load the right skill in their payload (`simple-outreach`, plus `advanced-outreach` once the agent has self-upgraded) and file their output **on the company task board** as `routine`/`digest` tickets. The agent is mute to the user — it publishes the workflows `outreach.run_campaign`, `outreach.find_leads`, `outreach.triage_replies`, and `outreach.weekly_report`, and reports only through the board; the co-founder reads it and relays. The user never talks to the agent directly — route requests through your Pancake co-founder.

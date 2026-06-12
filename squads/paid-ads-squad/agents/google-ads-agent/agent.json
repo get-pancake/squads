@@ -1,0 +1,29 @@
+{
+  "id": "google-ads-agent",
+  "description": "Single-account Google Ads autopilot — runs a daily optimization sweep, files a daily digest to the board, owns every reversible account operation; surfaces budget-raise asks on the board.",
+  "model": "sonnet",
+  "heartbeat": { "every": "24h" },
+  "skills": [
+    "agents/google-ads-agent/skills/optimization-sweep.md",
+    "agents/google-ads-agent/skills/daily-digest.md",
+    "agents/google-ads-agent/skills/pancake_account_foundations.md",
+    "agents/google-ads-agent/skills/pancake_orchestrator.md",
+    "agents/google-ads-agent/skills/pancake_inspect_bidding.md",
+    "agents/google-ads-agent/skills/pancake_bidding_playbook.md",
+    "agents/google-ads-agent/skills/pancake_budget_engine.md",
+    "agents/google-ads-agent/skills/pancake_creative_atelier.md",
+    "agents/google-ads-agent/skills/pancake_evaluate_demandgen.md",
+    "agents/google-ads-agent/skills/pancake_demandgen_playbook.md",
+    "agents/google-ads-agent/skills/pancake_inspect_local.md",
+    "agents/google-ads-agent/skills/pancake_local_playbook.md",
+    "agents/google-ads-agent/skills/pancake_pmax_workshop.md",
+    "agents/google-ads-agent/skills/pancake_query_intelligence.md",
+    "agents/google-ads-agent/skills/pancake_root_cause_lab.md",
+    "agents/google-ads-agent/skills/pancake_inspect_settings.md",
+    "agents/google-ads-agent/skills/pancake_settings_playbook.md",
+    "agents/google-ads-agent/skills/pancake_evaluate_shopping.md",
+    "agents/google-ads-agent/skills/pancake_shopping_playbook.md",
+    "agents/google-ads-agent/skills/pancake_evaluate_youtube.md",
+    "agents/google-ads-agent/skills/pancake_youtube_playbook.md"
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "squad": "ai-seo-squad",
+  "workflow": "seo.weekly_report",
+  "case": "happy-path",
+  "description": "Sunday-pulse rollup per HEARTBEAT step 7. The workflow declares no inputs and tools: [] — the run is board + vault + wiki only. geo-agent claims, reads the keyword list from the vault, replays the week's audit tickets off the board (list_tasks / get_task / list_events), rolls the trend from wiki/Knowledge/GEO/citation-share.md into a weekly digest, files it to wiki, posts the summary as a board comment, queues next week's first move, and completes with result + digest. Also logs one learning under Weekly Learnings in MEMORY.md.",
+  "setup": {
+    "vault": {
+      "team.target_keywords": "ai agent platform, autonomous sub-agents, agent squads, proactive ai assistant, ai cofounder"
+    },
+    "installed_squads": ["ai-seo-squad@1.3.0"]
+  },
+  "inputs": {},
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "geo-agent",
+    "workflow": "ai-seo-squad.seo.weekly_report",
+    "title": "Weekly GEO citation report — week of 2026-06-08",
+    "kind": "routine"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "geo-agent",
+        "title": "Weekly GEO citation report — week of 2026-06-08",
+        "workflow": "ai-seo-squad.seo.weekly_report",
+        "squad": "ai-seo-squad",
+        "kind": "routine"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "geo-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "geo-agent", "key": "team.target_keywords" }
+    },
+    {
+      "kind": "tool",
+      "name": "list_tasks",
+      "args": { "caller_id": "geo-agent", "status": "done", "since": "2026-06-08" }
+    },
+    {
+      "kind": "tool",
+      "name": "get_task",
+      "args": { "caller_id": "geo-agent", "task_id": "audit-2026-06-12" }
+    },
+    {
+      "kind": "tool",
+      "name": "list_events",
+      "args": { "caller_id": "geo-agent", "task_id": "audit-2026-06-12" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": {
+        "caller_id": "geo-agent",
+        "comment": "Week of 2026-06-08: overall citation share 0.41 → 0.53 (+0.12). Biggest mover: 'agent squads' 0.33 → 0.67 (comparison page). Shipped: 2 posts, 1 llms.txt refresh, all self-merged. Worst remaining gap: 'ai cofounder' (comparison post merged Friday, impact reads in 2-4 weeks). Full digest: wiki/Knowledge/GEO/Reports/2026-W24.md."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "geo-agent",
+        "assigned_to": "geo-agent",
+        "title": "Freshness sweep: bump dateModified on the 5 oldest posts",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "geo-agent",
+        "result": "Weekly citation-share report filed to wiki/Knowledge/GEO/Reports/2026-W24.md. Overall share 0.41 → 0.53 (+0.12) across 5 keywords x 3 engines; 'agent squads' was the biggest mover after the comparison page. 3 artifacts shipped this week (2 posts, 1 llms.txt refresh). Summary posted on the board; learning logged under Weekly Learnings in MEMORY.md.",
+        "digest": "Week closed at 0.53 (+0.12). Learning: comparison pages are the format that moves citation share — both gains this week trace to them; hypothesis: one comparison page per gap keyword beats two generic posts. Next wake: freshness sweep queued; 'ai cofounder' impact reads around 2026-06-26."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "list_tasks", "add_task_comment", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "web_search", "web_fetch", "browser", "github", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

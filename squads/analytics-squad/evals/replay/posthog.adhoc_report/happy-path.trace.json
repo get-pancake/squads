@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "squad": "analytics-squad",
+  "workflow": "posthog.adhoc_report",
+  "case": "happy-path",
+  "description": "Ad-hoc metrics pull dispatched at the canonical qualified id with html format; analytics-agent reads the read-only API key, pulls the requested metrics over web_fetch, publishes the HTML report through preview-host (publish_preview), and completes with the signed preview URL + digest.",
+  "setup": {
+    "vault": { "team.posthog_api_key": "phx_test_key" },
+    "installed_squads": ["analytics-squad@1.1.0"]
+  },
+  "inputs": {
+    "metrics": "DAU last 7d, top 5 events, active users",
+    "format": "html"
+  },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "analytics-agent",
+    "workflow": "analytics-squad.posthog.adhoc_report",
+    "title": "Ad-hoc report: DAU last 7d, top 5 events, active users",
+    "kind": "task"
+  },
+  "events": [
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "analytics-agent", "workflow": "analytics-squad.posthog.adhoc_report" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "analytics-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "team.posthog_api_key" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/query/", "note": "HogQL: DAU last 7d" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/query/", "note": "HogQL: top 5 events by volume, last 7d" } },
+    { "kind": "tool", "name": "web_fetch", "args": { "url": "https://eu.posthog.com/api/projects/170554/query/", "note": "HogQL: distinct active users, last 7d" } },
+    { "kind": "tool", "name": "publish_preview", "args": { "path": "reports/adhoc-2026-06-12.html", "note": "HTML report published via preview-host" } },
+    { "kind": "tool", "name": "complete_task", "args": {
+      "caller_id": "analytics-agent",
+      "result": "Ad-hoc report published: https://preview.pancake.dev/r/adhoc-2026-06-12 (signed URL on the ticket). DAU 7d avg 405; top events slack_relayed, task_created, digest_opened, login, report_generated; 1,930 distinct active users in the window.",
+      "digest": "Ad-hoc pull, html format requested so published via preview-host instead of the wiki. All three metrics from eu.posthog.com with the read-only key. Numbers consistent with yesterday's daily digest — no anomaly flags."
+    } }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "publish_preview", "complete_task"],
+    "tools_must_exclude": ["fail_task"]
+  }
+}

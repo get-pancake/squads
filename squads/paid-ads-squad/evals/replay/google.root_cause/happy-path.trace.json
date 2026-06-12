@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "google.root_cause",
+  "case": "happy-path",
+  "description": "Cofounder dispatches a CPA-regression investigation scoped to Brand Search; google-ads-agent claims, reads API creds from the vault, pulls change-history + auction-insights via the API, confirms the diagnosis in the UI via browser, ships the reversible fix (reverts a broadened match-type change), and completes with result + digest.",
+  "setup": {
+    "vault": {
+      "google_ads.developer_token": "dev-token-redacted",
+      "google_ads.oauth_refresh_token": "refresh-token-redacted",
+      "google_ads.customer_id": "1234567890"
+    },
+    "installed_squads": ["paid-ads-squad@1.1.0"]
+  },
+  "inputs": { "metric": "CPA", "scope": "Brand Search" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "google-ads-agent",
+    "workflow": "paid-ads-squad.google.root_cause",
+    "title": "Investigate CPA regression on Brand Search",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "google-ads-agent",
+        "title": "Investigate CPA regression on Brand Search",
+        "workflow": "paid-ads-squad.google.root_cause",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "google-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.developer_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.oauth_refresh_token" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://googleads.googleapis.com/v17/customers/1234567890/googleAds:searchStream", "method": "POST", "note": "GAQL: change_event + auction insights for Brand Search, last 14d" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "action": "navigate", "url": "https://ads.google.com/aw/keywords", "note": "confirm match-type broadening landed in UI on 2026-06-08" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://googleads.googleapis.com/v17/customers/1234567890/adGroupCriteria:mutate", "method": "POST", "note": "revert 6 keywords from broad back to phrase match" }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "google-ads-agent",
+        "result": "Root cause: CPA on Brand Search rose from $39 to $58 after 6 keywords were broadened to broad match on 2026-06-08, pulling in non-brand queries. Reversible fix shipped: reverted the 6 keywords to phrase match. No spend-increasing remedy needed; expect CPA to recover within 3 days.",
+        "digest": "Diagnosed google.root_cause on Brand Search CPA: broad-match drift from 06-08, reverted 6 keywords to phrase. Next wake: check CPA trend on Brand Search before tomorrow's sweep."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "browser", "complete_task"],
+    "tools_must_exclude": ["fail_task", "mcp-installer"]
+  }
+}

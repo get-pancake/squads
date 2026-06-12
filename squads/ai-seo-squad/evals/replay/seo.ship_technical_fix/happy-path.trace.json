@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "squad": "ai-seo-squad",
+  "workflow": "seo.ship_technical_fix",
+  "case": "happy-path",
+  "description": "Cofounder dispatches an llms.txt refresh. Per advanced-seo: geo-agent claims, reads the target domain from the vault, fetches the live llms.txt and the pages it should index via web_fetch, rewrites it (one-liner, core pages, facts), ships the change as a PR via github and self-merges (squash — never edit the live file directly), files the change to wiki/Knowledge/GEO, and completes with the merged-PR link + digest. The workflow declares only web_fetch + github — no web_search, no browser.",
+  "setup": {
+    "vault": { "team.target_domain": "getpancake.ai" },
+    "installed_squads": ["ai-seo-squad@1.3.0"]
+  },
+  "inputs": {
+    "target": "llms.txt",
+    "scope": "domain root — add the new /compare pages and refresh the Facts block"
+  },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "geo-agent",
+    "workflow": "ai-seo-squad.seo.ship_technical_fix",
+    "title": "Refresh llms.txt: index the new comparison pages",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "geo-agent",
+        "title": "Refresh llms.txt: index the new comparison pages",
+        "workflow": "ai-seo-squad.seo.ship_technical_fix",
+        "squad": "ai-seo-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "claim_task",
+      "args": { "caller_id": "geo-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "vault_get",
+      "args": { "caller_id": "geo-agent", "key": "team.target_domain" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://getpancake.ai/llms.txt" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://getpancake.ai/compare/pancake-vs-diy-agent-stack" }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": {
+        "op": "pulls.create",
+        "repo": "pancake/website",
+        "head": "geo/llms-txt-compare-pages",
+        "title": "geo: llms.txt — index /compare pages, refresh Facts block"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "github",
+      "args": { "op": "pulls.merge", "repo": "pancake/website", "pull_number": 319, "merge_method": "squash" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": {
+        "caller_id": "geo-agent",
+        "comment": "llms.txt refreshed: both /compare pages added under Core pages, Facts block updated. PR pancake/website#319 self-merged (squash). Change filed to wiki/Knowledge/GEO/llms-txt.md."
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "geo-agent",
+        "result": "Shipped llms.txt refresh for getpancake.ai: added the two new /compare pages to Core pages and refreshed the Facts block. PR pancake/website#319 opened and self-merged (squash). Change log filed to wiki/Knowledge/GEO/llms-txt.md.",
+        "digest": "llms.txt now indexes the comparison pages — that's the page family driving the recent citation gains, so crawlers should pick them up faster. Next wake: validate JSON-LD on the two /compare pages (queued); watch the daily audit for crawler pickup."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "github", "complete_task"],
+    "tools_must_exclude": ["fail_task", "web_search", "browser", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

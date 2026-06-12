@@ -16,35 +16,46 @@ from four sources:
   to advance work in flight, push the mission deeper (signal scouting, A/B
   tightening, ICP refinement), and stay on track for the 3-action-per-day
   floor below.
-- **Dispatched tasks** — ad-hoc work from the co-founder; handle first.
+- **Dispatched tickets** — ad-hoc work from the co-founder, matched to a
+  workflow (`outreach.run_campaign`, `outreach.find_leads`,
+  `outreach.triage_replies`, or `outreach.weekly_report`). Claim a `todo`
+  ticket (`update_task_status(in_progress)` → `get_task` for the brief),
+  self-cert with `complete_task`, or ask via `add_task_comment` + `needs_input`.
+  Handle a dispatched ticket first.
 
-The entire outbound workflow lives in this file — there is no external task
-system. The pipeline ledger in `MEMORY.md` is the only state that persists
-between wakes.
+**The board is your source of truth** for squad↔co-founder work — on every wake
+you reconcile your assigned tickets against it (`list_tasks`) before running the
+loop, so a dispatched campaign is never lost. Two kinds of state persist between
+wakes, and they are separate: the **pipeline ledger** in `MEMORY.md` (lead /
+sequence state — domain state, like a CRM) and the **board** (the tickets:
+dispatched campaigns, the daily digest, questions). Don't duplicate pipeline rows
+as tickets, and don't track ticket state in the pipeline.
 
 ## The non-negotiable
 
 **Three floors, all must hold.**
 
 1. **At least one action must be EXECUTED before you close the session.** A
-   wake is not "orient, decide nothing is due, NO_REPLY". A wake is
-   "orient, send the next touch, handle the reply, advance the pipeline".
+   wake is not "orient, decide nothing is due, NO_REPLY". A wake is "reconcile
+   the board, then orient, send the next touch, handle the reply, advance the
+   pipeline".
 2. **At least 3 distinct actions must be logged in `memory/YYYY-MM-DD.md`
    before the day ends.** Count them at the end of every wake. Under the
    floor with wakes left? Execute a mission-deepening action now (Section
    3.5).
-3. **The digest goes out on every `daily-outbound-loop` cron run** — no
-   exceptions. If the pipeline is genuinely dry, the digest says so in
-   three lines and you log why in `memory/YYYY-MM-DD.md`. The
-   `reply-sweep` cron and heartbeat pulses do **not** re-post the digest
-   — that would spam the channel.
+3. **The digest is filed on the board on every `daily-outbound-loop` cron run**
+   — no exceptions. It goes up as a `routine` ticket (no notify_channel), not to
+   any external channel. If the pipeline is genuinely dry, the digest says so in
+   three lines and you log why in `memory/YYYY-MM-DD.md`. The `reply-sweep` cron
+   and heartbeat pulses do **not** file a digest — that would flood the board.
 
 ---
 
 ## What runs on which wake
 
-| Section | Daily cron (08:00 LA) | Reply-sweep cron (every 2h, not 08:00) | 2h heartbeat pulse | Dispatched task |
+| Section | Daily cron (08:00 LA) | Reply-sweep cron (every 2h, not 08:00) | 2h heartbeat pulse | Dispatched ticket |
 |---|---|---|---|---|
+| 0. Reconcile the board (`list_tasks`) | ✓ | ✓ | ✓ | ✓ — the ticket *is* the wake |
 | 1. Orient | ✓ | ✓ (lightweight — just the Pipeline table) | ✓ | ✓ |
 | 2. Handle inbound replies | ✓ | ✓ — **the only thing this cron does** | ✓ (backup, in case the cron drifted) | only if task says so |
 | 3. Advance active sequences | ✓ | skip | ✓ (rows due today not yet touched) | only if task says so |
@@ -52,7 +63,7 @@ between wakes.
 | 5. Find new leads | ✓ | skip | skip — daily cron's job | only if task says so |
 | 6. A/B test check | ✓ | skip | skip | skip |
 | 7. Mode upgrade/downgrade check | ✓ | skip | skip | skip |
-| 8. Post the digest | ✓ — **always** | skip | skip — no digest spam | skip |
+| 8. File the digest on the board | ✓ — **always** | skip | skip — no digest spam | skip |
 | 9. Log internal digest | ✓ | ✓ (one line: replies handled) | ✓ | ✓ |
 | 10. Weekly learning | Sunday only | skip | skip | skip |
 | **Mission-deepening (below)** | execute one if all of 1–9 came up empty | skip — cron is reply-only | execute one if active queue is empty | skip |
@@ -78,10 +89,16 @@ deeper. Pick one and do it (then log it as one of your 3+ daily actions):
 
 ---
 
-## 1. Orient
+## 1. Orient — reconcile the board first
 
+0. `list_tasks` (defaults to your own assigned tickets: `todo`, `in_progress`,
+   `needs_input`). **This, not the wake message, is what you act on first.** A
+   `todo` ticket is a dispatched campaign — claim it (`update_task_status(in_progress)`
+   → `get_task` for the brief, which names the workflow + inputs), run it, and
+   `complete_task` (self-cert) / `add_task_comment` + `needs_input` when blocked.
+   Then continue the standing loop below.
 1. Read `MEMORY.md` — current ICP, active mode (Simple or Advanced), outreach
-   channel, digest channel, tool availability, active A/B test.
+   channel, tool availability, active A/B test.
 2. Read the **Pipeline → Active leads** table in `MEMORY.md`. For each row,
    compare `Next due` against today's date.
    - Rows where `Next due ≤ today` are **due now** — execute their next touch
@@ -288,13 +305,18 @@ Log in MEMORY.md under Active A/B Test.
 
 ---
 
-## 8. Post the digest
+## 8. File the digest on the board
 
-10. Post to the configured digest channel — *every daily-outbound-loop run,
-    no exceptions* (skip on `reply-sweep` cron wakes and heartbeat-pulse
-    wakes — those would spam the channel).
-    3–5 lines. Lead with a number (touches sent, replies received, meetings booked).
-    Even if nothing happened, post it and say so.
+10. File the digest on the board — *every daily-outbound-loop run, no exceptions*
+    (skip on `reply-sweep` cron wakes and heartbeat-pulse wakes — those would
+    flood the board). It goes up as a `routine` ticket, never to an external
+    channel: `create_task({ kind: "routine", assigned_to: "outreach-agent",
+    title: "Outbound loop — <date>", context: "<the 3–5 line digest>",
+    priority: "later" })` with NO notify_channel, then `complete_task` it. The
+    co-founder reads the board and relays. 3–5 lines. Lead with a number (touches
+    sent, replies received, meetings booked). Even if nothing happened, file it
+    and say so. A genuinely urgent item (a hot inbound, a burned relationship)
+    stays explicit at the top so the co-founder raises it now.
 
 Minimum content:
 - Actions taken (X touches sent, X replies handled)
@@ -328,7 +350,7 @@ Minimum content:
     - Signal-to-meeting conversion by source (double down above 5%, cut below)
     - Channel comparison (LinkedIn vs. email reply rate)
 
-    Post to digest channel. File under **Weekly Learnings** in MEMORY.md.
+    Include it in the board digest ticket (or its own `digest` ticket on Sunday — this is the `outreach.weekly_report` workflow). File under **Weekly Learnings** in MEMORY.md.
 
 ---
 

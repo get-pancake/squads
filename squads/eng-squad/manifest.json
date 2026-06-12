@@ -1,0 +1,95 @@
+{
+  "name": "eng-squad",
+  "version": "2.1.1",
+  "description": "Engineering squad: triage-agent classifies GitHub issues by P0–P3 criticality, labels them, sweeps untriaged issues daily, and files a weekly issue-health report.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "agents": [
+    "triage-agent"
+  ],
+  "workflows": [
+    {
+      "id": "eng.triage_issue",
+      "summary": "Classify one GitHub issue's criticality (P0–P3), label it, and file a short assessment.",
+      "inputs": {
+        "repo": {
+          "type": "string",
+          "description": "GitHub owner/repo slug of the repository the issue lives in.",
+          "example": "acme/api"
+        },
+        "issue_number": {
+          "type": "integer",
+          "description": "The issue's numeric id within the repo.",
+          "example": 142
+        }
+      },
+      "outcome": "Issue labeled with one of priority/P0…P3 + a one-paragraph assessment posted as an issue comment and filed to the wiki.",
+      "agent": "triage-agent",
+      "secrets": [],
+      "tools": [
+        "github"
+      ]
+    },
+    {
+      "id": "eng.sweep_open_issues",
+      "summary": "Triage every untriaged open issue in a repo and file a digest of what was classified.",
+      "inputs": {
+        "repo": {
+          "type": "string",
+          "description": "GitHub owner/repo slug of the repository to sweep.",
+          "example": "acme/api"
+        },
+        "since": {
+          "type": "string",
+          "description": "Only consider issues created or updated since this ISO date (defaults to the whole backlog).",
+          "example": "2026-06-01",
+          "required": false
+        }
+      },
+      "outcome": "All untriaged open issues labeled with a P0–P3 criticality; a digest of the sweep filed on the board.",
+      "agent": "triage-agent",
+      "secrets": [
+        "team.github_repos"
+      ],
+      "tools": [
+        "github"
+      ]
+    },
+    {
+      "id": "eng.weekly_report",
+      "summary": "Produce a weekly issue-health report — open/closed counts, criticality mix, stale and unlabeled issues.",
+      "inputs": {
+        "repo": {
+          "type": "string",
+          "description": "GitHub owner/repo slug of the repository to report on.",
+          "example": "acme/api"
+        }
+      },
+      "outcome": "A weekly issue-health report filed to the wiki and summarized on the board.",
+      "agent": "triage-agent",
+      "secrets": [
+        "team.github_repos"
+      ],
+      "tools": [
+        "github"
+      ]
+    }
+  ],
+  "required_identities": [
+    {
+      "site": "github.com",
+      "reason": "Triage-agent reads issues and writes labels + triage comments on your repo via the connected GitHub App."
+    }
+  ],
+  "required_vault_secrets": [
+    {
+      "key": "team.github_repos",
+      "label": "Repos to triage (owner/repo, comma-separated)",
+      "type": "string"
+    }
+  ],
+  "required_tool_permissions": [
+    "github"
+  ],
+  "min_pancake_version": "1.0.0"
+}

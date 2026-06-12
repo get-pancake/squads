@@ -1,14 +1,88 @@
 {
   "name": "outreach-squad",
-  "version": "0.1.5",
-  "description": "Daily outbound engine: finds leads, runs sequences, handles replies, and posts a digest every day. Simple mode by default, upgrades to Advanced when signals stack.",
+  "version": "0.3.0",
+  "description": "Daily outbound engine: finds leads, runs sequences, handles replies, and files a digest on the board every day. Simple mode by default, upgrades to Advanced when signals stack.",
   "author": "pancake-official",
   "license": "MIT",
   "skills": [
     "skills/simple-outreach.md",
     "skills/advanced-outreach.md"
   ],
-  "agents": ["outreach-agent"],
+  "agents": [
+    "outreach-agent"
+  ],
+  "workflows": [
+    {
+      "id": "outreach.run_campaign",
+      "summary": "Find ICP-matched leads and run a sequenced multi-touch outreach.",
+      "inputs": {
+        "icp": {
+          "type": "string",
+          "description": "Ideal customer profile: role / industry / size / trigger event.",
+          "example": "Head of Sales at 20-100p B2B SaaS that just raised a seed"
+        },
+        "volume": {
+          "type": "integer",
+          "description": "Number of leads to contact in this campaign.",
+          "example": 4
+        }
+      },
+      "outcome": "N leads contacted via sequenced touches, replies triaged, results filed on the board.",
+      "agent": "outreach-agent",
+      "secrets": [],
+      "tools": [
+        "browser",
+        "web_search",
+        "web_fetch",
+        "exa"
+      ]
+    },
+    {
+      "id": "outreach.find_leads",
+      "summary": "Source and enrich ICP-matched leads (signal-first, ICP-search fallback).",
+      "inputs": {
+        "icp": {
+          "type": "string",
+          "description": "Ideal customer profile to match leads against.",
+          "example": "Head of Sales at 20-100p B2B SaaS that just raised a seed"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of leads to source and enrich.",
+          "example": 10
+        }
+      },
+      "outcome": "A list of enriched, ICP-qualified leads appended to the pipeline ledger and filed on the board.",
+      "agent": "outreach-agent",
+      "secrets": [],
+      "tools": [
+        "browser",
+        "web_search",
+        "web_fetch",
+        "exa"
+      ]
+    },
+    {
+      "id": "outreach.triage_replies",
+      "summary": "Sweep active channels and respond to inbound replies with the qualify-first framework.",
+      "inputs": {},
+      "outcome": "Every new reply handled (Q1→Q2→meeting), lead rows updated, closed rows moved.",
+      "agent": "outreach-agent",
+      "secrets": [],
+      "tools": [
+        "browser"
+      ]
+    },
+    {
+      "id": "outreach.weekly_report",
+      "summary": "Compute 7-day pipeline performance and log the week's learnings.",
+      "inputs": {},
+      "outcome": "7-day pipeline metrics + one Weekly Learning filed and summarized on the board.",
+      "agent": "outreach-agent",
+      "secrets": [],
+      "tools": []
+    }
+  ],
   "required_tool_permissions": [
     "browser",
     "web_search",

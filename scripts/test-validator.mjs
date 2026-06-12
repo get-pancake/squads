@@ -101,6 +101,235 @@ const cases = [
     expect: null,
   },
 
+  // Workflow-scoped secrets/tools — the registries live at the squad level
+  // (required_vault_secrets / required_tool_permissions); each workflow
+  // references the keys it actually uses.
+  {
+    name: "workflow secrets/tools referencing the registries is accepted, no warnings",
+    mutate: (b) => {
+      b["manifest.json"].required_vault_secrets = [
+        { key: "team.api_key", label: "API key", type: "api_key" },
+      ];
+      b["manifest.json"].required_tool_permissions = ["browser"];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          secrets: ["team.api_key"],
+          tools: ["browser"],
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "rich workflow input descriptors are accepted",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: {
+            target: { type: "string", description: "what to act on", example: "acme/api" },
+            mode: { type: "enum", description: "how to act", enum: ["fast", "slow"], required: false, default: "fast" },
+          },
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "legacy string-shorthand workflow inputs are rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: { target: "string (what to act on)" },
+        },
+      ];
+    },
+    expect: /workflows\[0\]\.inputs\.target.*must be an object/,
+  },
+  {
+    name: "input descriptor missing type/description, bad enum, bad name, unknown field are rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: {
+            no_type: { description: "missing type" },
+            no_desc: { type: "string" },
+            bad_enum: { type: "enum", description: "no enum array" },
+            extra_field: { type: "string", description: "ok", bogus: 1 },
+            "BAD-NAME": { type: "string", description: "bad name" },
+            enum_on_string: { type: "string", description: "ok", enum: ["a"] },
+          },
+        },
+      ];
+    },
+    expect: /inputs\.no_type\.type.*required/,
+  },
+  {
+    name: "workflow outcome_schema is an accepted field",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          outcome_schema: { type: "object", required: ["status"], properties: { status: { type: "string" } } },
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "workflow secret not defined in required_vault_secrets is rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          secrets: ["team.undeclared_key"],
+        },
+      ];
+    },
+    expect: /workflows\[0\]\.secrets\[0\].*not defined in required_vault_secrets/,
+  },
+  {
+    name: "workflow tool not declared in required_tool_permissions is rejected",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser"];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          tools: ["github"],
+        },
+      ];
+    },
+    expect: /workflows\[0\]\.tools\[0\].*not declared in required_tool_permissions/,
+  },
+  {
+    name: "duplicate workflow secret key is rejected",
+    mutate: (b) => {
+      b["manifest.json"].required_vault_secrets = [
+        { key: "team.api_key", label: "API key", type: "api_key" },
+      ];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          secrets: ["team.api_key", "team.api_key"],
+        },
+      ];
+    },
+    expect: /workflows\[0\]\.secrets\[1\].*duplicate secret key/,
+  },
+  {
+    name: "registry secret unreferenced by any workflow warns (but stays valid)",
+    mutate: (b) => {
+      b["manifest.json"].required_vault_secrets = [
+        { key: "team.api_key", label: "API key", type: "api_key" },
+      ];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+        },
+      ];
+    },
+    expect: null,
+    expectWarn: /"team\.api_key" is not referenced by any workflow/,
+  },
+  {
+    name: "no-workflow squad with registry secrets does not warn",
+    mutate: (b) => {
+      b["manifest.json"].required_vault_secrets = [
+        { key: "team.api_key", label: "API key", type: "api_key" },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+
+  // infra_tool_permissions — onboarding/heartbeat-time tools, exempt from the
+  // unreferenced-tool warning but still required to live in the registry.
+  {
+    name: "infra tool unreferenced by any workflow does not warn",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser", "mcp-installer"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer"];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          tools: ["browser"],
+        },
+      ];
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
+    name: "non-infra registry tool unreferenced by any workflow still warns",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser", "web_fetch", "mcp-installer"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer"];
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          tools: ["browser"],
+        },
+      ];
+    },
+    expect: null,
+    expectWarn: /"web_fetch" is not referenced by any workflow/,
+  },
+  {
+    name: "infra tool not declared in required_tool_permissions is rejected",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer"];
+    },
+    expect: /infra_tool_permissions\[0\].*not declared in required_tool_permissions/,
+  },
+  {
+    name: "duplicate infra_tool_permissions key is rejected",
+    mutate: (b) => {
+      b["manifest.json"].required_tool_permissions = ["browser", "mcp-installer"];
+      b["manifest.json"].infra_tool_permissions = ["mcp-installer", "mcp-installer"];
+    },
+    expect: /infra_tool_permissions\[1\].*duplicate tool key "mcp-installer"/,
+  },
+
   // Negative — heartbeat shape
   {
     name: "heartbeat as bare string is rejected",
@@ -338,6 +567,14 @@ async function main() {
         reason = ok
           ? ""
           : `expected exit 0 (valid bundle), got exit ${exitCode}`;
+        if (ok && c.expectWarn && !c.expectWarn.test(output)) {
+          ok = false;
+          reason = `expected a warning matching ${c.expectWarn}`;
+        }
+        if (ok && c.expectNoWarn && /⚠/.test(output)) {
+          ok = false;
+          reason = `expected zero warnings, but the validator emitted one`;
+        }
       } else {
         if (exitCode === 0) {
           ok = false;

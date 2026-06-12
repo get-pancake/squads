@@ -61,9 +61,11 @@ package-level metadata only — per-agent runtime config lives in `agents/<id>/a
 | `license` | string | · | any string when present |
 | `skills` | string[] | · | bundle-relative paths to squad-wide skill files (e.g. `skills/playbook.md`) |
 | `agents` | string[] | ✔ | non-empty array of kebab-case agent ids. Each id must have a matching `agents/<id>/agent.json`. |
+| `workflows` | object[] | · | the squad's published outcome-typed entrypoints — see [*workflows*](#workflows--the-squads-published-interface) below |
 | `required_identities` | object[] | · | each `{ site, reason }` — both non-empty. `site` is an eTLD+1, e.g. `github.com`. |
-| `required_vault_secrets` | object[] | · | each `{ key, label, type }` — `key`/`label` non-empty; `type` ∈ `string` \| `api_key` \| `token` |
-| `required_tool_permissions` | string[] | · | each entry must be an accepted Pancake tool key (see [*Tool permissions*](#tool-permissions) below). Unknown keys are an error. |
+| `required_vault_secrets` | object[] | · | the squad's **secret registry** — each `{ key, label, type }` defined once; `key`/`label` non-empty; `type` ∈ `string` \| `api_key` \| `token`. Workflows reference these keys via `workflows[].secrets`. |
+| `required_tool_permissions` | string[] | · | the squad's **tool-permission registry** — each entry must be an accepted Pancake tool key (see [*Tool permissions*](#tool-permissions) below). Unknown keys are an error. Workflows reference these via `workflows[].tools`. |
+| `infra_tool_permissions` | string[] | · | **squad-infra tools** used at onboarding/heartbeat time rather than inside any workflow (e.g. `mcp-installer`). Each entry must also appear in `required_tool_permissions`; listed keys are exempt from the unreferenced-tool warning. |
 | `min_pancake_version` | string | · | informational only |
 
 Validation returns **all** problems found, not just the first — so a bad manifest can be
@@ -99,6 +101,77 @@ unknown fields rather than silently dropping them, so any new OpenClaw field a s
 must be added here first.
 
 See [`template/agents/example-agent/agent.json`](../template/agents/example-agent/agent.json).
+
+## `workflows` — the squad's published interface
+
+`manifest.workflows` is the list of **outcome-typed entrypoints** the squad exposes. It is
+the squad's *public API*: the cofounder delegates by matching the user's intent to a
+workflow, then creating a board ticket assigned to that workflow's agent — it never reaches
+into the squad's internal tools. This is what keeps the cofounder's context bounded as
+squads are added: the cofounder carries a compact **catalog** (id + summary + inputs +
+outcome + agent), not every squad's tool schemas.
+
+Each entry is inline metadata (not a file path), so the catalog can be generated at install
+without reading extra files:
+
+```json
+"workflows": [
+  {
+    "id": "eng.triage_issue",
+    "summary": "Classify a GitHub issue's criticality and label it.",
+    "inputs": {
+      "repo": {
+        "type": "string",
+        "description": "GitHub owner/repo slug of the repository the issue lives in.",
+        "example": "acme/api"
+      },
+      "issue_number": {
+        "type": "integer",
+        "description": "The issue's numeric id within the repo.",
+        "example": 142
+      }
+    },
+    "outcome": "Issue labeled with a P0–P3 criticality + a one-paragraph assessment filed.",
+    "agent": "triage-agent",
+    "secrets": ["github.bot_token"],
+    "tools": ["github"]
+  }
+]
+```
+
+| Field | Type | Req | Rules |
+|---|---|---|---|
+| `id` | string | ✔ | lower-kebab/dotted `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, e.g. `eng.triage_issue`. Unique within the squad. |
+| `summary` | string | ✔ | one line, ≤ 200 chars — what the cofounder reads to match intent → workflow. |
+| `inputs` | object | · | map of input name (lower_snake_case) → **rich descriptor** `{ type, description, example?, required?, default?, enum? }`. `type` ∈ `string` \| `integer` \| `number` \| `boolean` \| `enum` \| `object`; `description` ≤ 280 chars is required; `enum` is required (and only legal) when `type` is `enum`; `required` defaults to true. The cofounder writes its dispatch brief from these — treat them as the workflow's API docs. |
+| `outcome` | string | ✔ | the defined done-state, e.g. "issue labeled + assessment filed". |
+| `outcome_schema` | object | · | optional JSON-Schema-shaped object the workflow's `complete_task` result must conform to; the gateway validates and re-routes mismatches through `fail_task` (`outcome_invalid`). Passed through transparently by the marketplace. |
+| `agent` | string | ✔ | the squad agent that runs it — **must be one of `manifest.agents`**. The cofounder assigns the ticket to this agent. |
+| `secrets` | string[] | · | the vault keys this workflow needs at runtime. Each entry **must reference a key defined in `required_vault_secrets`** (duplicates are an error). The agent fetches a secret only when running a workflow that lists it. |
+| `tools` | string[] | · | the tool permissions this workflow needs at runtime. Each entry **must also appear in `required_tool_permissions`** (duplicates are an error). |
+
+**Secrets and tools are scoped to workflows.** The squad-level
+`required_vault_secrets` / `required_tool_permissions` arrays are *registries*: secrets are
+defined once (`{ key, label, type }`) so onboarding knows what to collect, and tool
+permissions are the union the install grants. What each workflow actually *uses* is declared
+on the workflow itself — agents only need a secret or tool while running a workflow that
+references it. When a squad publishes workflows, the validator warns about any registry
+entry no workflow references. The exception is **squad-infra tools** — tools the squad
+uses at onboarding or heartbeat time rather than inside any workflow (e.g.
+`mcp-installer` to set up an MCP server during install). List those in
+`manifest.infra_tool_permissions` (still alongside their `required_tool_permissions`
+registry entry) instead of parking them on a workflow that doesn't actually use them;
+the validator exempts them from the unreferenced-tool warning.
+
+**How a workflow runs.** The squad agent maps the workflow id to one of its own skills (by
+convention, a skill named after the workflow) and executes it from the ticket's brief +
+inputs. Self-certify the outcome with `complete_task`; ask via `needs_input` + a comment
+when blocked on intent. The board is the only channel — see
+[*HEARTBEAT.md*](#heartbeatmd--the-wake-procedure) and the `tasks` skill.
+
+Workflows are optional — a squad with none is dispatched ad hoc (the cofounder briefs an
+agent directly). But publishing workflows is what makes a squad a clean, repeatable,
+fire-and-forget unit, so prefer them for any recurring job.
 
 ## `SQUAD.md` — the marketplace catalog card
 
@@ -175,6 +248,16 @@ agent.
 - **Boundaries (Inviolable)** — the *Never* / *Always* hard limits.
 - **What Success Looks Like** — the bar.
 
+**One voice out — the inviolable a squad must carry.** A squad agent is **mute to the
+user**: it communicates *only* through the task board (the `tasks` plugin) — `complete_task`
+with a self-certified outcome, `add_task_comment` for a question, `update_task_status` to
+`needs_input` when blocked on intent. It **never** messages the user (directly or indirectly)
+and **never** DMs the co-founder out of band. The co-founder is the single voice to the user;
+it reads the board and relays. Bake this into every squad's `SOUL.md` *Boundaries* — the
+template does. (This is also why Slack Block Kit and Voice are not authorable from a bundle —
+see [*Tool permissions*](#tool-permissions).) Squads self-certify reversible outcomes; the
+correction path is the co-founder reopening a ticket, not an up-front approval gate.
+
 The step-by-step wake procedure lives in [`HEARTBEAT.md`](#heartbeatmd--the-wake-procedure),
 not in `SOUL.md` — keep behavioural rules here and the procedure there.
 
@@ -182,7 +265,7 @@ not in `SOUL.md` — keep behavioural rules here and the procedure there.
 
 Per agent. **Required when `agent.json` declares a `heartbeat`** — the validator errors
 otherwise. OpenClaw loads `agents/<id>/HEARTBEAT.md` on **every wake** — both heartbeat
-pulses and dispatched tasks — before the agent starts work. This is the right home for
+pulses and dispatched tickets — before the agent starts work. This is the right home for
 the recurring procedure the agent runs each tick: what to read, what to decide, what to
 file. Keeping it out of `SOUL.md` is the convention because:
 
@@ -193,25 +276,38 @@ file. Keeping it out of `SOUL.md` is the convention because:
 - **Authors can iterate on the wake procedure without touching `SOUL.md`**,
   which keeps personality/principles stable across releases.
 
+**The board is the source of truth.** A wake reconciles the agent's assigned tickets
+against the task board — both the *push* (a `sessions_send` pointer when the cofounder
+dispatches) and the *pull* (this scan) converge on `list_tasks`, so nothing is lost if a
+wake is missed or the agent restarts mid-ticket. This is the same reconcile-loop
+discipline the pancake-controller uses against the cluster.
+
 Write it in the imperative, addressed to the agent. A solid structure
 (mirrored in [`template/agents/example-agent/HEARTBEAT.md`](../template/agents/example-agent/HEARTBEAT.md)):
 
-1. **The non-negotiable** — *at least one task must be EXECUTED before the
-   session closes.* A wake is "orient, find the highest-leverage action in
-   the lane, do it, file the result" — not "orient and NO_REPLY". `NO_REPLY`
-   is only acceptable when nothing is actionable, and the reason must be
+1. **The non-negotiable** — *at least one ticket must be ADVANCED before the
+   session closes.* `NO_REPLY` is only acceptable when nothing is actionable (every
+   assigned ticket parked `needs_input`, no recurring duty due), and the reason must be
    logged to `memory/YYYY-MM-DD.md` first.
-2. **Orient** — read `MEMORY.md`, skim recent daily logs, `list_tasks`.
-3. **Decide what this wake is for** — dispatched task, recurring duty, draft
-   to advance, or genuinely nothing (with a logged reason).
-4. **Recurring duty** — the agent's specific heartbeat work and its cadence.
-5. **Execute** — actually produce the artifact; don't just plan.
-6. **Digest** — before closing the session, append a one-paragraph digest to
-   `memory/YYYY-MM-DD.md`: *what you did, what changed, what's still open,
-   and the single first move for the next wake.* The digest is for
-   future-you; only escalate to the co-founder when there is material news.
-   A wake without a digest is an unfinished wake.
-7. **Close the loop** — `complete_task` / `fail_task`, surface blockers.
+2. **Orient — reconcile the board first** — `list_tasks` (defaults to your own
+   assigned tickets: `todo`, `in_progress`, `needs_input`). *This*, not the wake
+   message, is what you act on. Then read `MEMORY.md` and skim recent daily logs.
+3. **Pick and claim a ticket** — claim the oldest/highest-priority `todo`
+   (`update_task_status(in_progress)` → `get_task` for the brief, which names the
+   **workflow** to run), resume an `in_progress` one, or resume a `needs_input` one whose
+   answer just arrived (read the thread via `list_events({ task_id })`).
+4. **Run the ticket — self-cert or ask** — execute the workflow, then either
+   `complete_task(result)` (you **self-certify** the outcome), or — when blocked on intent
+   only the cofounder has — `add_task_comment(question)` + `update_task_status(needs_input)`
+   (never guess, never message the user), or `fail_task` on a hard blocker.
+5. **Recurring duty** — heartbeat-pulse work when no ticket is assigned. Most recurring
+   duty is better driven by a cron that files a `routine`/`digest` ticket — see
+   [*Crons through the board*](#crons-through-the-board).
+6. **Digest** — append a one-paragraph digest to `memory/YYYY-MM-DD.md`: *what you did,
+   what changed, what's still open (esp. `needs_input` you're waiting on), the next
+   wake's first move.* Material news reaches the cofounder **through the ticket**, never
+   by DMing the user. A wake without a digest is an unfinished wake.
+7. **Close the loop** — `complete_task` / `add_task_comment` + `needs_input` / `fail_task`.
 
 If `heartbeat` is omitted from `agent.json`, `HEARTBEAT.md` is optional and the pod's
 default wake template is used when the agent does wake.
@@ -287,6 +383,37 @@ Optional. Native OpenClaw cron jobs registered at install.
 - A cron run that intentionally produces no output must instruct the agent to reply with
   the single literal token **`NO_REPLY`** — OpenClaw's silent-turn sentinel. Never write
   "do not respond"; that trips a false-positive failure alert.
+
+### Crons through the board
+
+Crons are how a squad becomes **autonomous** — each one runs a workflow on a schedule
+(daily triage, weekly report) without anyone asking. But a cron must **not** do silent work
+the user can't see, and it must **not** page the user. Route cron output through the board:
+
+The cron payload instructs the agent to run its workflow and then **file the result as a
+ticket assigned to itself** with `kind: "routine"` (recurring operational output) or
+`kind: "digest"` (periodic summaries), and **no `notify_channel`**:
+
+```
+create_task({ kind: "routine", assigned_to: "<this agent>", title: "<job> — <date>",
+              context: "<the result/digest>", priority: "later" })   // NO notify_channel
+→ complete_task(...)   // self-cert; lands on the board, quiet
+```
+
+Because there's no `notify_channel`, the plugin never wakes the cofounder — the ticket just
+appears on the board. The cofounder's daily report rolls up `routine`/`digest` tickets;
+only `task` / `needs_input` / `failed` interrupt the user. A genuinely urgent finding (a P0)
+the agent still surfaces explicitly in the ticket so the cofounder raises it now.
+
+This keeps the board the single pane for *both* delegated work and autonomous cron output,
+without burying the user in daily noise.
+
+### Self-managed crons
+
+A squad may also create its own crons at runtime (e.g. to add a per-source fetch the user
+asked for). Declare `"cron"` in `manifest.required_tool_permissions`; the agent then uses
+the `cron` tool, and its job ids should stay namespaced under the squad. No approval gate —
+the board's audit trail is the safety net.
 
 ## Dispatchable work
 

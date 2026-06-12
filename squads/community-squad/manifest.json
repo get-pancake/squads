@@ -1,0 +1,107 @@
+{
+  "name": "community-squad",
+  "version": "1.2.0",
+  "description": "Community squad: reddit-agent grows organic presence on Reddit — monitors subreddits, drafts value comments via the browser, warms up a single purchased account, and reports account health.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "agents": [
+    "reddit-agent"
+  ],
+  "workflows": [
+    {
+      "id": "reddit.scan_and_draft",
+      "summary": "Scan target subreddits, score threads, and draft up to 3 value-adding comments for the day.",
+      "inputs": {
+        "subreddits": {
+          "type": "string",
+          "description": "Comma-separated subreddits to scan, no r/ prefix (defaults to the team.reddit_target_subreddits vault value).",
+          "example": "Entrepreneurs,startups",
+          "required": false
+        }
+      },
+      "outcome": "Up to 3 scored comment drafts filed to wiki and surfaced as a batch on the board for sign-off.",
+      "agent": "reddit-agent",
+      "secrets": [
+        "team.reddit_account",
+        "team.reddit_target_subreddits"
+      ],
+      "tools": [
+        "browser"
+      ]
+    },
+    {
+      "id": "reddit.monitor_keywords",
+      "summary": "Monitor Reddit for brand and competitor keyword mentions and flag high-value threads.",
+      "inputs": {
+        "keywords": {
+          "type": "string",
+          "description": "Comma-separated brand/competitor keywords to monitor (defaults to the team.target_keywords vault value).",
+          "example": "pancake,openclaw",
+          "required": false
+        }
+      },
+      "outcome": "Keyword/competitor mention hits filed and any high-value threads flagged on the board.",
+      "agent": "reddit-agent",
+      "secrets": [
+        "team.target_keywords"
+      ],
+      "tools": [
+        "web_search"
+      ]
+    },
+    {
+      "id": "reddit.account_health",
+      "summary": "Run the weekly karma + shadowban health check on the Reddit account.",
+      "inputs": {},
+      "outcome": "Karma trend + shadowban status filed; a banned/suspended/shadowbanned account flagged explicitly on the board.",
+      "agent": "reddit-agent",
+      "secrets": [
+        "team.reddit_account"
+      ],
+      "tools": [
+        "browser"
+      ]
+    },
+    {
+      "id": "reddit.post",
+      "summary": "Publish approved comment drafts to Reddit via the browser on old.reddit.com.",
+      "inputs": {
+        "draft_ids": {
+          "type": "string",
+          "description": "Comma-separated ids of the approved drafts to post.",
+          "example": "draft-2026-06-12-1,draft-2026-06-12-2"
+        }
+      },
+      "outcome": "Approved comments posted from the dedicated account; permalinks filed back on the ticket.",
+      "agent": "reddit-agent",
+      "secrets": [
+        "team.reddit_account"
+      ],
+      "tools": [
+        "browser"
+      ]
+    }
+  ],
+  "required_vault_secrets": [
+    {
+      "key": "team.reddit_account",
+      "label": "Reddit account JSON — single {username, password} object from REDAccs (do NOT use your personal account)",
+      "type": "token"
+    },
+    {
+      "key": "team.reddit_target_subreddits",
+      "label": "Target subreddits (comma-separated, no r/ prefix, e.g. Entrepreneurs,startups)",
+      "type": "string"
+    },
+    {
+      "key": "team.target_keywords",
+      "label": "Top 5 keywords for Reddit keyword monitoring (comma-separated)",
+      "type": "string"
+    }
+  ],
+  "required_tool_permissions": [
+    "browser",
+    "web_search"
+  ],
+  "min_pancake_version": "1.0.0"
+}

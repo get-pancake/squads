@@ -47,6 +47,93 @@
       },
       "description": "List of agent ids declared by this squad. Per-agent config lives in agents/<id>/agent.json."
     },
+    "workflows": {
+      "type": "array",
+      "description": "Outcome-typed entrypoints the squad publishes — its public interface. The cofounder delegates by creating a board ticket that names a workflow id + inputs and assigns it to the workflow's agent; the agent runs it via its own skills. Inline metadata (not file paths) so the cofounder's catalog can be built without reading extra files.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "summary", "outcome", "agent"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+            "description": "Stable workflow id, lower-kebab/dotted, e.g. eng.triage_issue. Unique within the squad."
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "One line the cofounder reads to match intent → workflow."
+          },
+          "inputs": {
+            "type": "object",
+            "description": "Map of input name (lower_snake_case) → rich descriptor. The cofounder writes its dispatch brief from these — treat them as the workflow's API docs. Omit when the workflow takes no inputs.",
+            "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "description"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "integer", "number", "boolean", "enum", "object"],
+                  "description": "The value shape. \"enum\" requires the enum array."
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 280,
+                  "description": "One line of plain English: what this input means and what the squad does with it."
+                },
+                "example": {
+                  "description": "A concrete example value the cofounder can crib from when briefing."
+                },
+                "required": {
+                  "type": "boolean",
+                  "description": "Default true. Set false for optional inputs (then `default` is honored)."
+                },
+                "default": {
+                  "description": "Value used when required is false and the brief omits this input."
+                },
+                "enum": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string" },
+                  "description": "Legal values — only allowed (and required) when type is \"enum\"."
+                }
+              }
+            }
+          },
+          "outcome": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The defined outcome / done-state, e.g. \"issue labeled with a P0–P3 criticality + assessment filed\"."
+          },
+          "outcome_schema": {
+            "type": "object",
+            "description": "Optional JSON-Schema-shaped object the workflow's complete_task result must conform to. Opt-in; the gateway validates the result against it and re-routes mismatches through fail_task (category outcome_invalid). Passed through transparently by the marketplace."
+          },
+          "agent": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "description": "The squad agent that runs this workflow — must be one of manifest.agents. The cofounder assigns the ticket to this agent."
+          },
+          "secrets": {
+            "type": "array",
+            "uniqueItems": true,
+            "description": "Vault keys this workflow needs at runtime. Each entry must reference a key defined in required_vault_secrets (the squad-level registry, where {key,label,type} live once). Agents fetch a secret only when running a workflow that lists it.",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "tools": {
+            "type": "array",
+            "uniqueItems": true,
+            "description": "Tool permissions this workflow needs at runtime. Each entry must also appear in required_tool_permissions (the squad-level registry the install grants).",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
     "required_identities": {
       "type": "array",
       "items": {
@@ -61,6 +148,7 @@
     },
     "required_vault_secrets": {
       "type": "array",
+      "description": "The squad's secret registry — each {key,label,type} is defined once here so onboarding/install knows what to collect. Workflows reference these keys via their `secrets` array; an agent needs a secret only when running a workflow that lists it.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -74,6 +162,7 @@
     },
     "required_tool_permissions": {
       "type": "array",
+      "description": "The squad's tool-permission registry — the union of what its workflows need; the install grants these. Workflows reference these keys via their `tools` array.",
       "uniqueItems": true,
       "items": {
         "type": "string",
@@ -92,6 +181,12 @@
         ]
       },
       "description": "Enforced — each value must be an accepted Pancake tool key. See docs/bundle-reference.md for the canonical list."
+    },
+    "infra_tool_permissions": {
+      "type": "array",
+      "description": "Squad-infra tools used at onboarding/heartbeat time rather than inside any workflow (e.g. mcp-installer). Each entry must also appear in required_tool_permissions; listed keys are exempt from the unreferenced-tool warning.",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
     },
     "min_pancake_version": {
       "type": "string",

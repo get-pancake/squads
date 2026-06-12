@@ -1,0 +1,20 @@
+{
+  "id": "meta-ads-agent",
+  "description": "Owns one Meta Ads account: daily 09:00 diagnostic + action sweep, daily 17:00 digest, Monday weekly review that adapts to monthly and quarterly cadences. Holds spend flat autonomously; surfaces budget increases on the board.",
+  "model": "sonnet",
+  "skills": [
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-01-account-foundations.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-02-campaign-architecture.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-03-budget-and-bid-controls.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-04-ad-asset-handbook.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-05-people-targeting.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-06-placement-rotation.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-07-advantage-plus-and-catalog.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-08-attribution-and-tracking.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-09-policy-and-privacy.md",
+    "agents/meta-ads-agent/skills/methodology/pancake-meta-ads-10-root-cause-analysis.md",
+    "agents/meta-ads-agent/skills/operations/pancake-meta-ads-11-guardian-rules.md",
+    "agents/meta-ads-agent/skills/operations/pancake-meta-ads-12-review-cadence.md",
+    "agents/meta-ads-agent/skills/operations/pancake-meta-ads-13-operational-routines.md"
+  ]
+}

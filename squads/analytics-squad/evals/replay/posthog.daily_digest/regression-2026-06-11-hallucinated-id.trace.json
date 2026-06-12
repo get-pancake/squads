@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "squad": "analytics-squad",
+  "workflow": "posthog.daily_digest",
+  "case": "regression-2026-06-11-hallucinated-id",
+  "description": "Regression for the live tenant audit on 2026-06-11. The cofounder stamped tasks with `analytics-squad.daily_digest` (squad name as the entire qualified id) when the canonical form is `analytics-squad.posthog.daily_digest`. The invented stamp polluted the SigNoz workflow group-bys AND — worse — suppressed the learned-workflow nudge in complete_task (which keys on workflow_id === null), so the working recipe was never registered after a successful run. We shipped the validator in tasks plugin (apps/pancake-claw/plugins/tasks/src/squads-registry.ts → checkWorkflowId); this trace keeps a record of the exact id shape that triggered it and goes red if the dispatch.workflow stamp check ever stops catching it.",
+  "setup": {
+    "vault": { "team.posthog_api_key": "phx_test_key" },
+    "installed_squads": ["analytics-squad@1.1.0"]
+  },
+  "inputs": { "date": "2026-06-11" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "analytics-agent",
+    "workflow": "analytics-squad.daily_digest",
+    "title": "PostHog — pull sample data + publish HTML artefact",
+    "kind": "task"
+  },
+  "events": [
+    { "kind": "tool", "name": "create_task", "args": { "caller_id": "main", "assigned_to": "analytics-agent", "workflow": "analytics-squad.daily_digest" } },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "analytics-agent" } },
+    { "kind": "tool", "name": "complete_task", "args": { "caller_id": "analytics-agent", "result": "Triaged.", "digest": "digest" } }
+  ],
+  "terminal": "complete_task",
+  "expected": "FAIL",
+  "expected_failures": ["dispatch.workflow stamp"]
+}

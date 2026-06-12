@@ -71,6 +71,30 @@ const HEARTBEAT_FIELDS = {
 
 const FORBIDDEN_BASENAMES = new Set(["agents.md", "user.md", "bootstrap.md", "boot.md"]);
 
+// workflows[] — outcome-typed entrypoints the squad publishes. `secrets` and
+// `tools` scope the squad-level registries to the workflow that actually uses
+// them: each entry references a key defined in required_vault_secrets /
+// required_tool_permissions (the registries stay squad-level so install-time
+// collection has one source of truth).
+const WORKFLOW_ID = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
+const WORKFLOW_ALLOWED_KEYS = new Set([
+  "id",
+  "summary",
+  "inputs",
+  "outcome",
+  "outcome_schema",
+  "agent",
+  "secrets",
+  "tools",
+]);
+// workflows[].inputs — rich descriptors, not string shorthand. Each input is
+// { type, description, example?, required?, default?, enum? }: the cofounder
+// writes its dispatch brief from these, so they are the workflow's API docs.
+const WORKFLOW_INPUT_TYPES = new Set(["string", "integer", "number", "boolean", "enum", "object"]);
+const WORKFLOW_INPUT_ALLOWED_KEYS = new Set(["type", "description", "example", "required", "default", "enum"]);
+const WORKFLOW_INPUT_NAME = /^[a-z][a-z0-9_]*$/;
+const MAX_INPUT_DESCRIPTION = 280;
+
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const isStringArray = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
 
@@ -140,6 +164,139 @@ function validateManifest(input) {
     });
   }
 
+  // workflows (optional) — published outcome-typed entrypoints. Inline metadata
+  // so the cofounder's catalog can be generated without reading extra files.
+  if (input.workflows !== undefined) {
+    if (!Array.isArray(input.workflows)) {
+      err("workflows", "must be an array when present");
+    } else {
+      const declaredAgents = new Set(
+        Array.isArray(input.agents) ? input.agents.filter((a) => typeof a === "string") : [],
+      );
+      const declaredSecretKeys = new Set(
+        Array.isArray(input.required_vault_secrets)
+          ? input.required_vault_secrets
+              .filter((s) => isObject(s) && typeof s.key === "string")
+              .map((s) => s.key)
+          : [],
+      );
+      const declaredToolKeys = new Set(
+        isStringArray(input.required_tool_permissions) ? input.required_tool_permissions : [],
+      );
+      const seenW = new Set();
+      input.workflows.forEach((w, i) => {
+        const at = `workflows[${i}]`;
+        if (!isObject(w)) {
+          err(at, "must be an object");
+          return;
+        }
+        for (const key of Object.keys(w)) {
+          if (!WORKFLOW_ALLOWED_KEYS.has(key)) {
+            err(`${at}.${key}`, `unknown field — allowed: ${[...WORKFLOW_ALLOWED_KEYS].join(", ")}`);
+          }
+        }
+        if (typeof w.id !== "string" || w.id.length === 0) {
+          err(`${at}.id`, "required, must be a non-empty string");
+        } else if (!WORKFLOW_ID.test(w.id)) {
+          err(`${at}.id`, `"${w.id}" must be lower-kebab/dotted (e.g. eng.triage_issue)`);
+        } else if (seenW.has(w.id)) {
+          err(`${at}.id`, `duplicate workflow id "${w.id}"`);
+        } else {
+          seenW.add(w.id);
+        }
+        if (typeof w.summary !== "string" || w.summary.length === 0) {
+          err(`${at}.summary`, "required, must be a non-empty string");
+        } else if (w.summary.length > MAX_DESCRIPTION) {
+          err(`${at}.summary`, `must be ${MAX_DESCRIPTION} characters or fewer`);
+        }
+        if (typeof w.outcome !== "string" || w.outcome.length === 0) {
+          err(`${at}.outcome`, "required, must be a non-empty string describing the defined outcome");
+        }
+        if (w.inputs !== undefined) {
+          if (!isObject(w.inputs)) {
+            err(`${at}.inputs`, "must be an object mapping input name → input descriptor when present");
+          } else {
+            for (const [inputName, inputSpec] of Object.entries(w.inputs)) {
+              const ipath = `${at}.inputs.${inputName}`;
+              if (!WORKFLOW_INPUT_NAME.test(inputName)) {
+                err(ipath, `"${inputName}" must be lower_snake_case starting with a letter`);
+              }
+              if (!isObject(inputSpec)) {
+                err(ipath, "must be an object — { type, description, example?, required?, default?, enum? }");
+                continue;
+              }
+              for (const key of Object.keys(inputSpec)) {
+                if (!WORKFLOW_INPUT_ALLOWED_KEYS.has(key)) {
+                  err(`${ipath}.${key}`, `unknown field — allowed: ${[...WORKFLOW_INPUT_ALLOWED_KEYS].join(", ")}`);
+                }
+              }
+              const type = inputSpec.type;
+              if (typeof type !== "string" || !WORKFLOW_INPUT_TYPES.has(type)) {
+                err(`${ipath}.type`, `required, must be one of: ${[...WORKFLOW_INPUT_TYPES].join(", ")}`);
+              }
+              if (typeof inputSpec.description !== "string" || inputSpec.description.length === 0) {
+                err(`${ipath}.description`, "required, must be a non-empty one-line description of what this input means");
+              } else if (inputSpec.description.length > MAX_INPUT_DESCRIPTION) {
+                err(`${ipath}.description`, `must be ${MAX_INPUT_DESCRIPTION} characters or fewer`);
+              }
+              if (inputSpec.required !== undefined && typeof inputSpec.required !== "boolean") {
+                err(`${ipath}.required`, "must be a boolean when present");
+              }
+              if (type === "enum") {
+                if (!Array.isArray(inputSpec.enum) || inputSpec.enum.length === 0) {
+                  err(`${ipath}.enum`, 'required when type is "enum"; must be a non-empty array of strings');
+                } else if (!inputSpec.enum.every((v) => typeof v === "string")) {
+                  err(`${ipath}.enum`, "every enum entry must be a string");
+                }
+              } else if (inputSpec.enum !== undefined) {
+                err(`${ipath}.enum`, 'only allowed when type is "enum"');
+              }
+            }
+          }
+        }
+        if (typeof w.agent !== "string" || w.agent.length === 0) {
+          err(`${at}.agent`, "required, must name the squad agent that runs this workflow");
+        } else if (declaredAgents.size && !declaredAgents.has(w.agent)) {
+          err(`${at}.agent`, `"${w.agent}" is not a declared agent id (must be one of: ${[...declaredAgents].join(", ")})`);
+        }
+        if (w.secrets !== undefined) {
+          if (!isStringArray(w.secrets)) {
+            err(`${at}.secrets`, "must be an array of vault keys (strings) when present");
+          } else {
+            const seenS = new Set();
+            w.secrets.forEach((key, j) => {
+              const sat = `${at}.secrets[${j}]`;
+              if (!declaredSecretKeys.has(key)) {
+                err(sat, `"${key}" is not defined in required_vault_secrets (workflow secrets reference the squad-level registry)`);
+              } else if (seenS.has(key)) {
+                err(sat, `duplicate secret key "${key}"`);
+              } else {
+                seenS.add(key);
+              }
+            });
+          }
+        }
+        if (w.tools !== undefined) {
+          if (!isStringArray(w.tools)) {
+            err(`${at}.tools`, "must be an array of tool keys (strings) when present");
+          } else {
+            const seenT = new Set();
+            w.tools.forEach((key, j) => {
+              const tat = `${at}.tools[${j}]`;
+              if (!declaredToolKeys.has(key)) {
+                err(tat, `"${key}" is not declared in required_tool_permissions (workflow tools reference the squad-level registry)`);
+              } else if (seenT.has(key)) {
+                err(tat, `duplicate tool key "${key}"`);
+              } else {
+                seenT.add(key);
+              }
+            });
+          }
+        }
+      });
+    }
+  }
+
   // required_identities
   if (input.required_identities !== undefined) {
     if (!Array.isArray(input.required_identities)) {
@@ -204,6 +361,31 @@ function validateManifest(input) {
     }
   }
 
+  // infra_tool_permissions — squad-infra tools used at onboarding/heartbeat
+  // time rather than inside any workflow (e.g. mcp-installer). Entries
+  // reference the required_tool_permissions registry; they are exempt from
+  // the unreferenced-tool warning.
+  if (input.infra_tool_permissions !== undefined) {
+    if (!isStringArray(input.infra_tool_permissions)) {
+      err("infra_tool_permissions", "must be an array of strings when present");
+    } else {
+      const registry = new Set(
+        isStringArray(input.required_tool_permissions) ? input.required_tool_permissions : [],
+      );
+      const seen = new Set();
+      input.infra_tool_permissions.forEach((key, i) => {
+        const at = `infra_tool_permissions[${i}]`;
+        if (!registry.has(key)) {
+          err(at, `"${key}" is not declared in required_tool_permissions (infra tools reference the squad-level registry)`);
+        } else if (seen.has(key)) {
+          err(at, `duplicate tool key "${key}"`);
+        } else {
+          seen.add(key);
+        }
+      });
+    }
+  }
+
   // min_pancake_version
   if (input.min_pancake_version !== undefined && typeof input.min_pancake_version !== "string") {
     err("min_pancake_version", "must be a string when present");
@@ -215,6 +397,50 @@ function validateManifest(input) {
   }
 
   return errors;
+}
+
+/**
+ * Non-fatal manifest findings. When a squad publishes workflows, every
+ * squad-level secret and tool permission should be referenced by at least one
+ * workflow's `secrets`/`tools` — an unreferenced entry usually means the
+ * author forgot to scope it (or it is dead weight from a removed workflow).
+ */
+function manifestWarnings(input) {
+  const warnings = [];
+  if (!isObject(input) || !Array.isArray(input.workflows) || input.workflows.length === 0) {
+    return warnings;
+  }
+  const workflows = input.workflows.filter(isObject);
+  const referenced = (field) =>
+    new Set(workflows.flatMap((w) => (isStringArray(w[field]) ? w[field] : [])));
+
+  const usedSecrets = referenced("secrets");
+  if (Array.isArray(input.required_vault_secrets)) {
+    for (const s of input.required_vault_secrets) {
+      if (isObject(s) && typeof s.key === "string" && !usedSecrets.has(s.key)) {
+        warnings.push({
+          path: "manifest.json",
+          message: `required_vault_secrets key "${s.key}" is not referenced by any workflow's \`secrets\` — scope it to the workflow(s) that use it`,
+        });
+      }
+    }
+  }
+
+  const usedTools = referenced("tools");
+  const infraTools = new Set(
+    isStringArray(input.infra_tool_permissions) ? input.infra_tool_permissions : [],
+  );
+  if (isStringArray(input.required_tool_permissions)) {
+    for (const key of input.required_tool_permissions) {
+      if (!usedTools.has(key) && !infraTools.has(key)) {
+        warnings.push({
+          path: "manifest.json",
+          message: `required_tool_permissions key "${key}" is not referenced by any workflow's \`tools\` — scope it to the workflow(s) that use it, or list it in infra_tool_permissions if it is an onboarding/heartbeat-time tool`,
+        });
+      }
+    }
+  }
+  return warnings;
 }
 
 // ── heartbeat sub-schema validation ─────────────────────────────────────────
@@ -585,6 +811,7 @@ async function validateBundle(bundleDir) {
     }
     if (manifest !== undefined) {
       for (const e of validateManifest(manifest)) errors.push(e);
+      warnings.push(...manifestWarnings(manifest));
     }
   }
 

@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "squad": "outreach-squad",
+  "workflow": "outreach.run_campaign",
+  "case": "happy-path",
+  "description": "Cofounder dispatches a signal-first campaign (devtools-CTO ICP, volume 3). Outreach-agent claims the ticket, sources hiring-signal leads via exa + web_search, enriches via web_fetch, sends Touch 1 connection requests over the LinkedIn browser identity, appends the rows to the MEMORY.md pipeline ledger (file work — no tool event), files the routine digest ticket on the board, and completes with result + digest. No vault reads: the squad declares no secrets.",
+  "setup": {
+    "vault": {},
+    "installed_squads": ["outreach-squad@0.3.0"]
+  },
+  "inputs": { "icp": "CTO/VP Eng at seed-to-A devtools companies (5-50 ppl), hiring for platform roles", "volume": 3 },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "outreach-agent",
+    "workflow": "outreach-squad.outreach.run_campaign",
+    "title": "Campaign: devtools CTOs, hiring signal, 3 leads",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "outreach-agent",
+        "title": "Campaign: devtools CTOs, hiring signal, 3 leads",
+        "workflow": "outreach-squad.outreach.run_campaign",
+        "squad": "outreach-squad"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "list_tasks",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "update_task_status",
+      "args": { "caller_id": "outreach-agent", "status": "in_progress" }
+    },
+    {
+      "kind": "tool",
+      "name": "get_task",
+      "args": { "caller_id": "outreach-agent" }
+    },
+    {
+      "kind": "tool",
+      "name": "exa",
+      "args": { "op": "search", "query": "LinkedIn profiles: CTO OR VP Engineering, devtools startup 5-50 employees, currently hiring platform engineers" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_search",
+      "args": { "query": "site:linkedin.com/jobs platform engineer devtools seed stage 2026" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://www.acmedev.io/careers", "purpose": "verify the hiring signal + company size for lead 1" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "open_profile", "url": "https://www.linkedin.com/in/lead-1-cto" }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "send_connection_request", "url": "https://www.linkedin.com/in/lead-1-cto", "message": null }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "send_connection_request", "url": "https://www.linkedin.com/in/lead-2-vpeng", "message": null }
+    },
+    {
+      "kind": "tool",
+      "name": "browser",
+      "args": { "identity": "linkedin", "action": "send_connection_request", "url": "https://www.linkedin.com/in/lead-3-cto", "message": null }
+    },
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "outreach-agent",
+        "kind": "routine",
+        "assigned_to": "outreach-agent",
+        "title": "Outbound loop — 2026-06-12",
+        "context": "3 Touch-1 connection requests sent (hiring signal, devtools CTOs). 3 leads queued in pipeline, next due 2026-06-14. No replies yet — campaign day 1. A/B variants seeded for first DM.",
+        "priority": "later"
+      }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "outreach-agent", "comment": "Campaign launched: 3 ICP-qualified leads sourced on the hiring signal, Touch 1 sent to all 3, pipeline ledger updated." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "outreach-agent",
+        "result": "Campaign launched at volume 3 on the hiring signal. 3 ICP-qualified leads (CTO/VP Eng, seed-to-A devtools, all actively hiring platform roles) appended to Pipeline → Active leads in MEMORY.md, Touch 1 connection requests sent via LinkedIn browser identity, daily digest filed on the board as a routine ticket.",
+        "digest": "Ran outreach.run_campaign: 3/3 leads sourced (hiring signal — Crunchbase/Jobs cross-check), Touch 1 sent, rows queued with Next due 2026-06-14. Signal quality good; no fuzzy ICP matches needed. Next wake: reply sweep + Touch 2 for any acceptances."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["exa", "browser", "create_task", "complete_task"],
+    "tools_must_exclude": ["fail_task", "vault_get", "vault_request", "squad_install", "squad_uninstall", "workflow_remove"]
+  }
+}

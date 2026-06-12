@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "squad": "paid-ads-squad",
+  "workflow": "google.scale_budget",
+  "case": "happy-path",
+  "description": "Co-founder dispatches an approved budget raise on Brand Search (the only way this workflow runs — it is never self-initiated); google-ads-agent claims, reads API creds from the vault, applies the budget mutation via the API, verifies pacing with a follow-up read, and confirms back on the ticket with result + digest.",
+  "setup": {
+    "vault": {
+      "google_ads.developer_token": "dev-token-redacted",
+      "google_ads.oauth_refresh_token": "refresh-token-redacted",
+      "google_ads.customer_id": "1234567890"
+    },
+    "installed_squads": ["paid-ads-squad@1.1.0"]
+  },
+  "inputs": { "campaign": "Brand Search", "change": "Raise daily budget from $120 to $160 (approved BUD-114)" },
+  "dispatch": {
+    "caller_id": "main",
+    "assigned_to": "google-ads-agent",
+    "workflow": "paid-ads-squad.google.scale_budget",
+    "title": "Apply approved budget raise BUD-114 — Brand Search to $160/day",
+    "kind": "task"
+  },
+  "events": [
+    {
+      "kind": "tool",
+      "name": "create_task",
+      "args": {
+        "caller_id": "main",
+        "assigned_to": "google-ads-agent",
+        "title": "Apply approved budget raise BUD-114 — Brand Search to $160/day",
+        "workflow": "paid-ads-squad.google.scale_budget",
+        "squad": "paid-ads-squad"
+      }
+    },
+    { "kind": "tool", "name": "claim_task", "args": { "caller_id": "google-ads-agent" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.developer_token" } },
+    { "kind": "tool", "name": "vault_get", "args": { "key": "google_ads.oauth_refresh_token" } },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://googleads.googleapis.com/v17/customers/1234567890/campaignBudgets:mutate", "method": "POST", "note": "Brand Search daily budget 120.00 -> 160.00" }
+    },
+    {
+      "kind": "tool",
+      "name": "web_fetch",
+      "args": { "url": "https://googleads.googleapis.com/v17/customers/1234567890/googleAds:searchStream", "method": "POST", "note": "GAQL: read back budget + today's pacing to verify the change took" }
+    },
+    {
+      "kind": "tool",
+      "name": "add_task_comment",
+      "args": { "caller_id": "google-ads-agent", "comment": "BUD-114 applied: Brand Search now $160/day, API read-back confirms. Pacing nominal — 41% of budget spent at 11:00 PT." }
+    },
+    {
+      "kind": "tool",
+      "name": "complete_task",
+      "args": {
+        "caller_id": "google-ads-agent",
+        "result": "Approved budget raise BUD-114 applied: Brand Search daily budget $120 -> $160. Read-back verified; pacing nominal at 41% spent by 11:00 PT. Change logged to the daily log; will watch impression share lift over the next 3 sweeps.",
+        "digest": "Applied google.scale_budget (BUD-114, Brand Search to $160/day) and verified pacing. Next wake: confirm impression share climbs off the 71% lost-IS-budget floor."
+      }
+    }
+  ],
+  "terminal": "complete_task",
+  "assertions": {
+    "tools_must_include": ["claim_task", "vault_get", "web_fetch", "add_task_comment", "complete_task"],
+    "tools_must_exclude": ["fail_task", "browser", "mcp-installer"]
+  }
+}
