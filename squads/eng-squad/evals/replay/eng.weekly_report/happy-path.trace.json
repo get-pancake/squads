@@ -6,7 +6,7 @@
   "description": "Weekly-report cron dispatches the issue-health report; triage-agent claims, reads team.github_repos from the vault, gathers the week's stats from GitHub (open vs closed, criticality mix, stale >30d, unlabeled, oldest untriaged), writes the report to the wiki, files it as a digest board record (no notify_channel), and completes with the headline numbers + digest.",
   "setup": {
     "vault": { "team.github_repos": "acme/api" },
-    "installed_squads": ["eng-squad@2.2.0"]
+    "installed_squads": ["eng-squad@2.3.0"]
   },
   "inputs": { "repo": "acme/api" },
   "dispatch": {

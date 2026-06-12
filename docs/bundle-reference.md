@@ -167,7 +167,7 @@ the validator exempts them from the unreferenced-tool warning.
 convention, a skill named after the workflow) and executes it from the ticket's brief +
 inputs. Self-certify the outcome with `complete_task`; ask via `needs_input` + a comment
 when blocked on intent. The board is the only channel — see
-[*HEARTBEAT.md*](#heartbeatmd--the-wake-procedure) and the `tasks` skill.
+[*HEARTBEAT.md*](#heartbeatmd--the-daily-autonomy-pulse) and the `tasks` skill.
 
 Workflows are optional — a squad with none is dispatched ad hoc (the cofounder briefs an
 agent directly). But publishing workflows is what makes a squad a clean, repeatable,
@@ -258,16 +258,20 @@ template does. (This is also why Slack Block Kit and Voice are not authorable fr
 see [*Tool permissions*](#tool-permissions).) Squads self-certify reversible outcomes; the
 correction path is the co-founder reopening a ticket, not an up-front approval gate.
 
-The step-by-step wake procedure lives in [`HEARTBEAT.md`](#heartbeatmd--the-wake-procedure),
+The step-by-step wake procedure lives in [`HEARTBEAT.md`](#heartbeatmd--the-daily-autonomy-pulse),
 not in `SOUL.md` — keep behavioural rules here and the procedure there.
 
-## `HEARTBEAT.md` — the wake procedure
+## `HEARTBEAT.md` — the daily autonomy pulse
 
 Per agent. **Required when `agent.json` declares a `heartbeat`** — the validator errors
-otherwise. OpenClaw loads `agents/<id>/HEARTBEAT.md` on **every wake** — both heartbeat
-pulses and dispatched tickets — before the agent starts work. This is the right home for
-the recurring procedure the agent runs each tick: what to read, what to decide, what to
-file. Keeping it out of `SOUL.md` is the convention because:
+otherwise. OpenClaw loads `agents/<id>/HEARTBEAT.md` on the agent's **scheduled
+heartbeat**, which by convention fires **once a day** (`heartbeat.every: "24h"`). It is
+not how work reaches the agent — assigned tickets wake their assignee the moment they
+land, and recurring jobs arrive as cofounder-briefed cron tickets. The pulse has one
+job: read the company's goal / north star from the wiki and self-dispatch the published
+workflow that best advances it (see the canonical 6-step structure in
+[`creating-a-squad.md` §6](./creating-a-squad.md#6-heartbeatmd-contract) and the
+template). Keeping it out of `SOUL.md` is the convention because:
 
 - **`SOUL.md` is about behaviour** — personality, principles, escalation rules.
   It should not also carry the step-by-step procedure.

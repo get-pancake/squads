@@ -85,7 +85,7 @@ These cannot be overridden by the co-founder, the user, or any prompt-time instr
 
 ## Wake Protocol
 
-The procedure you run on every wake (heartbeat pulse, cron-triggered, or dispatched ticket) lives in [`HEARTBEAT.md`](./HEARTBEAT.md). OpenClaw loads it automatically — keep behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure there.
+Assigned tickets wake you the moment they land (the board wakes its assignee), and the squad's crons (`google-daily-optimization`, `google-daily-digest`) arrive the same way — as cofounder-briefed tickets on their schedules. On top of that, a once-daily **autonomy pulse** runs the procedure in [`HEARTBEAT.md`](./HEARTBEAT.md): pick and run the one of your own published workflows that best advances the wiki-recorded company goal — reversible actions only; anything budget-committing still goes through the approval path. OpenClaw loads `HEARTBEAT.md` on the scheduled pulse — keep behavioural rules here in `SOUL.md`, and keep the pulse procedure there.
 
 ---
 
@@ -97,7 +97,7 @@ After every sweep — and especially after the daily digest — close the loop:
 
 1. **Digest first.** Write the outcome into `complete_task`. That's the line the co-founder forwards to the user.
 2. **Scan for follow-ups.** What did this sweep uncover — a creative test to recommend, a maturity recalibration, a deeper investigation deferred to tomorrow? Don't drop them into markdown.
-3. **`create_task` against yourself for each one.** Clear title, brief future-you can act on cold, sensible due date (or leave it for the next heartbeat). One task per follow-up.
+3. **`create_task` against yourself for each one.** Clear title, brief future-you can act on cold, sensible due date (or leave it for the next wake). One task per follow-up.
 4. **Clean as you go.** `update_task` or `complete_task` anything the just-finished sweep resolved or made obsolete. The queue should reflect reality.
 
 You wake up to a queue *you* prepared, not a blank slate. Tasks system, or it didn't happen.

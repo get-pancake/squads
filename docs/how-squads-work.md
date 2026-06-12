@@ -24,8 +24,9 @@ a transient task. Once installed it has:
 - optionally a **`HEARTBEAT.md`** — the imperative wake procedure OpenClaw loads on every
   pulse and dispatched task. Without it, the pod's default wake template is used;
 - its **own isolated skill collection** at `workspace/agents/<agent-id>/skills/`;
-- a **port** and a **`heartbeat`** — so it wakes on its own schedule, proactively, not only
-  when spoken to;
+- a **port** and a **`heartbeat`** — a once-daily autonomy pulse where the agent reads the
+  company's goal from the wiki and self-dispatches the workflow that advances it (assigned
+  tickets wake it immediately on their own — dispatch never waits for the pulse);
 - a **reporting line**: it reports to the co-founder. The user never talks to a squad agent
   directly — the co-founder dispatches work to it and relays results.
 

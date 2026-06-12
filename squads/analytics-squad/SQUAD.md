@@ -19,13 +19,13 @@ Every morning at 09:00 you get a short digest: DAU/WAU/MAU + trend, what your no
 
 - A **daily digest** at 09:00 (your timezone): DAU/WAU/MAU + WoW, north-star event volumes, top 5 engaged users, top 5 dying users
 - An **activation funnel debugger** that auto-runs when activation drops > 2pp or sits below 5%, surfacing the biggest drop-off step
-- **Mid-day anomaly alerts** — agent compares recent activity vs typical every 2h; DMs you immediately when something's off (don't wait for tomorrow)
+- **Anomaly alerts** — when a scheduled run or a dispatched question turns up activity that's off versus typical, the agent DMs you immediately (don't wait for tomorrow)
 - A **weekly Monday recap** with a 4-week trend and one written hypothesis on what to ship next
 
 Plus three opt-in add-ons you can enable later by asking the agent: **release-impact tracking** (snapshot metrics around each GitHub release), **auto-maintained PostHog cohorts** (Power Users + Dying Users kept in sync via a separate write key), and **auto-filed investigation tasks** (anomalies become tasks in your queue with HogQL pre-filled).
 
 ## How it works
 
-Analytics-agent runs on a **daily analysis cron** (09:00 in the timezone agreed at onboarding) and a **weekly recap cron** (Monday 10:00). A **2h heartbeat pulse** between crons handles dispatched questions and mid-day anomaly checks. All analysis is filed to the wiki under `wiki/Knowledge/PostHog/`; you only see the short digest. **Read-only against PostHog by default** — the cohort-write add-on is the single carve-out, opt-in, and uses a separate narrowly-scoped key.
+Analytics-agent runs on a **daily analysis cron** (09:00 in the timezone agreed at onboarding) and a **weekly recap cron** (Monday 10:00) — both land as board tickets that wake the agent the moment they're assigned, as do your dispatched questions. A **daily autonomy pulse** on top of that lets the agent pick and run one of its own workflows to advance the company goal. All analysis is filed to the wiki under `wiki/Knowledge/PostHog/`; you only see the short digest. **Read-only against PostHog by default** — the cohort-write add-on is the single carve-out, opt-in, and uses a separate narrowly-scoped key.
 
 > **Why a single agent.** Product analytics is a coordination problem, not a parallelism problem. One agent that owns the event taxonomy, the dashboard outputs, and the founder's mental model is more useful than a swarm that each touches a slice.

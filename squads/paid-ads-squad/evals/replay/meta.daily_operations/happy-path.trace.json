@@ -10,7 +10,7 @@
       "team.meta_ad_account_id": "act_998877",
       "team.flag_thresholds": "{}"
     },
-    "installed_squads": ["paid-ads-squad@1.2.0"]
+    "installed_squads": ["paid-ads-squad@1.3.0"]
   },
   "inputs": {},
   "dispatch": {

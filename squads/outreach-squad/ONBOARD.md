@@ -33,6 +33,6 @@ The user may already have this defined in the wiki. Check `wiki/Company/COMPANY.
 - `create_task({ assigned_to: "outreach-agent", priority: "today", title: "Seed the pipeline — <ICP>", context: "Run the outreach.run_campaign workflow against the onboarded ICP: source the first 4 leads (signal-first, ICP-search fallback), append them to the Active leads ledger, send Touch 1, and file the seed digest as a routine ticket. Report the headline (leads sourced, touches sent) back on this ticket.", notify_channel: <your Slack channel id>, notify_session_key: <your sessionKey> })`
 - Then `sessions_spawn outreach-agent` on it and `update_task_status(id, "in_progress")`.
 
-From then on: the `daily-outbound-loop` cron runs at 08:00 LA daily, the `reply-sweep` cron runs every 2h (excluding 08:00) to keep reply latency under 2h, and the 2h heartbeat pulse handles mission-deepening between cron runs.
+From then on: dispatch is event-driven (the board wakes the agent when a ticket lands), the `daily-outbound-loop` cron runs at 08:00 LA daily, the `reply-sweep` cron runs every 2h (excluding 08:00) and carries the reply-latency SLA, the `weekly-report` cron runs Sunday — and a once-a-day autonomy pulse lets the agent self-dispatch the own-workflow run that best advances the wiki-recorded company goal.
 
 Close by telling the user the agent is already working, the first batch of leads + drafted messages is underway, and everything from here lands on the board for you to relay — they never talk to the agent directly.

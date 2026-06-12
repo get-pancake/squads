@@ -2,6 +2,10 @@
   "id": "example-agent",
   "description": "TODO: one-line description of this agent's single, focused role.",
   "model": "sonnet",
-  "heartbeat": { "every": "24h" },
-  "skills": ["agents/example-agent/skills/example-agent-skill.md"]
+  "heartbeat": {
+    "every": "24h"
+  },
+  "skills": [
+    "agents/example-agent/skills/example-agent-skill.md"
+  ]
 }

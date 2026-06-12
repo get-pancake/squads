@@ -2,7 +2,7 @@
   "id": "triage-agent",
   "description": "GitHub issue triage specialist — classifies issues by P0–P3 criticality, labels them, sweeps the backlog daily, and reports issue health weekly.",
   "model": "sonnet",
-  "heartbeat": { "every": "2h" },
+  "heartbeat": { "every": "24h" },
   "skills": [
     "agents/triage-agent/skills/triage-playbook.md",
     "agents/triage-agent/skills/github-labeling.md"

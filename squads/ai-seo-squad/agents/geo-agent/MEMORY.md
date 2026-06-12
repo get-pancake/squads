@@ -18,7 +18,8 @@
 → ai-seo-squad
 → My skills: geo-llmseo-playbook, advanced-seo, blog-writing-guide
 → My workflows: `seo.audit_citations`, `seo.write_article`, `seo.ship_technical_fix`, `seo.weekly_report`
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Wakes are event-driven: the board wakes me when a ticket lands (dispatched or cron-briefed)
+→ Daily autonomy pulse: HEARTBEAT.md (24h heartbeat — pick my own goal-advancing workflow run)
 
 ## Target
 → Domain: (set at onboarding)

@@ -79,12 +79,16 @@ After install, the co-founder runs the onboarding script for whichever platform(
 collecting credentials via the vault, connecting identities, walking the account-foundations
 interview, and dispatching a baseline audit so you see real work while you're still there.
 
-From then on each agent runs on its own crons (Google: optimization + digest; Meta: operations
-+ digest + weekly review) and on ad-hoc tickets the co-founder dispatches by matching your
-intent to one of the squad's **published workflows** (`google.optimize_account`,
+From then on each agent wakes the moment a ticket is assigned to it: the crons (Google:
+optimization + digest; Meta: operations + digest + weekly review) file cofounder-briefed
+tickets on their schedules, and ad-hoc work arrives as tickets the co-founder dispatches by
+matching your intent to one of the squad's **published workflows** (`google.optimize_account`,
 `google.root_cause`, `google.scale_budget`, `meta.daily_operations`, `meta.weekly_review`,
-`meta.investigate`, and the two digests). Every cron routes its result **through the board** as
-a `routine`/`digest` ticket rather than paging you — only genuine asks (a budget approval, a
-blocker) surface, and the co-founder's daily report rolls up the rest. The agents talk to the
+`meta.investigate`, and the two digests). On top of that, a **daily autonomy pulse** lets each
+agent pick and run one of its own workflows to advance the company goal recorded on the wiki —
+reversible actions only; anything budget-committing still goes through the approval path. Every
+cron routes its result **through the board** as a `routine`/`digest` ticket rather than paging
+you — only genuine asks (a budget approval, a blocker) surface, and the co-founder's daily
+report rolls up the rest. The agents talk to the
 ad platforms through the Google Ads API credentials and a self-hosted Meta MCP; your tokens
 never leave your pod.

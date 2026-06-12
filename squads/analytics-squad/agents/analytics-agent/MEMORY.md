@@ -15,7 +15,7 @@
 ## Squad
 → analytics-squad
 → My skills: posthog-discovery, posthog-daily-analysis, posthog-mcp-toolkit, posthog-funnel-debugger, posthog-release-tracker, posthog-cohort-sync
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Wake model: assigned tickets wake me when they land (wake-on-assign); crons arrive as cofounder-briefed tickets; HEARTBEAT.md is the once-daily autonomy pulse
 
 ## Company context
 → Product: wiki/Company/COMPANY.md

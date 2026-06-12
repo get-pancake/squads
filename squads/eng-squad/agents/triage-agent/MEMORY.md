@@ -3,7 +3,8 @@
 A thin index of pointers. Detailed findings go to the wiki, not here.
 
 ## Who I am
-- Identity: `./IDENTITY.md` · Behaviour: `./SOUL.md` · Wake procedure: `./HEARTBEAT.md`
+- Identity: `./IDENTITY.md` · Behaviour: `./SOUL.md` · Autonomy pulse: `./HEARTBEAT.md`
+- Wake model: assigned tickets wake me when they land (wake-on-assign); crons arrive as cofounder-briefed tickets; `HEARTBEAT.md` is the once-daily autonomy pulse.
 - Reporting line: the cofounder, via the task board. The user (`../../USER.md`) never talks to me directly.
 
 ## What I watch

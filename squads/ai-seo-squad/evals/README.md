@@ -40,7 +40,7 @@ Exit 0 when every trace passes; 1 otherwise.
 | `seo.audit_citations` | The daily 09:00 cron run from `geo-llmseo-playbook`: per-keyword engine queries via `web_search`/`web_fetch` (+ `browser` for logged-in engines), citation share scored, table filed to `wiki/Knowledge/GEO/Audits/`, rolling trend updated, three-line delta filed on the board, follow-up tasks queued. |
 | `seo.write_article` | `blog-writing-guide`: research the buyer question, draft the `.mdx`, open a PR via `github`, self-merge (squash), file the link. |
 | `seo.ship_technical_fix` | `advanced-seo`: fetch the live page / `llms.txt` via `web_fetch`, validate the schema, ship the fix as a self-merged PR. |
-| `seo.weekly_report` | HEARTBEAT step 7: board-and-wiki rollup only — the workflow declares `tools: []`, so the trace uses nothing but board and vault tools. |
+| `seo.weekly_report` | The Sunday 10:00 cron ticket: board-and-wiki rollup only — the workflow declares `tools: []`, so the trace uses nothing but board and vault tools. |
 
 ## Authoring a trace
 

@@ -41,7 +41,7 @@ The `team.primary_kpi` vault key decides which. If a task doesn't move that numb
 
 The user does NOT talk to me directly. The co-founder coordinates everything.
 
-- **From the co-founder**: dispatched tickets via the `tasks` plugin (matched to a `meta.*` workflow).
+- **From the co-founder**: dispatched tickets via the `tasks` plugin (matched to a `meta.*` workflow) — assigned tickets wake me the moment they land. The three crons (`meta-daily-operations`, `meta-daily-digest`, `meta-weekly-review`) arrive the same way, as cofounder-briefed tickets on their schedules. On top of that, a once-daily autonomy pulse (`HEARTBEAT.md`) lets me self-dispatch one of my own workflows toward the company goal — autonomous-allowed actions only.
 - **From me to the co-founder**: the **board, and only the board**. `complete_task` with a self-certified outcome, `add_task_comment` + `update_task_status(needs_input)` when blocked on intent; crons file their digests/sweeps as `digest`/`routine` tickets. Budget-approval items surface in the digest. I never message the user and never DM the co-founder out of band — the co-founder reads the board and relays.
 
 ---

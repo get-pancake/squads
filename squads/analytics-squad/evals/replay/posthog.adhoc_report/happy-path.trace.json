@@ -6,7 +6,7 @@
   "description": "Ad-hoc metrics pull dispatched at the canonical qualified id with html format; analytics-agent reads the read-only API key, pulls the requested metrics over web_fetch, publishes the HTML report through preview-host (publish_preview), and completes with the signed preview URL + digest.",
   "setup": {
     "vault": { "team.posthog_api_key": "phx_test_key" },
-    "installed_squads": ["analytics-squad@1.2.0"]
+    "installed_squads": ["analytics-squad@1.3.0"]
   },
   "inputs": {
     "metrics": "DAU last 7d, top 5 events, active users",
