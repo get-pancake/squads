@@ -1,6 +1,6 @@
 {
   "name": "product-squad",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Product management & discovery: triages Notion product ideas into researched PRDs (build/reject verdicts) and harvests daily user feedback from your configured sources into a Notion feedback DB.",
   "author": "pancake-official",
   "license": "MIT",
@@ -14,8 +14,15 @@
       "summary": "Sweep the Notion ideas DB for Status=New entries; research each (feasibility, market, competition), decide build vs reject, write a full PRD sub-page, and update the entry's status and notes.",
       "outcome": "Every Status=New idea is moved to Todo or Rejected with a complete PRD filed as a Notion sub-page and a verdict note on the entry; a per-run digest lands on the board.",
       "agent": "pm-agent",
-      "secrets": ["team.notion"],
-      "tools": ["notion", "vault", "web_search", "web_fetch"]
+      "secrets": [
+        "team.notion"
+      ],
+      "tools": [
+        "notion",
+        "vault",
+        "web_search",
+        "web_fetch"
+      ]
     },
     {
       "id": "product.write_prd",
@@ -35,16 +42,30 @@
       },
       "outcome": "A complete PRD (problem, solution, scope, user stories, technical approach, steps, open questions, success metrics, research sources) filed as a Notion sub-page, with a build/reject verdict summarized on the board.",
       "agent": "pm-agent",
-      "secrets": ["team.notion"],
-      "tools": ["notion", "vault", "web_search", "web_fetch"]
+      "secrets": [
+        "team.notion"
+      ],
+      "tools": [
+        "notion",
+        "vault",
+        "web_search",
+        "web_fetch"
+      ]
     },
     {
       "id": "product.harvest_feedback",
       "summary": "Run the daily feedback harvest: read the configured sources from MEMORY, collect everything new since the last run, dedupe, file into the Notion feedback DB, and flag recurring themes.",
       "outcome": "All new feedback since the last checkpoint is deduplicated and filed in the Notion feedback DB with priority labels; recurring themes and any P0s are flagged in the run digest; the checkpoint is advanced.",
       "agent": "feedback-agent",
-      "secrets": ["team.notion"],
-      "tools": ["notion", "vault", "web_fetch", "agentmail"]
+      "secrets": [
+        "team.notion"
+      ],
+      "tools": [
+        "notion",
+        "vault",
+        "web_fetch",
+        "agentmail"
+      ]
     }
   ],
   "required_vault_secrets": [

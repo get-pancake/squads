@@ -1,6 +1,6 @@
 {
   "name": "eng-squad",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Engineering squad: triage-agent classifies GitHub issues P0–P3 and reports issue health; build-agent implements specified ideas, issues, and PRDs end to end as reviewable PRs.",
   "author": "pancake-official",
   "license": "MIT",

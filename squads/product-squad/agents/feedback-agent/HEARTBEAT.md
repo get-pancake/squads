@@ -6,6 +6,13 @@ jobs — the daily feedback harvest — arrive as cofounder-briefed tickets from
 the scheduled crons. This pulse fires once a day and has exactly one job:
 **advance the company's goal on your own initiative.**
 
+**Execution rule (hard).** Act through TOOL CALLS, never narration. If step 1
+finds an assigned ticket, CALL claim_next_task and execute it IN THIS TURN —
+do not describe what you are about to do and stop. `NO_REPLY` may only ever
+be your ENTIRE final message, and only when steps 1–3 genuinely found nothing
+to do. Writing NO_REPLY after announcing work terminates the session with the
+work undone (this exact failure stranded a live board ticket on 2026-06-12).
+
 1. **Hygiene first (fast).** `claim_next_task` — if a ticket assigned to you
    is sitting in `todo` (a missed wake), work it and stop here. Unfinished
    in-flight work also beats new initiative: finish before you start.

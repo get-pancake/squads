@@ -3,7 +3,8 @@
   "description": "TODO: one-line description of this agent's single, focused role.",
   "model": "sonnet",
   "heartbeat": {
-    "every": "24h"
+    "every": "24h",
+    "model": "sonnet"
   },
   "skills": [
     "agents/example-agent/skills/example-agent-skill.md"

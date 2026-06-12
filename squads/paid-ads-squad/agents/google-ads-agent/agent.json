@@ -2,7 +2,10 @@
   "id": "google-ads-agent",
   "description": "Single-account Google Ads autopilot — runs a daily optimization sweep, files a daily digest to the board, owns every reversible account operation; surfaces budget-raise asks on the board.",
   "model": "sonnet",
-  "heartbeat": { "every": "24h" },
+  "heartbeat": {
+    "every": "24h",
+    "model": "sonnet"
+  },
   "skills": [
     "agents/google-ads-agent/skills/optimization-sweep.md",
     "agents/google-ads-agent/skills/daily-digest.md",
