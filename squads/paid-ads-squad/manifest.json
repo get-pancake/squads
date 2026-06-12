@@ -1,6 +1,6 @@
 {
   "name": "paid-ads-squad",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Paid-advertising squad: google-ads-agent and meta-ads-agent each run one ad account end to end — daily optimization, diagnostics, digests, and reviews — filed to the board.",
   "author": "pancake-official",
   "license": "MIT",

@@ -3,12 +3,12 @@
   "squad": "ai-seo-squad",
   "workflow": "seo.weekly_report",
   "case": "happy-path",
-  "description": "Sunday-pulse rollup per HEARTBEAT step 7. The workflow declares no inputs and tools: [] — the run is board + vault + wiki only. geo-agent claims, reads the keyword list from the vault, replays the week's audit tickets off the board (list_tasks / get_task / list_events), rolls the trend from wiki/Knowledge/GEO/citation-share.md into a weekly digest, files it to wiki, posts the summary as a board comment, queues next week's first move, and completes with result + digest. Also logs one learning under Weekly Learnings in MEMORY.md.",
+  "description": "Sunday 10:00 cron rollup (crons/jobs.json weekly-report). The workflow declares no inputs and tools: [] — the run is board + vault + wiki only. geo-agent claims, reads the keyword list from the vault, replays the week's audit tickets off the board (list_tasks / get_task / list_events), rolls the trend from wiki/Knowledge/GEO/citation-share.md into a weekly digest, files it to wiki, posts the summary as a board comment, queues next week's first move, and completes with result + digest. Also logs one learning under Weekly Learnings in MEMORY.md.",
   "setup": {
     "vault": {
       "team.target_keywords": "ai agent platform, autonomous sub-agents, agent squads, proactive ai assistant, ai cofounder"
     },
-    "installed_squads": ["ai-seo-squad@1.4.0"]
+    "installed_squads": ["ai-seo-squad@1.5.0"]
   },
   "inputs": {},
   "dispatch": {

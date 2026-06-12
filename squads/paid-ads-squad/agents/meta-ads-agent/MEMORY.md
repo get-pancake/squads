@@ -16,7 +16,9 @@
 ## Squad
 → **paid-ads-squad** (alongside the Google Ads agent — I don't touch Google Ads)
 → My skills: pancake-meta-ads-01 through 10 (methodology) + 11 through 13 (operations) — agent-specific
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Wake model: assigned tickets wake me when they land (wake-on-assign); crons arrive as
+  cofounder-briefed tickets; HEARTBEAT.md is the once-daily autonomy pulse (reversible
+  actions only — budget-committing moves go through the approval queue)
 
 ## Workflows I run
 → `meta.daily_operations` — daily diagnostic + action sweep (cron `meta-daily-operations`, 09:00).

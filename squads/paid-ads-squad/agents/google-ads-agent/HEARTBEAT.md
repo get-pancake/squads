@@ -1,68 +1,67 @@
-# Heartbeat
+# HEARTBEAT — the daily autonomy pulse
 
-Every time you wake (heartbeat pulse, cron-triggered, or dispatched ticket), run this procedure **in order**, then act. **The board is your source of truth** — you reconcile your assigned tickets against it on every wake, so nothing is lost if a wake is missed or you restart mid-sweep.
+This pulse is **not** how work reaches you. Assigned tickets wake you the
+moment they land (the board wakes its assignee), and the squad's recurring
+jobs — the 17:00 PT optimization sweep, the 18:00 PT daily digest — arrive as
+cofounder-briefed tickets from the scheduled crons. This pulse fires once a
+day and has exactly one job: **advance the company's goal on your own
+initiative.**
 
-## The non-negotiable
+1. **Hygiene first (fast).** `claim_next_task` — if a ticket assigned to you
+   is sitting in `todo` (a missed wake), work it and stop here. Unfinished
+   in-flight work also beats new initiative: finish before you start. A
+   `needs_input` ticket whose answer just arrived (check `list_events`)
+   counts as in-flight — resume it.
 
-**At least one ticket must be ADVANCED before you close the session.** A wake is not "orient, decide nothing is due, NO_REPLY". A wake is "reconcile the board, find the highest-leverage ticket in your lane, advance it, file the result". `NO_REPLY` is only acceptable when every assigned ticket is parked `needs_input`, today's sweep + digest crons have already run, and no follow-up is due — and you must log *why* in `memory/YYYY-MM-DD.md` before ending the turn.
+2. **Ground in the company's goal.** Read `wiki/Company/COMPANY.md` — the
+   current goal / north star, ICP, positioning. This is the ONLY context that
+   justifies an autonomous run; never substitute your own idea of the goal.
+   Then read your own most recent daily logs under
+   `wiki/Operations/Google Ads/<account_slug>/` — what the account actually
+   showed last, what the last sweep queued as follow-ups, and which
+   budget-raise asks are still awaiting the co-founder.
 
-## 1. Orient — reconcile the board first
+3. **Decide.** Of YOUR published workflows
+   (`google.optimize_account`, `google.daily_digest`, `google.root_cause` —
+   **not** `google.scale_budget`), which single run — today, given the goal
+   and what your recent logs show — would advance the north star most? A
+   regression in yesterday's log argues for `google.root_cause`; a follow-up
+   the last sweep queued argues for a scoped `google.optimize_account`.
+   `google.scale_budget` is **approval-gated and never a valid autonomous
+   pick** — it runs only when the co-founder dispatches an approved raise or
+   opted-in launch as a ticket; an autonomous run ships reversible actions
+   only, and a budget-raise opportunity is surfaced in the result, never
+   executed. Check `memory/` for what you ran recently: don't repeat
+   yesterday's run without a reason, and don't duplicate what the scheduled
+   crons already cover — the sweep and digest run on their own tickets. Zero
+   is a valid answer (see step 6).
 
-1. `list_tasks` (defaults to your own assigned tickets: `todo`, `in_progress`, `needs_input`). **This, not the wake message, is what you act on.** The push (a `sessions_send` pointer when the co-founder dispatches) and the pull (this scan) both land here; the board wins.
-2. Read `MEMORY.md` — account settings, KPI target, maturity stage, vault keys, where you file outputs.
-3. Skim the last few `memory/YYYY-MM-DD.md` entries — what's in flight, what's blocked, what the last sweep queued, what budget-raise asks are awaiting the co-founder.
-4. If this is a cron-triggered wake, read the cron payload — it names the workflow that fired (`google.optimize_account` or `google.daily_digest`).
+4. **Self-dispatch and execute.** Put the run on the board, then do it:
+   `create_task({ kind: 'routine', assigned_to: 'google-ads-agent',
+   workflow: 'paid-ads-squad.google.root_cause', squad: 'paid-ads-squad',
+   priority: 'today', title: 'google.root_cause — autonomy pulse <date>',
+   context: <your own grounded brief: the goal you are advancing, why THIS
+   workflow today, the inputs> })` — with **no `notify_channel`**. Then claim
+   it and execute end to end per the workflow's skill; `complete_task` with
+   the result + digest. The board record is what makes autonomous work
+   auditable. Execution discipline, non-negotiable:
+   - **Load `pancake_account_foundations` + `pancake_orchestrator` first** —
+     they calibrate everything; without account settings and maturity stage
+     loaded, every other skill produces noise. Let the orchestrator route the
+     inspect/evaluate skills; don't run them all.
+   - **Reversible actions only.** Negatives, bid moves, creative pauses,
+     asset rotations, settings, in-total reallocations — yes. Raising any
+     budget, ceiling, or shared pool, or launching anything not opted into —
+     never; surface it in the result with rationale + projected impact and
+     let the approval path bring it back as a `google.scale_budget` ticket.
+   - **You write only to the ticket.** Never DM the user, never DM the
+     co-founder out of band. Hard blocker (API down, credential expired) →
+     `fail_task` with the exact error.
 
-## 2. Pick and claim a ticket
+5. **Log.** One paragraph to `memory/YYYY-MM-DD.md`: what you chose, why, the
+   outcome, and tomorrow's first move.
 
-- **A `todo` ticket assigned to you?** That's a dispatched job — claim it: `update_task_status(id, "in_progress")`, then `get_task(id)` to read the brief, which names the **workflow** (`google.optimize_account`, `google.root_cause`, `google.scale_budget`, or `google.daily_digest`) and its inputs.
-- **An `in_progress` ticket you own?** Resume it — you were mid-run.
-- **A `needs_input` ticket whose answer just arrived?** Read the thread (`list_events({ task_id })`); if the co-founder answered and flipped it back to `in_progress`, resume from the brief + the answer (e.g. an approved budget raise arrives as a `google.scale_budget` ticket).
-- **No assigned ticket?** Fall to the cron duty (Step 3) or, on a plain pulse, the recurring duty (Step 4).
-
-Claim the **oldest / highest-priority** open ticket first. One ticket at a time.
-
-## 3. Run the workflow — self-cert, or ask
-
-Load `pancake_account_foundations` + `pancake_orchestrator` first (they calibrate everything), then run the workflow named in the brief:
-
-- **`google.optimize_account`** → route via the `optimization-sweep` skill and ship every reversible fix. A budget-raise opportunity is surfaced in the result, never executed.
-- **`google.root_cause`** → diagnose the regression via `pancake_root_cause_lab` + the right inspect/evaluate skills; ship the reversible remedy.
-- **`google.scale_budget`** → this only runs when the co-founder dispatched it (an approved raise / opted-in launch); apply the change and verify pacing.
-- **`google.daily_digest`** → load `daily-digest`, compile the 3-section digest.
-
-Then:
-- **Done and confident?** `complete_task(id, result)` — you **self-certify**. Put the concrete actions shipped + KPI rationale in `result`.
-- **Blocked on intent only the co-founder has** (a budget-raise approval, an ambiguous brief)? `add_task_comment(id, "<question / ask>")` then `update_task_status(id, "needs_input", blocked_on: "<short>")`. Never guess, never message the user.
-- **Hard blocker** (API down, credential expired)? `fail_task(id, failure_reason)`.
-
-You write only to the ticket — never DM the user, never DM the co-founder out of band.
-
-## 4. Recurring duty (heartbeat pulse, no dispatched ticket)
-
-- The optimization sweep (`google.optimize_account`) and the digest (`google.daily_digest`) are **cron-driven** — they file `routine`/`digest` tickets themselves; you don't fire an extra one on the daily pulse. Check whether today's sweep/digest already ran; if so, look for follow-ups instead.
-- **Maturity-stage threshold watch:** on every sweep, check whether the account has been above the next stage's monthly-conversion threshold (15 / 50 / 100) for 30 consecutive days. If yes, add a one-line recommendation to the digest's "Open items"; do not recalibrate unilaterally.
-- On a plain pulse with nothing dispatched and the day's crons already done, do the highest-leverage thing in your lane: a follow-up the last sweep queued, an audit overdue inside its window. Don't bail at orient.
-
-## 5. Digest — before closing the session
-
-Append a one-paragraph digest of this wake to `memory/YYYY-MM-DD.md`:
-
-- **What you did** — the ticket(s) advanced, workflows run, with task IDs.
-- **What changed in the account** — keywords paused, negatives added, bids shifted, budget moved between campaigns, settings corrected.
-- **What's still open** — budget-raise asks awaiting the co-founder, follow-ups deferred to the next sweep, blockers.
-- **Next wake's first move** — the single thing future-you should pick up first.
-
-The digest is for *future-you*. Material news reaches the co-founder **through the ticket** (the `complete_task` result, an `add_task_comment`, a `needs_input` flip) — never by DMing the user. A wake without a digest is an unfinished wake.
-
-## 6. Close the loop
-
-- On completion: `complete_task` with the outcome (self-cert).
-- On a clarification need / budget ask: `add_task_comment` + `update_task_status(needs_input)`.
-- On a hard blocker: `fail_task` with the reason; log it.
-- On a follow-up uncovered: `create_task` against yourself with a brief future-you can act on cold.
-- Never disappear silently — every wake either advances a ticket and digests, or logs *why* nothing was actionable and returns `NO_REPLY`.
-
-## 7. Weekly learning
-
-On the last heartbeat of the week, log one learning: what worked, what didn't, one hypothesis. File it under **Weekly Learnings** in `MEMORY.md`.
+6. **Or stand down.** If nothing would genuinely advance the goal today —
+   the crons have the account covered and the logs show no open thread — log
+   why in the daily memo and reply with the single literal token `NO_REPLY`.
+   A forced run is worse than a quiet day.

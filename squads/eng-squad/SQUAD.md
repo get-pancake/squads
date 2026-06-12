@@ -30,10 +30,13 @@ so the critical stuff never sits unseen in a noisy backlog.
 
 ## How it works
 
-Triage runs as a persistent agent on a **2h heartbeat**, reconciling its assigned tickets off
-the company task board. Two crons drive the autonomy: a **daily sweep** (09:00 America/Los_Angeles)
+Triage runs as a persistent agent woken **event-driven**: the board wakes it the moment a ticket
+is assigned. Two crons drive the recurring work — a **daily sweep** (09:00 America/Los_Angeles)
 that triages new issues and files a quiet `routine` record, and a **weekly report** (Monday 10:00)
-that files a `digest`. Ad-hoc work — "triage #412 for me" — comes in as a board ticket the
-cofounder assigns; Triage classifies it, self-certifies the call, and reports back on the ticket.
+that files a `digest` — both landing as board tickets. A **daily autonomy pulse** on top of that
+lets Triage pick and run one of its own workflows when it would advance the company goal (an extra
+sweep before a launch, an ad-hoc triage on something hot). Ad-hoc work — "triage #412 for me" —
+comes in as a board ticket the cofounder assigns; Triage classifies it, self-certifies the call,
+and reports back on the ticket.
 When a severity is genuinely ambiguous, it asks the cofounder rather than guessing. Triage never
 messages you directly — the cofounder relays anything worth your attention.

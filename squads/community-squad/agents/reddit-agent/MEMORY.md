@@ -16,7 +16,7 @@
 → **community-squad** (I own the Reddit channel)
 → My skills: reddit-playbook, reddit-account
 → My workflows: `reddit.scan_and_draft`, `reddit.monitor_keywords`, `reddit.account_health`, `reddit.post`
-→ Wake procedure: HEARTBEAT.md (loaded on every wake)
+→ Daily autonomy pulse: HEARTBEAT.md (loaded on the once-a-day scheduled wake; assigned tickets wake me the moment they land)
 
 ## Target Subreddits
 → (set at onboarding)

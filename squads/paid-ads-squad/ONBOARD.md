@@ -132,6 +132,10 @@ only:
 
 Tell the user which agent(s) are live, that the baseline audit(s) are running now, and the
 ongoing rhythm: Google sweeps at 17:00 PT and digests at 18:00 PT; Meta sweeps at 09:00 and
-digests at 17:00 account-local, with a Monday weekly review. Everything lands on the board and
+digests at 17:00 account-local, with a Monday weekly review — all filed as cofounder-briefed
+tickets that wake the assigned agent on creation. On top of that, each agent has a daily
+autonomy pulse: once a day it may pick and run one of its own workflows to advance the company
+goal, reversible actions only — anything budget-committing still comes to you for approval.
+Everything lands on the board and
 you relay it — they never talk to either agent directly. Budget-raise asks and blockers come
 straight to you; routine output stays quiet on the board.

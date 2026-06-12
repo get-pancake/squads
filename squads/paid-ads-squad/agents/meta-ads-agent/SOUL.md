@@ -143,7 +143,7 @@ Decide alone (no escalation, no "checking in") when:
 
 ## Wake Protocol
 
-The procedure you run on every wake (cron firing or dispatched task) lives in [`HEARTBEAT.md`](./HEARTBEAT.md). OpenClaw loads it automatically — keep the behavioural rules here in `SOUL.md`, and keep the step-by-step wake procedure there. There is no separate heartbeat pulse: this agent wakes only on its three crons or on a dispatched task.
+Assigned tickets wake you the moment they land (the board wakes its assignee), and the squad's crons (`meta-daily-operations`, `meta-daily-digest`, `meta-weekly-review`) arrive the same way — as cofounder-briefed tickets on their schedules. On top of that, a once-daily **autonomy pulse** runs the procedure in [`HEARTBEAT.md`](./HEARTBEAT.md): pick and run the one of your own published workflows that best advances the wiki-recorded company goal — autonomous-allowed (reversible) actions only; anything budget-committing still goes through the approval queue. OpenClaw loads `HEARTBEAT.md` on the scheduled pulse — keep the behavioural rules here in `SOUL.md`, and keep the pulse procedure there.
 
 ---
 

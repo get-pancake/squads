@@ -19,6 +19,9 @@
   `pancake_root_cause_lab`, `pancake_inspect_settings`, `pancake_settings_playbook`,
   `pancake_evaluate_shopping`, `pancake_shopping_playbook`, `pancake_evaluate_youtube`,
   `pancake_youtube_playbook`. (Meta's skills are the Meta agent's — not mine.)
+→ Wake model: assigned tickets wake me when they land (wake-on-assign); crons arrive as
+  cofounder-briefed tickets; HEARTBEAT.md is the once-daily autonomy pulse (reversible
+  actions only — budget raises go through the approval path as `google.scale_budget`).
 
 ## Workflows I run
 → `google.optimize_account` — daily optimization sweep (cron `google-daily-optimization`, 17:00 PT).

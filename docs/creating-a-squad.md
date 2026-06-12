@@ -459,36 +459,43 @@ The body, in the imperative addressed to the co-founder:
 
 ## 6. `HEARTBEAT.md` contract
 
-OpenClaw loads `agents/<id>/HEARTBEAT.md` on **every wake** — both heartbeat pulses and
-dispatched tasks. This is the right home for the procedure the agent runs each tick;
-keeping it out of `SOUL.md` (which is for behavioural rules) and out of `MEMORY.md`
-(which is an index of pointers) lets you iterate on the procedure without touching the
-agent's personality.
+OpenClaw loads `agents/<id>/HEARTBEAT.md` on the agent's **scheduled heartbeat** —
+which, since wake-on-assign, fires **once a day** (`agent.json` →
+`heartbeat.every: "24h"`) and is *not* how work reaches the agent:
 
-Write it in the imperative, addressed to the agent. **The board is the source of truth** — the
-wake reconciles the agent's assigned tickets against it, so a missed wake or a mid-ticket
-restart self-heals on the next pulse (the same reconcile-loop discipline pancake-controller uses
-against the cluster). A solid structure:
+- **Assigned tickets wake the assignee the moment they land** — the tasks plugin
+  fires the agent's heartbeat immediately on `create_task` / `answer_question`
+  (deterministic, coalesced; no model decides "who should run").
+- **Recurring jobs arrive as cofounder-briefed cron tickets** (§3.7) on their
+  schedule.
+- **The daily pulse has exactly one job: autonomy.** The agent reads the
+  company's current goal / north star from the wiki and decides which of its
+  own published workflows — run today, on its own initiative — would advance
+  it. Then it self-dispatches that run as a board ticket and executes it.
 
-1. **The non-negotiable** — at least one ticket must be **advanced** before the session
-   closes. A wake is "reconcile the board, find the highest-leverage ticket in the lane, advance
-   it, file the result" — not "orient and `NO_REPLY`". `NO_REPLY` is only acceptable when nothing
-   is actionable, and the reason must be logged to `memory/YYYY-MM-DD.md` first.
-2. **Orient — reconcile the board first.** `list_tasks` for your *own* open tickets (`todo`,
-   `in_progress`, `needs_input`) — **this**, not the wake message, is what you act on. Then read
-   `MEMORY.md` and skim recent daily logs.
-3. **Pick and claim a ticket.** Claim a `todo` (`update_task_status(in_progress)` → `get_task`
-   for the brief, which names the **workflow** + inputs), resume an `in_progress`, or resume a
-   `needs_input` whose answer arrived. No assigned ticket → fall to the recurring duty.
-4. **Run the workflow — self-cert or ask.** Load the matching skill, run it end to end, then
-   `complete_task(result)` (self-certify), or `add_task_comment` + `update_task_status(needs_input)`
-   when blocked on intent, or `fail_task` on a hard blocker. Never guess, never message the user.
-5. **Recurring duty** — heartbeat-pulse work when no ticket is assigned; most recurring duty is
-   cron-driven and files a `routine`/`digest` ticket (§3.7).
-6. **Digest** — before closing the session, append a one-paragraph digest to
-   `memory/YYYY-MM-DD.md`: *what you did, what changed, what's still open, and the single
-   first move for the next wake.* Material news reaches the co-founder *through the ticket*.
-7. **Close the loop** — `complete_task` / `add_task_comment` + `needs_input` / `fail_task`.
+The canonical structure (mirror [`template/agents/example-agent/HEARTBEAT.md`](../template/agents/example-agent/HEARTBEAT.md)):
+
+1. **Hygiene first** — `claim_next_task` to sweep any ticket a wake missed;
+   finish in-flight work before new initiative.
+2. **Ground in the company's goal** — read `wiki/Company/COMPANY.md` (goal /
+   north star, ICP, positioning) plus the agent's own recent
+   `wiki/Knowledge/<domain>/` reports. The wiki-recorded goal is the ONLY
+   context that justifies an autonomous run.
+3. **Decide** — which single one of the squad's published workflows advances
+   that goal most today? Check `memory/` for recent runs; don't duplicate what
+   the crons already cover. Zero is a valid answer.
+4. **Self-dispatch and execute** — `create_task` with the qualified
+   `workflow` stamp, `kind: 'routine'`, **no `notify_channel`**, a
+   self-written grounded brief — then claim and run it end to end per the
+   workflow's skill, `complete_task` with result + digest. The board record is
+   what keeps autonomous work auditable.
+5. **Log** one paragraph to `memory/YYYY-MM-DD.md`.
+6. **Or stand down** — nothing would genuinely advance the goal → log why and
+   reply `NO_REPLY`. A forced run is worse than a quiet day.
+
+Keep it imperative and short; behavioural rules stay in `SOUL.md`, pointers in
+`MEMORY.md`. Fold any load-bearing operational hardening (connectivity probes,
+spend guardrails, sign-off gates) into step 4 rather than losing it.
 
 ## 7. Authoring principles
 
@@ -537,11 +544,12 @@ The contract tells you what's valid. This tells you what's good.
   to relay it. Only split when work is genuinely distinct: different cadence, different
   skills, different identities. When in doubt, one agent.
 
-- **Heartbeat first, cron only when timing matters.** A heartbeat is a state-driven
-  trigger — the agent wakes on its pulse and decides what to do. A cron is clock-driven:
-  it fires at an exact time with a hard-coded instruction. Reach for a cron only when the
-  time itself matters to someone outside the agent — an 18:00 PT end-of-day report, a
-  Monday-morning digest. Otherwise raise the heartbeat.
+- **Tickets carry the work; crons carry the schedule; the pulse carries the initiative.**
+  Dispatch is event-driven — the board wakes the assignee the moment a ticket lands, so
+  never size a heartbeat for dispatch latency. A cron is for runs where clock time matters
+  to someone outside the agent (the 18:00 digest, the Monday review) and arrives as a
+  cofounder-briefed ticket. The scheduled heartbeat is the **once-daily autonomy pulse**
+  (§6): goal-grounded self-initiative, nothing else.
 
 - **Crons stay quiet unless something changed.** A scheduled run with nothing to report
   must reply with the single literal token `NO_REPLY`. A chatty cron that posts "nothing

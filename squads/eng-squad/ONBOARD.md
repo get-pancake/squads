@@ -37,5 +37,6 @@ work while the user is here:
 ## 4. Tell the user what's live
 
 Briefly: Triage is connected to <repos>, it's running an initial sweep now, and from here it
-sweeps daily (09:00) and reports weekly (Mon 10:00). To triage a specific issue any time, they
+sweeps daily (09:00) and reports weekly (Mon 10:00) — plus a once-daily autonomy pulse where it
+may run an extra sweep or ad-hoc triage when that advances the company goal. To triage a specific issue any time, they
 just ask you ("triage issue #N in <repo>") and you'll hand it to Triage. P0s come straight to you.
