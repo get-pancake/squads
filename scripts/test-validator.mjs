@@ -600,6 +600,57 @@ const cases = [
     expect: /passes input "bogus" that workflow "test\.do_thing" does not declare/,
   },
   {
+    name: "bare cron dispatching a workflow with a required input is rejected",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: { target: { type: "string", description: "what to act on" } },
+        },
+      ];
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          { id: "daily", schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" }, workflow: "test.do_thing" },
+        ],
+      });
+    },
+    expect: /dispatches "test\.do_thing" without required input "target"/,
+  },
+  {
+    name: "bare cron is fine when the workflow input is optional or supplied",
+    mutate: (b) => {
+      b["manifest.json"].workflows = [
+        {
+          id: "test.do_thing",
+          summary: "does the thing",
+          outcome: "thing done",
+          agent: "test-agent",
+          inputs: {
+            target: { type: "string", description: "what to act on", required: false },
+            mode: { type: "string", description: "how" },
+          },
+        },
+      ];
+      b["crons/jobs.json"] = JSON.stringify({
+        version: 1,
+        jobs: [
+          {
+            id: "daily",
+            schedule: { kind: "cron", expr: "0 9 * * *", tz: "UTC" },
+            workflow: "test.do_thing",
+            inputs: { mode: "fast" },
+          },
+        ],
+      });
+    },
+    expect: null,
+    expectNoWarn: true,
+  },
+  {
     name: "legacy sessionTarget+payload cron still validates but warns to migrate",
     mutate: (b) => {
       b["crons/jobs.json"] = JSON.stringify({

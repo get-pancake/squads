@@ -648,12 +648,15 @@ async function checkTargeting(bundleDir, agentIds, manifest) {
             `cron job "${itemId}" references workflow "${job.workflow}", which is not ` +
             `declared in manifest.workflows`,
         });
-      } else if (job.inputs !== undefined) {
-        if (!isObject(job.inputs)) {
+      } else {
+        const workflow = workflowIds.get(job.workflow);
+        const supplied =
+          isObject(job.inputs) ? new Set(Object.keys(job.inputs)) : new Set();
+        if (job.inputs !== undefined && !isObject(job.inputs)) {
           errors.push({ path: relPath, message: `cron job "${itemId}" inputs must be an object` });
         } else {
-          const declared = new Set(Object.keys(workflowIds.get(job.workflow).inputs ?? {}));
-          for (const key of Object.keys(job.inputs)) {
+          const declared = new Set(Object.keys(workflow.inputs ?? {}));
+          for (const key of supplied) {
             if (!declared.has(key)) {
               errors.push({
                 path: relPath,
@@ -662,6 +665,21 @@ async function checkTargeting(bundleDir, agentIds, manifest) {
                   `"${job.workflow}" does not declare`,
               });
             }
+          }
+        }
+        // A scheduled dispatch has nobody to ask for missing inputs — every
+        // required input the workflow declares must be supplied by the cron
+        // (or the input must be marked required: false with a sensible
+        // runtime default).
+        for (const [key, spec] of Object.entries(workflow.inputs ?? {})) {
+          if (isObject(spec) && spec.required !== false && !supplied.has(key)) {
+            errors.push({
+              path: relPath,
+              message:
+                `cron job "${itemId}" dispatches "${job.workflow}" without required ` +
+                `input "${key}" — supply it in the cron's \`inputs\`, or mark the ` +
+                `workflow input \`required: false\` with a documented default`,
+            });
           }
         }
       }
