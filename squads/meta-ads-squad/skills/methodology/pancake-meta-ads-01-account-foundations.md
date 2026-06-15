@@ -7,6 +7,21 @@ description: Profile a Meta ad account — identity, capabilities, KPI targets, 
 
 Every recommendation in the rest of these files assumes you know what kind of account you are working on. This file is how you answer that question.
 
+## Marketing API access tiers
+
+Before profiling the account, know what your app's API access actually permits — this is widely misunderstood.
+
+**Development Access fully works for managing your own ad accounts** — accounts owned by the same Business that owns the app. You do **not** need App Review to operate against an ad account that belongs to you. The calls work; campaigns, ad sets, ads, and insights are all readable and writable on day one.
+
+What Development tier limits is **scale and rate**, not capability:
+
+- **Rate:** roughly 60 quota points per 300-second window (1 point per read, 3 per write).
+- **Accounts:** a small handful of ad accounts.
+
+**Standard Access (via App Review)** raises the ceiling to roughly 9,000 points per window. You need it for managing many client accounts or sustaining a heavy cron rhythm — but **not to make the calls work at all**. For a single self-owned account on a light cadence, Development tier is enough; the App Review step (3–10 business days) is a scale upgrade you can defer until rate limits actually bite.
+
+When an account hits rate-limit errors (HTTP 429 / code 17), that's the Development-tier point budget being exhausted — the fix is either thinning the cron rhythm or moving to Standard Access, not re-checking permissions.
+
 ## Account identity sheet
 
 For each Meta ad account under management, capture the following before doing any analysis. Treat this as the configuration that every other workflow reads.

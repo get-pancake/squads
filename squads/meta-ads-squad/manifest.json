@@ -1,6 +1,6 @@
 {
   "name": "meta-ads-squad",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Single-agent Meta Ads squad: daily diagnostic + action sweep, daily digest, weekly review. Holds spend flat autonomously; escalates only budget increases.",
   "author": "pancake-official",
   "license": "MIT",
