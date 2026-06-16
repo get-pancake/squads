@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "evening-queue-audit",
+      "name": "Evening Buffer queue audit — Buffer-agent",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 17 * * *", "tz": "America/Los_Angeles" },
+      "sessionTarget": "buffer-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "Run the evening queue audit. **Load the `buffer-queue-health` skill** and execute it end to end via the Buffer CLI: confirm `MEMORY → Channels` is fresh (re-run `buffer-channel-discovery` if `DISCOVERED:` is missing or > 30 days old). For every channel, run `buffer posts list --channel-id <id>` with status filtered to scheduled/pending posts in the next 7 days, count per channel, compare against `MEMORY → Cadence`. For each gap: confirm a Tone Profile exists (else regenerate via `buffer-channel-tone-extraction` first), then draft posts via `buffer-post-drafter` honouring the profile + the next-up pillar from `MEMORY → Pillars`, `--dry-run` validate each, check daily posting limits for each target channel+date (via the limits command discovered with `buffer schema`), and `buffer posts create` with `mode addToQueue` (or `recommendedTime`) and the pillar's tag ids. File the full audit to `wiki/Knowledge/Buffer/QueueAudits/YYYY-MM-DD.md` — per-channel depth table, drafts queued (with post ids), every CLI invocation verbatim. Surface a 5–8 line summary to the co-founder via `complete_task`. Write the daily digest to `memory/YYYY-MM-DD.md` before closing. If every channel is at or above cadence and no drafting is needed, file the audit and reply with the single literal token `NO_REPLY`. If the CLI is down, auth fails, or posting limits block every channel, log the reason to `memory/YYYY-MM-DD.md` and reply `NO_REPLY`."
+      },
+      "failureAlert": true,
+      "state": {}
+    },
+    {
+      "id": "weekly-buffer-output-report",
+      "name": "Weekly Buffer output report — Buffer-agent",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 9 * * 1", "tz": "America/Los_Angeles" },
+      "sessionTarget": "buffer-agent",
+      "payload": {
+        "kind": "systemEvent",
+        "text": "Run the weekly output report. **Load the `buffer-weekly-audit` skill** and execute it end to end via the Buffer CLI. Pull the trailing 7 days of posts per channel via `buffer posts list --channel-id <id> --fields id,status,dueAt,sentAt,text,metadata,tags` (no analytics — Buffer's API has none; do NOT invent engagement numbers). Compute: volume per channel, volume per pillar (group by tags against `MEMORY → Pillars`), failed posts (`status: error`) with their reason, queue headroom (org limits vs. currently-scheduled), tone-drift check (compare the last 3 sent posts on each channel to that channel's Tone Profile — flag DO/DON'T violations and proposed regenerations), 4-week volume trend per channel. Write one **written observation** on what to try this week given pillar mix + tone drift + recurring failures. Refresh stale Tone Profiles (> 7 days) at the end of the run. File to `wiki/Knowledge/Buffer/Reports/weekly/YYYY-WW.md` — include every CLI command used, verbatim. Capture any promising angles as Buffer Ideas via `buffer-ideas-capture`. Surface a 10–12 line summary to the co-founder via `complete_task` ending with the observation, and one explicit line confirming engagement metrics live in native analytics, not Buffer. If total posts in the trailing 7 days < 5, say so explicitly — do not pad."
+      },
+      "failureAlert": true,
+      "state": {}
+    }
+  ]
+}
