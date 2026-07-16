@@ -1,0 +1,61 @@
+{
+  "name": "landing-page",
+  "version": "0.1.0",
+  "description": "Iterates on landing page copy and design, tracks traffic sources, sets up analytics, creates lead-magnet pages, and maintains a design system.",
+  "author": "pancake-official",
+  "license": "MIT",
+  "skills": ["skills/github-pr.md"],
+  "agents": [
+    {
+      "id": "conversion-optimizer",
+      "description": "Iterates on landing page copy and messaging for optimal conversion — writes variants, A/B test briefs, and secondary lead-magnet pages.",
+      "model": "sonnet",
+      "heartbeat": "daily",
+      "skills": ["agents/conversion-optimizer/skills/copy-iteration.md"]
+    },
+    {
+      "id": "traffic-analyst",
+      "description": "Monitors traffic, analyses sources, sets up and maintains analytics tooling (Google Analytics, GTM, or user-specified tools).",
+      "model": "sonnet",
+      "heartbeat": "daily",
+      "skills": ["agents/traffic-analyst/skills/analytics-setup.md"]
+    },
+    {
+      "id": "design-system",
+      "description": "Creates and maintains the landing page design system — tokens, components, and visual consistency guidelines.",
+      "model": "sonnet",
+      "heartbeat": "daily",
+      "skills": ["agents/design-system/skills/design-system-maintenance.md"]
+    }
+  ],
+  "required_identities": [
+    {
+      "site": "github.com",
+      "reason": "Agents open PRs against the landing page repo (basalt-ai/pancake-landing) to ship copy changes, new pages, and design-system updates."
+    }
+  ],
+  "required_vault_secrets": [
+    {
+      "key": "team.landing_repo",
+      "label": "Landing page GitHub repo (e.g. basalt-ai/pancake-landing)",
+      "type": "string"
+    },
+    {
+      "key": "team.ga_measurement_id",
+      "label": "Google Analytics Measurement ID (e.g. G-XXXXXXXXXX) — leave blank if not yet set up",
+      "type": "string"
+    },
+    {
+      "key": "team.gtm_container_id",
+      "label": "Google Tag Manager Container ID (e.g. GTM-XXXXXXX) — leave blank if not yet set up or not using GTM",
+      "type": "string"
+    },
+    {
+      "key": "team.analytics_tool",
+      "label": "Preferred analytics tool (e.g. 'google_analytics', 'plausible', 'posthog', 'custom') — used by the traffic analyst",
+      "type": "string"
+    }
+  ],
+  "required_tool_permissions": ["web_search", "web_fetch", "message", "exec", "read", "write", "edit"],
+  "min_pancake_version": "1.0.0"
+}

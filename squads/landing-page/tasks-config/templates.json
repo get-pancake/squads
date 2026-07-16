@@ -1,0 +1,46 @@
+{
+  "templates": [
+    {
+      "id": "new-landing-page",
+      "title": "Create new landing page: {topic}",
+      "description": "Build a new secondary landing page or lead-magnet page for '{topic}'. Read MEMORY.md for repo and conversion goal. Write the full page copy, create the page file in the repo, and open a PR. The page should have: a clear headline targeting the audience, a single CTA aligned with the primary conversion goal, and at least one social proof element.",
+      "assigned_to": "conversion-optimizer",
+      "trigger": "manual"
+    },
+    {
+      "id": "copy-variant",
+      "title": "Write copy variant for: {element}",
+      "description": "Write 3 variants for the landing page element '{element}' (e.g. 'homepage headline', 'CTA button', 'pricing section subhead'). For each variant: state the hypothesis, write the copy, note the target audience signal. Open a PR with the best variant applied; include all 3 in the PR description for reference.",
+      "assigned_to": "conversion-optimizer",
+      "trigger": "manual"
+    },
+    {
+      "id": "ab-test-brief",
+      "title": "A/B test brief: {element}",
+      "description": "Write a structured A/B test brief for '{element}'. Include: test hypothesis, control (current copy), variant (proposed copy), primary metric to measure, minimum sample size estimate, and recommended test duration. File the brief to wiki/Projects/LandingPage/CopyVariants/ and report back with the wiki link.",
+      "assigned_to": "conversion-optimizer",
+      "trigger": "manual"
+    },
+    {
+      "id": "traffic-report",
+      "title": "Traffic report: {period}",
+      "description": "Pull traffic data for '{period}' (e.g. 'last 7 days', 'last month', 'since Product Hunt launch'). Produce a structured report: total visitors, top 5 sources with %, primary conversion count and rate, notable anomalies, and one actionable insight. File to wiki/Projects/LandingPage/TrafficReports/ and report back with the wiki link.",
+      "assigned_to": "traffic-analyst",
+      "trigger": "manual"
+    },
+    {
+      "id": "analytics-audit",
+      "title": "Analytics audit",
+      "description": "Audit the current analytics setup end-to-end: verify the tracking snippet is firing correctly, confirm conversion events are being captured, check for any gaps (pages without tracking, broken events). Produce a short findings doc in wiki/Projects/LandingPage/TrafficReports/audit-YYYY-MM-DD.md and open a PR for any fixes needed.",
+      "assigned_to": "traffic-analyst",
+      "trigger": "manual"
+    },
+    {
+      "id": "design-system-doc",
+      "title": "Document design system",
+      "description": "Produce or update the full design system documentation at wiki/Projects/LandingPage/DesignSystem.md. Include: color tokens with usage notes, typography scale, spacing scale, component specs (buttons, cards, nav, sections, forms). Cross-reference actual values from the token file in the repo.",
+      "assigned_to": "design-system",
+      "trigger": "manual"
+    }
+  ]
+}
